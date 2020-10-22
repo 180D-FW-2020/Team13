@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Networking;
 using UnityEngine.UI;
 
 public class PlayerController : MonoBehaviour
@@ -52,6 +53,8 @@ public class PlayerController : MonoBehaviour
             if (hit.transform.tag == "Enemy")
             {
                 Debug.Log("GOTTEM");
+                EnemyController enemy = hit.transform.gameObject.GetComponent<EnemyController>();
+                enemy.Die();
             }
         }
     }

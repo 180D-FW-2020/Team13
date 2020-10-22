@@ -20,7 +20,6 @@ public class PlayerController : MonoBehaviour
     private RaycastHit hit;
 
 
-
     void Update()
     {
         Aim();

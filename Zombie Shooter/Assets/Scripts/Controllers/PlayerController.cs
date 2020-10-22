@@ -6,6 +6,7 @@ using UnityEngine.UI;
 
 public class PlayerController : MonoBehaviour
 {
+    public GameManager gameManager;
     public MouseControlType mouseControlType;
 
     // reticle
@@ -18,10 +19,7 @@ public class PlayerController : MonoBehaviour
     private Ray aimingRay;
     private RaycastHit hit;
 
-    void Start()
-    {
-        
-    }
+
 
     void Update()
     {
@@ -50,11 +48,12 @@ public class PlayerController : MonoBehaviour
     {
         if (Physics.Raycast(aimingRay, out hit))
         {
-            if (hit.transform.tag == "Enemy")
+            GameObject hitObject = hit.collider.transform.gameObject;
+            if (hitObject.tag == "Enemy")
             {
                 Debug.Log("GOTTEM");
-                EnemyController enemy = hit.transform.gameObject.GetComponent<EnemyController>();
-                enemy.Die();
+                Debug.Log(hitObject.name);
+                gameManager.KillEnemy(hitObject);
             }
         }
     }

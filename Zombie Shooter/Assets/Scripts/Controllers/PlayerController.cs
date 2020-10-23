@@ -12,13 +12,24 @@ public class PlayerController : MonoBehaviour
     // reticle
     public Transform reticle;
 
-    //camera
+    // mouse controls camera
     public Camera playerCamera;
     public float cameraRotateSensitivity;
+    private float rotationX = 0f;
+    private float rotationY = 0f;
+    Quaternion originalRotation;
 
     private Ray aimingRay;
     private RaycastHit hit;
 
+    private void Start()
+    {
+        if (mouseControlType == MouseControlType.Camera)
+        {
+            Cursor.lockState = CursorLockMode.Locked;
+            originalRotation = playerCamera.transform.parent.rotation;
+        }
+    }
 
     void Update()
     {
@@ -38,7 +49,12 @@ public class PlayerController : MonoBehaviour
         }
         else if (mouseControlType == MouseControlType.Camera)
         {
-            playerCamera.transform.rotation *= Quaternion.Euler(-Input.GetAxis("Mouse Y") * cameraRotateSensitivity, Input.GetAxis("Mouse X") * cameraRotateSensitivity, 0);
+            rotationX += Input.GetAxis("Mouse X") * cameraRotateSensitivity;
+            rotationY += Input.GetAxis("Mouse Y") * cameraRotateSensitivity;
+            Quaternion xQuaternion = Quaternion.AngleAxis(rotationX, Vector3.up);
+            Quaternion yQuaternion = Quaternion.AngleAxis(rotationY, -Vector3.right);
+
+            playerCamera.transform.parent.rotation = originalRotation * xQuaternion * yQuaternion;
         }
         aimingRay = playerCamera.ScreenPointToRay(reticle.position);
     }

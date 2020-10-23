@@ -2,44 +2,46 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+[RequireComponent(typeof(EnemyManager))]
+[RequireComponent(typeof(UIManager))]
 public class GameManager : MonoBehaviour
 {
-    public GameObject player;
+    public int healthLossIncrement;
 
-    public GameObject enemy;
-    public float spawnDelay;
-    public float dieDelay;
-    public float enemySpawnRangeMinX;
-    public float enemySpawnRangeMaxX;
-    public int maxEnemies;
+    private int health;
+    public int Health
+    {
+        get { return health; }
+        set
+        {
+            health = value;
+            uiManager?.SetHealth(health);
+        }
+    }
 
-    private List<GameObject> enemies = new List<GameObject>();
+    private EnemyManager enemyManager;
+    private UIManager uiManager;
+
+    public void Awake()
+    {
+        enemyManager = GetComponent<EnemyManager>();
+        uiManager = GetComponent<UIManager>();
+    }
 
     public void Start()
     {
-        StartCoroutine(SpawnEnemies());
-    }
-
-    public IEnumerator SpawnEnemies()
-    {
-        while (true)
-        {
-            yield return new WaitForSeconds(spawnDelay);
-            if (enemies.Count < maxEnemies)
-            {
-                Vector3 position = enemy.transform.position;
-                position.x = Random.Range(enemySpawnRangeMinX, enemySpawnRangeMaxX);
-                var spawnedEnemy = Instantiate(enemy, position, Quaternion.identity, transform);
-                spawnedEnemy.GetComponent<EnemyController>().SetTarget(player.transform);
-                enemies.Add(spawnedEnemy);
-            }
-        }
+        Health = 100;
+        enemyManager.SpawnEnemies();
     }
 
     public void KillEnemy(GameObject enemy)
     {
-        var enemyController = enemy.GetComponent<EnemyController>();
-        StartCoroutine(enemyController.Die());
-        enemies.Remove(enemy);
+        enemyManager.KillEnemy(enemy);
+        //do something with the UI
+    }
+
+    public void AttackPlayer()
+    {
+        Health -= healthLossIncrement;
     }
 }

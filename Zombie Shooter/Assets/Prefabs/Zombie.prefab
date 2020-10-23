@@ -200,6 +200,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   animator: {fileID: 6546417693553793137}
   secondsIdleUntilWalk: 1
+  attackDistance: 5
+  attackInterval: 0.5
   dieDelay: 2
 --- !u!54 &931787621746825022
 Rigidbody:

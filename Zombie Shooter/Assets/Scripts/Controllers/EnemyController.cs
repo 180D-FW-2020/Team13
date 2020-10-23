@@ -2,42 +2,75 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+public enum EnemyState
+{
+    Idle = 0,
+    Moving = 1,
+    Attacking = 2,
+    Dead = 3
+}
 public class EnemyController : MonoBehaviour
 {
-    public static string TRIGGER_MOVE = "TriggerMove";
-    public static string TRIGGER_FALLDOWN = "TriggerFallingDown";
-
     public Animator animator;
     public float secondsIdleUntilWalk;
+    public float attackDistance;
+    public float attackInterval;
     public float dieDelay;
 
     private Transform target;
+    private GameManager gameManager;
+
+    private EnemyState state;
 
     public void Start()
     {
-        StartCoroutine(WaitForWalk());
+        state = EnemyState.Idle;
+        StartCoroutine(WaitForMove());
     }
 
-    public void Update()
+    public void FixedUpdate()
     {
         Vector3 dir = target.position - transform.position;
         Quaternion rotation = Quaternion.LookRotation(dir);
         transform.rotation = Quaternion.Euler(0, rotation.eulerAngles.y, 0);
+
+        if (state == EnemyState.Moving && Vector2.Distance(target.position.xz(), transform.position.xz()) < attackDistance)
+            StartCoroutine(Attack());
     }
 
-    public IEnumerator WaitForWalk()
+    public IEnumerator WaitForMove()
     {
         yield return new WaitForSeconds(secondsIdleUntilWalk);
-        animator.SetTrigger(TRIGGER_MOVE);
+        animator.SetTrigger(Constants.TRIGGER_MOVE);
+        state = EnemyState.Moving;
     }
-
+    
     public void SetTarget(Transform targetTransform)
     {
         target = targetTransform;
     }
+
+    public void SetGameManager(GameManager manager)
+    {
+        gameManager = manager;
+    }
+
+    public IEnumerator Attack()
+    {
+        state = EnemyState.Attacking;
+        animator.SetTrigger(Constants.TRIGGER_ATTACK);
+        var interval = new WaitForSeconds(attackInterval);
+        while (state != EnemyState.Dead)
+        {
+            yield return interval;
+            gameManager.AttackPlayer();
+        }
+    }
+
     public IEnumerator Die()
     {
-        animator.SetTrigger(TRIGGER_FALLDOWN);
+        state = EnemyState.Dead;
+        animator.SetTrigger(Constants.TRIGGER_FALLDOWN);
         gameObject.tag = "DeadEnemy"; //prevent double shoot
         yield return new WaitForSeconds(dieDelay);
         Destroy(gameObject);

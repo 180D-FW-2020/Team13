@@ -323,7 +323,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   gameManager: {fileID: 1988368586}
-  mouseControlType: 2
+  mouseControlType: 1
   reticle: {fileID: 1145362931}
   playerCamera: {fileID: 1268017146}
   cameraRotateSensitivity: 5

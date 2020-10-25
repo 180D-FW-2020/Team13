@@ -11,7 +11,7 @@ green_upper = (70, 255, 255)
 def track_ball(frame):
     frame = imutils.resize(frame, width)
     
-    blurred = cv2.GaussianBlur(frame, (10, 10), 0)
+    blurred = cv2.GaussianBlur(frame, (11, 11), 0)
     hsv = cv2.cvtColor(blurred, cv2.COLOR_BGR2HSV)
 
     mask = cv2.inRange(hsv, green_lower, green_upper)

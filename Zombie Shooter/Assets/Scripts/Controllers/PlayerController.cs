@@ -9,31 +9,15 @@ public class PlayerController : MonoBehaviour
 {
     public GameManager gameManager;
     public InputManager inputManager;
-    public UIManager uiManager;
 
     private Ray aimingRay;
     private RaycastHit hit;
 
     private Camera playerCamera;
 
-    private int score;
-    public int Score
-    {
-        get { return score; }
-        set
-        {
-            score = value;
-            uiManager?.UpdateScore(score);
-        }
-    }
-
-    public int hitScore;
-    public int killScore;
-
     private void Awake()
     {
         playerCamera = GetComponentInChildren<Camera>();
-        uiManager = GetComponent<UIManager>();
     }
 
     void Update()
@@ -61,7 +45,6 @@ public class PlayerController : MonoBehaviour
                 Debug.Log("GOTTEM");
                 Debug.Log(hitObject.name);
                 gameManager.KillEnemy(hitObject);
-                Score += killScore;
             }
         }
     }

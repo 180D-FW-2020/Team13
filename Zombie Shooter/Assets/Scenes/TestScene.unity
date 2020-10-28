@@ -437,10 +437,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   gameManager: {fileID: 1988368586}
   inputManager: {fileID: 1988368590}
-  uiManager: {fileID: 0}
-  healthLossIncrement: 10
-  hitScore: 10
-  killScore: 100
 --- !u!4 &736461857
 Transform:
   m_ObjectHideFlags: 0
@@ -1751,7 +1747,6 @@ GameObject:
   - component: {fileID: 1524862079}
   - component: {fileID: 1524862081}
   - component: {fileID: 1524862080}
-  - component: {fileID: 1524862082}
   m_Layer: 5
   m_Name: Score
   m_TagString: Untagged
@@ -1820,20 +1815,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1524862078}
   m_CullTransparentMesh: 0
---- !u!114 &1524862082
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1524862078}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d5b7fe955d37d4b2397975123fbac50d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  scoreText: {fileID: 0}
-  playerScore: 0
 --- !u!1 &1659588946
 GameObject:
   m_ObjectHideFlags: 0
@@ -2165,6 +2146,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   healthLossIncrement: 5
+  hitScore: 10
+  killScore: 100
 --- !u!4 &1988368587
 Transform:
   m_ObjectHideFlags: 0

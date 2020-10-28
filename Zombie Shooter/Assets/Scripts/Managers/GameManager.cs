@@ -10,6 +10,9 @@ public class GameManager : MonoBehaviour
 {
     public int healthLossIncrement;
 
+    public int hitScore;
+    public int killScore;
+
     private int health;
     public int Health
     {
@@ -20,6 +23,18 @@ public class GameManager : MonoBehaviour
             uiManager?.SetHealth(health);
         }
     }
+
+    private int score;
+    public int Score
+    {
+        get { return score; }
+        set
+        {
+            score = value;
+            uiManager?.UpdateScore(score);
+        }
+    }
+
 
     private EnemyManager enemyManager;
     private UIManager uiManager;
@@ -59,8 +74,8 @@ public class GameManager : MonoBehaviour
 
     public void KillEnemy(GameObject enemy)
     {
+        Score += killScore;
         enemyManager.KillEnemy(enemy);
-        //do something with the UI
     }
 
     public void AttackPlayer()

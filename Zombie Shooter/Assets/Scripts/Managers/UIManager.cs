@@ -13,6 +13,7 @@ public class UIManager : MonoBehaviour
     [Header("In Game UI")]
     public GameObject inGameScreen;
     public Slider healthBar;
+    public Text scoreText;
 
 
     public void SetScreensActive(bool startScreenActive, bool inGameScreenActive)
@@ -41,11 +42,17 @@ public class UIManager : MonoBehaviour
 
     public void StartGame()
     {
+        scoreText.text = "Score: 0";
         SetScreensActive(false, true);
     }
 
     public void SetHealth(int value) //between 0 and 100
     {
         healthBar.value = value;
+    }
+
+    public void UpdateScore(int newScore)
+    {
+        scoreText.text = "Score: " + newScore.ToString();
     }
 }

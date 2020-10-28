@@ -66,5 +66,8 @@ public class GameManager : MonoBehaviour
     public void AttackPlayer()
     {
         Health -= healthLossIncrement;
+        if (Health <= 0) {
+            Debug.Log("YOU DEAD AF");
+        }
     }
 }

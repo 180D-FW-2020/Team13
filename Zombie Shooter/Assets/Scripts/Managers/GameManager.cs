@@ -51,22 +51,17 @@ public class GameManager : MonoBehaviour
     {
         uiManager.ShowLoading();
         uiManager.startButton.onClick.AddListener(StartGame);
-        inputManager.OnInputConnected.AddListener(GameLoaded);
+        uiManager.ShowStart();
     }
 
     public void Update()
     {
-    }
 
-    public void GameLoaded()
-    {
-        uiManager.ShowStart();
     }
 
     public void StartGame()
     {
         uiManager.StartGame();
-        inputManager.StartGame();
         Health = 100;
         enemyManager.SpawnEnemies();
         Debug.Log("Game Started");

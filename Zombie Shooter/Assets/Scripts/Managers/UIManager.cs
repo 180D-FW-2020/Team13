@@ -30,14 +30,10 @@ public class UIManager : MonoBehaviour
     public void ShowLoading()
     {
         SetScreensActive(true, false);
-        startButton.interactable = false;
-        startButtonText.text = "Loading";
     }
     public void ShowStart()
     {
         SetScreensActive(true, false);
-        startButton.interactable = true;
-        startButtonText.text = "Start";
     }
 
     public void StartGame()

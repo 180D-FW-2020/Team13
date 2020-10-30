@@ -1,13 +1,17 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using UnityEditor.PackageManager;
 using UnityEngine;
 
 public static class Constants
 {
     //Animator triggers
-    public static string TRIGGER_MOVE = "TriggerMove";
-    public static string TRIGGER_ATTACK = "TriggerAttack";
-    public static string TRIGGER_FALLDOWN = "TriggerFallingDown";
+    public const string TRIGGER_MOVE = "TriggerMove";
+    public const string TRIGGER_ATTACK = "TriggerAttack";
+    public const string TRIGGER_FALLDOWN = "TriggerFallingDown";
+
+    public const int CAMERA_INPUT_WIDTH = 640;
+    public const int CAMERA_INPUT_FPS = 20;
 }
 
 public enum MouseControlType

@@ -10,6 +10,9 @@ public class PlayerController : MonoBehaviour
     public GameManager gameManager;
     public InputManager inputManager;
 
+    public bool autoShoot;
+    public float autoShootInterval;
+
     private Ray aimingRay;
     private RaycastHit hit;
 
@@ -20,23 +23,32 @@ public class PlayerController : MonoBehaviour
         playerCamera = GetComponentInChildren<Camera>();
     }
 
+    private void Start()
+    {
+        if (autoShoot)
+            StartCoroutine(AutoShoot());
+    }
+
+    private IEnumerator AutoShoot()
+    {
+        while (true)
+        {
+            Shoot();
+            yield return new WaitForSeconds(autoShootInterval);
+        }
+    }
+
     void Update()
     {
-        Aim();
-
         if (Input.GetMouseButtonDown(0)) // click to shoot
         {
             Shoot();
         }
     }
 
-    private void Aim()
-    {
-        aimingRay = playerCamera.ScreenPointToRay(inputManager.reticle.position);
-    }
-
     private void Shoot()
     {
+        aimingRay = playerCamera.ScreenPointToRay(inputManager.reticle.position);
         if (Physics.Raycast(aimingRay, out hit))
         {
             GameObject hitObject = hit.collider.transform.gameObject;

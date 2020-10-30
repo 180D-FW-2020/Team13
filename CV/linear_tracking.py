@@ -4,6 +4,7 @@ import imutils
 import socket
 import signal
 
+port = 5000
 width = 600
 green_lower = (30, 80, 100)
 green_upper = (70, 255, 255)
@@ -39,7 +40,8 @@ def track_ball(frame):
 if __name__ == '__main__':
     cap = cv2.VideoCapture(0)
     
-    print("Connected")
+    data_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    data_socket.connect(('127.0.0.1', port))
     
     while True:
         ret, frame = cap.read()
@@ -52,7 +54,9 @@ if __name__ == '__main__':
             center_x = (width - center_x)/width
             center_y = (height - center_y)/height
 
-            print(str(center_x) + " " + str(center_y))
+            send_str = str(center_x) + " " + str(center_y) + "\n"
+            print(send_str)
+            data_socket.send(send_str.encode('ascii'))
 
         cv2.imshow('Mask', mask)
         cv2.imshow('Video', frame)
@@ -61,3 +65,4 @@ if __name__ == '__main__':
     
     cap.release()
     cv2.destroyAllWindows()
+

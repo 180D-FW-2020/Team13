@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -12,7 +11,15 @@ using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Events;
-using Debug = UnityEngine.Debug;
+using UnityEngine.UI;
+
+public class CVInputState
+{
+    public const int bufferSize = 1024;
+    public byte[] buffer = new byte[bufferSize];
+    public string readString;
+    public Socket clientSocket;
+}
 
 public class InputManager : MonoBehaviour
 {
@@ -34,94 +41,89 @@ public class InputManager : MonoBehaviour
     [Header("Reticle Control")]
     public Transform reticle;
 
-    private bool running = false;
+    [Header("UI Elements")]
+    public Text cvConnectionStatus;
+    public Text imuConnectionStatus;
+    public Color disconnectedColor;
+    public Color connectedColor;
+
     private Socket serverSocket;
     private Socket clientSocket;
+    private bool connected = false;
 
-    private Vector2 inputPosition;
     private int screenWidth;
     private int screenHeight;
+    private Vector2 inputPosition;
 
-    private Process cvProcess;
-    private Thread readThread;
-    private bool inputConnected = false;
-    private bool gameStarted;
-
-    private void Start()
+    public void Start()
     {
-        if (mouseControlType == MouseControlType.Camera)
-        {
-            Cursor.lockState = inputType == InputType.CV ? CursorLockMode.None : CursorLockMode.Locked;
-            originalRotation = playerCamera.transform.parent.rotation;
-        }
+        cvConnectionStatus.color = disconnectedColor;
+        imuConnectionStatus.color = disconnectedColor;
 
-        StartCoroutine(ConnectCVInput());
-    }
-
-    private IEnumerator ConnectCVInput()
-    {
-        yield return null;
         if (inputType == InputType.CV)
+            StartCoroutine(ConnectSocketClient());
+        else
+            OnInputConnected.Invoke();
+    }
+
+    private IEnumerator ConnectSocketClient()
+    {
+        Debug.Log("CV Input Socket Connection State: Disconnected");
+        IPAddress address = IPAddress.Parse(ipAddress);
+        IPEndPoint endpoint = new IPEndPoint(address, port);
+        serverSocket = new Socket(address.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+        serverSocket.Bind(endpoint);
+        serverSocket.Listen(1);
+        yield return serverSocket;
+
+        Task<Socket> acceptTask = serverSocket.AcceptAsync();
+        Debug.Log("CV Input Socket Connection State: Listening");
+        while (!acceptTask.IsCompleted)
         {
-            cvProcess = new Process();
-            cvProcess.StartInfo = new ProcessStartInfo()
-            {
-                FileName = "python",
-                Arguments = "-u ../../CV/linear_tracking.py",
-                WorkingDirectory = Application.dataPath,
-                CreateNoWindow = true,
-                UseShellExecute = false,
-                RedirectStandardOutput = true
-            };
-            cvProcess.EnableRaisingEvents = true;
-            cvProcess.Exited += ProcessExited;
-            cvProcess.Start();
-            yield return cvProcess;
-
-            var line = "";
-            while ((line = cvProcess.StandardOutput.ReadLine()) != "Connected")
-                yield return line;
-
-            screenWidth = Screen.width;
-            screenHeight = Screen.height;
-            ThreadStart threadStart = new ThreadStart(ReadOutput);
-            readThread = new Thread(threadStart);
-            readThread.Start();
+            yield return clientSocket;
         }
-
+        clientSocket = acceptTask.Result;
+        Debug.Log("CV Input Socket Connection State: Connected");
         OnInputConnected.Invoke();
-        inputConnected = true;
-        yield return null;
+        CVInputState state = new CVInputState();
+        state.clientSocket = clientSocket;
+        screenWidth = Screen.width;
+        screenHeight = Screen.height;
+
+        cvConnectionStatus.text = "Connected";
+        cvConnectionStatus.color = connectedColor;
+        clientSocket.BeginReceive(state.buffer, 0, CVInputState.bufferSize, 0, ReceiveData, state);
+
+        yield return clientSocket;
     }
 
-    private void ReadOutput()
+    public void ReceiveData(IAsyncResult result)
     {
-        while (inputConnected)
+        CVInputState state = (CVInputState)result.AsyncState;
+        if (connected)
         {
-            string data = cvProcess.StandardOutput.ReadLine().Trim();
-            if (string.IsNullOrEmpty(data)) continue;
-
-            var split = data.Split(' ').Select(s => float.Parse(s)).ToArray();
-            split[0] *= screenWidth;
-            split[1] *= screenHeight;
-            var pos = new Vector2(split[0], split[1]);
-            inputPosition = pos;
+            int n = state.clientSocket.EndReceive(result);
+            if (n > 0)
+            {
+                state.readString = Encoding.ASCII.GetString(state.buffer, 0, n);
+                var split = state.readString.Trim().Split(' ').Select(s => float.Parse(s)).ToArray();
+                split[0] *= screenWidth;
+                split[1] *= screenHeight;
+                var pos = new Vector2(split[0], split[1]);
+                inputPosition = pos;
+            }
+            state.clientSocket.BeginReceive(state.buffer, 0, CVInputState.bufferSize, 0, ReceiveData, state);
         }
-    }
-
-    private void ProcessExited(object sender, EventArgs e)
-    {
-        Application.Quit(1);
     }
 
     public void StartGame()
     {
-        gameStarted = true;
+        connected = true;
     }
 
     public void Update()
     {
-        if (inputConnected && gameStarted)
+        if (connected)
         {
             if (mouseControlType == MouseControlType.Reticle)
             {
@@ -158,11 +160,10 @@ public class InputManager : MonoBehaviour
         return originalRotation * xQuaternion * yQuaternion;
     }
 
-    public void OnDestroy()
+    public void OnApplicationQuit()
     {
-        readThread?.Abort();
-        cvProcess?.Kill();
-        clientSocket?.Shutdown(SocketShutdown.Both);
+        connected = false;
+        serverSocket?.Shutdown(SocketShutdown.Both);
         clientSocket?.Close();
         serverSocket?.Close();
     }

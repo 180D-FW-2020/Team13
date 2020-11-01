@@ -1,10 +1,11 @@
 import socket
 import asyncio
 import signal
+import sys
 
 from player import Player
 
-HOST = 'localhost'
+HOST = ''
 PORT = 5000
 BUFFER_SIZE = 4096
 

@@ -43,4 +43,4 @@ if __name__ == '__main__':
     for signal_type in [signal.SIGINT, signal.SIGTERM]:
         signal.signal(signal_type, signal_handler)
 
-    loop.run_until_complete()
+    loop.run_until_complete(task)

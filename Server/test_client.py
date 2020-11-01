@@ -2,7 +2,7 @@ import socket
 import threading
 
 HOST = 'zombie-shooter-server.herokuapp.com'
-PORT = 39490
+PORT = 26697
 BUFFER_SIZE = 4096
 
 def read_thread():

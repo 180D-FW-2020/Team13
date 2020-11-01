@@ -6,7 +6,8 @@ import sys
 from player import Player
 
 HOST = ''
-PORT = 5000
+PORT = int(os.environ.get("PORT", 5000))
+print(PORT)
 BUFFER_SIZE = 4096
 
 players = []

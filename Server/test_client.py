@@ -1,7 +1,7 @@
 import socket
 import threading
 
-HOST = 'localhost'
+HOST = 'zombie-shooter-server.herokuapp.com'
 PORT = 5000
 BUFFER_SIZE = 4096
 

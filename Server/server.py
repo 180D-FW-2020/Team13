@@ -1,7 +1,7 @@
 import socket
 import asyncio
 import signal
-import sys
+import os
 
 from player import Player
 

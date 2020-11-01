@@ -33,7 +33,6 @@ async def handle_client(reader, writer):
 def signal_handler(*args):
     for player in players:
         player.writer.close()
-    loop.close()
 
 if __name__ == '__main__':
     print("Starting server")
@@ -44,4 +43,4 @@ if __name__ == '__main__':
     for signal_type in [signal.SIGINT, signal.SIGTERM]:
         signal.signal(signal_type, signal_handler)
 
-    loop.run_forever()
+    loop.run_until_complete()

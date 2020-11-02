@@ -38,13 +38,11 @@ public class GameManager : MonoBehaviour
 
     private EnemyManager enemyManager;
     private UIManager uiManager;
-    private InputManager inputManager;
 
     public void Awake()
     {
         enemyManager = GetComponent<EnemyManager>();
         uiManager = GetComponent<UIManager>();
-        inputManager = GetComponent<InputManager>();
     }
 
     public void Start()

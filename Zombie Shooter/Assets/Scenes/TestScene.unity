@@ -2322,9 +2322,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ad298f44ab248474ab8725dd5c235706, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  port: 5000
-  ipAddress: 127.0.0.1
-  inputType: 2
+  inputType: 1
   mouseControlType: 1
   webcamPreview: {fileID: 1306310098}
   playerCamera: {fileID: 1268017146}

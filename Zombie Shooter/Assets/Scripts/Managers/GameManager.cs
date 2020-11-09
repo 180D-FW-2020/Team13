@@ -50,6 +50,7 @@ public class GameManager : MonoBehaviour
         uiManager.ShowLoading();
         uiManager.startButton.onClick.AddListener(StartGame);
         uiManager.ShowStart();
+        Health = 100;
     }
 
     public void Update()

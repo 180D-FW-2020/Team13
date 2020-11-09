@@ -260,7 +260,7 @@ public class SphinxExample : MonoBehaviour
 
     private IEnumerator ResetMicIndicator()
     {
-        yield return new WaitForSeconds(1);
+        yield return new WaitForSecondsRealtime(1);
         uiManager.UpdateIndicator(new Color(0,1,0,1));
     }
 }

@@ -2,6 +2,15 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
+
+
+public enum GameStatus
+{
+    Start = 0,
+    Playing = 1,
+    Paused = 2
+}
 
 public class UIManager : MonoBehaviour
 {
@@ -15,20 +24,37 @@ public class UIManager : MonoBehaviour
     public Slider healthBar;
     public Text scoreText;
 
+    [Header("Pause Menu UI")]
+    public GameObject pauseScreen;
+    public Button resumeButton;
+    public Button exitButton;
+
     [Header("Speech UI")]
     public Image micIndicator;
     private SphinxExample sphinx;
 
+    private GameManager gameManager;
+    private GameStatus gameStatus;
 
-    public void SetScreensActive(bool startScreenActive, bool inGameScreenActive)
+
+    // [0: Start Screen, 1: In-Game Screen, 2: Pause Screen]
+    public void SetScreensActive(int screen)
     {
-        startScreen.SetActive(startScreenActive);
-        inGameScreen.SetActive(inGameScreenActive);
+        gameStatus = (GameStatus) screen;
+
+        startScreen.SetActive(gameStatus == GameStatus.Start);
+        inGameScreen.SetActive(gameStatus == GameStatus.Playing);
+        pauseScreen.SetActive(gameStatus == GameStatus.Paused);
     }
 
     private IEnumerator Start()
     {
-        SetScreensActive(true, false);
+        gameManager = GetComponent<GameManager>();
+
+        SetScreensActive(0);
+
+        resumeButton.onClick.AddListener(ResumeGame);
+        exitButton.onClick.AddListener(ReloadGame);
 
         UpdateIndicator(new Color(1,0,0,1));
 
@@ -44,17 +70,35 @@ public class UIManager : MonoBehaviour
 
     public void ShowLoading()
     {
-        SetScreensActive(true, false);
+        SetScreensActive(0);
     }
     public void ShowStart()
     {
-        SetScreensActive(true, false);
+        SetScreensActive(0);
     }
 
     public void StartGame()
     {
         scoreText.text = "Score: 0";
-        SetScreensActive(false, true);
+        SetScreensActive(1);
+    }
+
+    public void PauseGame()
+    {
+        SetScreensActive(2);
+        Time.timeScale = 0;
+    }
+
+    public void ResumeGame()
+    {
+        SetScreensActive(1);
+        Time.timeScale = 1;
+    }
+
+    public void ReloadGame()
+    {
+        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+        Time.timeScale = 1;
     }
 
     public void SetHealth(int value) //between 0 and 100
@@ -75,13 +119,45 @@ public class UIManager : MonoBehaviour
 
     private void UpdateSpeechUI(string str)
     {
-        StartCoroutine(PrintVoiceCommand(str));
+        StartCoroutine(ProcessVoiceCommand(str));
     }
 
-    private IEnumerator PrintVoiceCommand(string str)
+    private IEnumerator ProcessVoiceCommand(string cmd)
     {
-        Debug.Log($"Voice Command: {str.ToUpper()}");
-        yield return new WaitForSeconds(1);
+        if (cmd.Contains(" "))
+            cmd = cmd.Substring(0,cmd.IndexOf(" "));
+        
+        Debug.Log($"Voice Command: {cmd.ToUpper()}");
+        cmd = cmd.ToLower();
+
+        switch (gameStatus)
+        {
+            case GameStatus.Start:
+                if (cmd == "play") {
+                    gameManager.StartGame();
+                }
+                break;
+            case GameStatus.Playing:
+                if (cmd == "reload") {
+                    // reload code
+                } else if (cmd == "pause") {
+                    PauseGame();
+                    UpdateIndicator(new Color(0,1,0,1));
+                }
+                break;
+            case GameStatus.Paused:
+                if (cmd == "resume") {
+                    ResumeGame();
+                } else if (cmd == "exit") {
+                    ReloadGame();
+                }
+                break;
+            default:
+                // wtf
+                break;
+        }
+
+        yield return new WaitForSecondsRealtime(1);
     }
 
     public void UpdateIndicator(Color col)

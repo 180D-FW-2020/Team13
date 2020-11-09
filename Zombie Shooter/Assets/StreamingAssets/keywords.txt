@@ -1,3 +1,5 @@
 play
+resume
 pause
+exit
 reload

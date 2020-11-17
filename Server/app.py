@@ -9,7 +9,7 @@ import json
 from datetime import datetime
 
 app = Flask(__name__)
-socketio = SocketIO(app, logging=True)
+socketio = SocketIO(app, async_mode='eventlet', logging=True)
 socketio.init_app(app, cors_allowed_origins="*")
 port = int(os.environ.get("PORT", 5000))
 

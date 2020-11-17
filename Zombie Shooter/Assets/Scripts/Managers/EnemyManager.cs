@@ -7,11 +7,7 @@ public class EnemyManager : MonoBehaviour
     public GameObject target;
 
     public GameObject enemy;
-    public float spawnDelay;
     public float dieDelay;
-    public float enemySpawnRangeMinX;
-    public float enemySpawnRangeMaxX;
-    public int maxEnemies;
 
     private GameManager gameManager;
     private List<GameObject> enemies = new List<GameObject>();
@@ -21,32 +17,24 @@ public class EnemyManager : MonoBehaviour
         gameManager = GetComponent<GameManager>();
     }
 
-    public void SpawnEnemies()
+    public void Initialize(Dictionary<string, float> positions)
     {
-        StartCoroutine(Spawn());
-    }
-    private IEnumerator Spawn()
-    {
-        while (true)
+        foreach (KeyValuePair<string, float> position in positions)
         {
-            yield return new WaitForSeconds(spawnDelay);
-            if (enemies.Count < maxEnemies)
-            {
-                Vector3 position = enemy.transform.position;
-                position.x = Random.Range(enemySpawnRangeMinX, enemySpawnRangeMaxX);
-                var spawnedEnemy = Instantiate(enemy, position, Quaternion.identity, transform);
-                var spawnedEnemyController = spawnedEnemy.GetComponent<EnemyController>();
-                spawnedEnemyController.SetTarget(target.transform);
-                spawnedEnemyController.SetGameManager(gameManager);
-                enemies.Add(spawnedEnemy);
-            }
+            var spawnedEnemy = Instantiate(enemy, new Vector3(position.Value, 0), Quaternion.identity, transform);
+            var spawnedEnemyController = spawnedEnemy.GetComponent<EnemyController>();
+            spawnedEnemyController.SetTarget(target.transform);
+            spawnedEnemyController.SetGameManager(gameManager);
+            spawnedEnemy.name = position.Key;
+            enemies.Add(spawnedEnemy);
         }
     }
 
-    public void KillEnemy(GameObject enemy)
+    public void KillEnemy(string enemyId)
     {
+        var enemy = transform.Find(enemyId);
         var enemyController = enemy.GetComponent<EnemyController>();
         StartCoroutine(enemyController.Die());
-        enemies.Remove(enemy);
+        enemies.Remove(enemy.gameObject);
     }
 }

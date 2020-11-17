@@ -17,6 +17,7 @@ public class PlayerController : MonoBehaviour
     private RaycastHit hit;
 
     private Camera playerCamera;
+    private bool gameStarted = false;
 
     private void Awake()
     {
@@ -29,11 +30,16 @@ public class PlayerController : MonoBehaviour
             StartCoroutine(AutoShoot());
     }
 
+    public void StartGame()
+    {
+        gameStarted = true;
+    }
+
     private IEnumerator AutoShoot()
     {
         while (true)
         {
-            Shoot();
+            if (inputManager.IsReticleStopped()) Shoot();
             yield return new WaitForSeconds(autoShootInterval);
         }
     }
@@ -41,22 +47,22 @@ public class PlayerController : MonoBehaviour
     void Update()
     {
         if (Input.GetMouseButtonDown(0)) // click to shoot
-        {
             Shoot();
-        }
     }
 
     private void Shoot()
     {
-        aimingRay = playerCamera.ScreenPointToRay(inputManager.reticle.position);
-        if (Physics.Raycast(aimingRay, out hit))
+        if (gameManager.GameStarted)
         {
-            GameObject hitObject = hit.collider.transform.gameObject;
-            if (hitObject.tag == "Enemy")
+            aimingRay = playerCamera.ScreenPointToRay(inputManager.playerReticle.position);
+            if (Physics.Raycast(aimingRay, out hit))
             {
-                Debug.Log("GOTTEM");
-                Debug.Log(hitObject.name);
-                gameManager.KillEnemy(hitObject);
+                GameObject hitObject = hit.collider.transform.gameObject;
+                if (hitObject.tag == "Enemy")
+                {
+                    Debug.Log("GOTTEM");
+                    gameManager.KillEnemy(hitObject);
+                }
             }
         }
     }

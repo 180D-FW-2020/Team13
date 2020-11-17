@@ -12,16 +12,35 @@ public static class Constants
 
     public const int CAMERA_INPUT_WIDTH = 640;
     public const int CAMERA_INPUT_FPS = 20;
-
-    public const string MQTT_BROKER_URL = "broker.emqx.io";
-    public const string MQTT_TOPIC = "ece180d/team13/multiplayer";
 }
 
+[Serializable]
 public class GameState
 {
     public long timestamp;
+    public long serverTimestamp;
     public string id;
-    public Vector3 playerPosition;
+    public List<float> playerPosition;
+}
+
+[Serializable]
+public class Register
+{
+    public string id;
+}
+
+[Serializable]
+public class Initialize
+{
+    public List<string> playerList;
+    public Dictionary<string, float> enemyPositions;
+}
+
+[Serializable]
+public class EnemyKilled
+{
+    public string id;
+    public string enemyId;
 }
 
 public enum MouseControlType

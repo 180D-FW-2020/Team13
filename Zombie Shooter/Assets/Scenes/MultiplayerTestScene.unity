@@ -866,7 +866,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3ade8f939c129574fad515965aea33d0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  playerName: Test2
+  playerName: Anchal
   latencyText: {fileID: 281053572}
   player: {fileID: 1231670597}
 --- !u!4 &930466028

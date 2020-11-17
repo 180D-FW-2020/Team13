@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using UnityEngine;
 
 public static class Vector3Extensions
 {
@@ -25,5 +26,9 @@ public static class Vector3Extensions
     public static Vector2 zy(this Vector3 vector)
     {
         return new Vector2(vector.z, vector.y);
+    }
+    public static List<float> coordinates(this Vector3 vector)
+    {
+        return new List<float>() { vector.x, vector.y, vector.z };
     }
 }

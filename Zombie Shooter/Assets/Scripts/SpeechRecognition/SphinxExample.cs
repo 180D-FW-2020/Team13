@@ -53,12 +53,12 @@ public class SphinxExample : MonoBehaviour
             if(!Microphone.IsRecording(mic.Name))
             {
                 mic.BeginRecording();
-                uiManager.UpdateIndicator(new Color(1,1,0,1));
+                uiManager.UpdateMicIndicator(new Color(1,1,0,1));
             }
             else
             {
                 mic.EndRecording();
-                uiManager.UpdateIndicator(new Color(1,0,0,1));
+                uiManager.UpdateMicIndicator(new Color(1,0,0,1));
                 StartCoroutine(ResetMicIndicator());
             }
         }
@@ -261,6 +261,6 @@ public class SphinxExample : MonoBehaviour
     private IEnumerator ResetMicIndicator()
     {
         yield return new WaitForSecondsRealtime(1);
-        uiManager.UpdateIndicator(new Color(0,1,0,1));
+        uiManager.UpdateMicIndicator(new Color(0,1,0,1));
     }
 }

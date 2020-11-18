@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Xml.Serialization;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 [RequireComponent(typeof(EnemyManager))]
@@ -44,6 +45,7 @@ public class GameManager : MonoBehaviour
     private EnemyManager enemyManager;
     private InputManager inputManager;
     private UIManager uiManager;
+    private SphinxExample sphinx;
 
     private NetworkConnection connection;
     private GameState gameState = new GameState();
@@ -52,6 +54,7 @@ public class GameManager : MonoBehaviour
     private string playerName, room;
     private long serverTimeOffset;
 
+    private GameStatus gameStatus = GameStatus.Start;
     internal bool GameStarted = false;
 
     public void Awake()
@@ -70,12 +73,37 @@ public class GameManager : MonoBehaviour
 
         uiManager.startButton.onClick.AddListener(WaitForPlayers);
         uiManager.playButton.onClick.AddListener(StartGame);
+        uiManager.resumeButton.onClick.AddListener(ResumeGame);
+        uiManager.exitButton.onClick.AddListener(ReloadGame);
         uiManager.ShowStart();
         Health = 100;
+
+        //sphinx = FindObjectOfType<SphinxExample>();
+        //sphinx.OnSpeechRecognized += UpdateSpeechUI;
+
+        //uiManager.UpdateMicIndicator(new Color(0, 1, 0, 1));
+        //while (sphinx.mic == null)
+        //{
+        //    yield return null;
+        //}
+        //Debug.Log($"<color=green><b>Connected to: {sphinx.mic.Name}</b></color>");
+        //uiManager.UpdateMicIndicator(new Color(1, 0, 0, 1));
+    }
+
+    #region Game Events
+    public void StartGame()
+    {
+        gameStatus = GameStatus.Playing;
+        GameStarted = true;
+        uiManager.UpdateScore(0);
+        uiManager.StartGame();
+        Health = 100;
+        Debug.Log("Game Started");
     }
 
     public async void WaitForPlayers()
     {
+        gameStatus = GameStatus.Waiting;
         uiManager.EnterWaitingRoom();
         playerName = uiManager.GetPlayerName();
         gameState.id = playerName;
@@ -88,15 +116,29 @@ public class GameManager : MonoBehaviour
         inputManager.playerReticle = player.transform;
     }
 
-    public void StartGame()
+    public void PauseGame()
     {
-        GameStarted = true;
-        uiManager.UpdateScore(0);
-        uiManager.StartGame();
-        Health = 100;
-        Debug.Log("Game Started");
+        gameStatus = GameStatus.Paused;
+        uiManager.SetScreensActive(GameStatus.Paused);
+        Time.timeScale = 0;
     }
 
+    public void ResumeGame()
+    {
+        gameStatus = GameStatus.Playing;
+        uiManager.SetScreensActive(GameStatus.Playing);
+        Time.timeScale = 1;
+    }
+
+    public void ReloadGame()
+    {
+        gameStatus = GameStatus.Start;
+        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+        Time.timeScale = 1;
+    }
+    #endregion
+
+    #region Network callbacks
     private void PlayerStateReceived(GameState state)
     {
         pendingActions.Enqueue(() => UpdateRemoteState(state));
@@ -118,27 +160,6 @@ public class GameManager : MonoBehaviour
             enemyManager.KillEnemy(enemyKilled.enemyId);
         });
     }
-
-    public async void FixedUpdate()
-    {
-        if (GameStarted)
-        {
-            inputManager.UpdateInput();
-            gameState.timestamp = DateTime.Now.Ticks;
-            gameState.playerPosition = allPlayers[playerName].transform.position.normalizedCoordinates();
-            await connection.SendState(gameState);
-        }
-    }
-
-    private void Update()
-    {
-        while (pendingActions.Count > 0)
-        {
-            var action = pendingActions.Dequeue();
-            action();
-        }
-    }
-
     public void UpdateRemoteState(GameState state)
     {
         if (state.id != playerName)
@@ -166,6 +187,27 @@ public class GameManager : MonoBehaviour
             uiManager.UpdateLatency(roundtripLatency);
         }
     }
+    #endregion
+
+    public async void FixedUpdate()
+    {
+        if (GameStarted)
+        {
+            inputManager.UpdateInput();
+            gameState.timestamp = DateTime.Now.Ticks;
+            gameState.playerPosition = allPlayers[playerName].transform.position.normalizedCoordinates();
+            await connection.SendState(gameState);
+        }
+    }
+
+    private void Update()
+    {
+        while (pendingActions.Count > 0)
+        {
+            var action = pendingActions.Dequeue();
+            action();
+        }
+    }
 
     public async void KillEnemy(GameObject enemy)
     {
@@ -184,6 +226,58 @@ public class GameManager : MonoBehaviour
             Debug.Log("YOU DEAD AF");
         }
     }
+
+    #region Speech
+    private void UpdateSpeechUI(string str)
+    {
+        StartCoroutine(ProcessVoiceCommand(str));
+    }
+
+    private IEnumerator ProcessVoiceCommand(string cmd)
+    {
+        if (cmd.Contains(" "))
+            cmd = cmd.Substring(0, cmd.IndexOf(" "));
+
+        Debug.Log($"Voice Command: {cmd.ToUpper()}");
+        cmd = cmd.ToLower();
+
+        switch (gameStatus)
+        {
+            case GameStatus.Start:
+                if (cmd == "play")
+                {
+                    StartGame();
+                }
+                break;
+            case GameStatus.Playing:
+                if (cmd == "reload")
+                {
+                    // reload code
+                }
+                else if (cmd == "pause")
+                {
+                    PauseGame();
+                    uiManager.UpdateMicIndicator(new Color(0, 1, 0, 1));
+                }
+                break;
+            case GameStatus.Paused:
+                if (cmd == "resume")
+                {
+                    ResumeGame();
+                }
+                else if (cmd == "exit")
+                {
+                    ReloadGame();
+                }
+                break;
+            default:
+                // wtf
+                break;
+        }
+
+        yield return new WaitForSecondsRealtime(1);
+    }
+    #endregion
 
     public async void OnApplicationQuit()
     {

@@ -38,75 +38,41 @@ public class UIManager : MonoBehaviour
 
     [Header("Speech UI")]
     public Image micIndicator;
-    private SphinxExample sphinx;
 
     private GameManager gameManager;
-    private GameStatus gameStatus;
 
-
-    // [0: Start Screen, 1: Waiting Screen, 2: In-Game Screen, 3: Pause Screen]
-    public void SetScreensActive(int screen)
+    public void SetScreensActive(GameStatus gameStatus)
     {
-        gameStatus = (GameStatus) screen;
-
         startScreen.SetActive(gameStatus == GameStatus.Start);
         inGameScreen.SetActive(gameStatus == GameStatus.Playing);
         waitingScreen.SetActive(gameStatus == GameStatus.Waiting);
         pauseScreen.SetActive(gameStatus == GameStatus.Paused);
     }
 
-    private IEnumerator Start()
+    private void Start()
     {
-        gameManager = GetComponent<GameManager>();
-
-        SetScreensActive(0);
-
-        resumeButton.onClick.AddListener(ResumeGame);
-        exitButton.onClick.AddListener(ReloadGame);
-
-        UpdateIndicator(new Color(1,0,0,1));
-
-        sphinx = FindObjectOfType<SphinxExample>();
-        sphinx.OnSpeechRecognized += UpdateSpeechUI;
-
-        while (sphinx.mic == null)
-        {
-            yield return null;
-        }
-        MicConnected();
+        SetScreensActive(GameStatus.Start);
     }
 
     public void ShowStart()
     {
-        SetScreensActive(0);
+        SetScreensActive(GameStatus.Start);
     }
     public void EnterWaitingRoom()
     {
-        SetScreensActive(1);
+        SetScreensActive(GameStatus.Waiting);
     }
 
     public void StartGame()
     {
         scoreText.text = "Score: 0";
-        SetScreensActive(2);
+        SetScreensActive(GameStatus.Playing);
     }
 
-    public void PauseGame()
+    #region Start Screen UI
+    public string GetPlayerName()
     {
-        SetScreensActive(3);
-        Time.timeScale = 0;
-    }
-
-    public void ResumeGame()
-    {
-        SetScreensActive(1);
-        Time.timeScale = 1;
-    }
-
-    public void ReloadGame()
-    {
-        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
-        Time.timeScale = 1;
+        return playerName.text;
     }
     #endregion
 
@@ -134,56 +100,8 @@ public class UIManager : MonoBehaviour
         latencyText.text = "Latency: " + latency.ToString() + "ms";
     }
     #endregion
-    private void MicConnected()
-    {
-        Debug.Log($"<color=green><b>Connected to: {sphinx.mic.Name}</b></color>");
-        UpdateIndicator(new Color(0,1,0,1));
-    }
 
-    private void UpdateSpeechUI(string str)
-    {
-        StartCoroutine(ProcessVoiceCommand(str));
-    }
-
-    private IEnumerator ProcessVoiceCommand(string cmd)
-    {
-        if (cmd.Contains(" "))
-            cmd = cmd.Substring(0,cmd.IndexOf(" "));
-        
-        Debug.Log($"Voice Command: {cmd.ToUpper()}");
-        cmd = cmd.ToLower();
-
-        switch (gameStatus)
-        {
-            case GameStatus.Start:
-                if (cmd == "play") {
-                    gameManager.StartGame();
-                }
-                break;
-            case GameStatus.Playing:
-                if (cmd == "reload") {
-                    // reload code
-                } else if (cmd == "pause") {
-                    PauseGame();
-                    UpdateIndicator(new Color(0,1,0,1));
-                }
-                break;
-            case GameStatus.Paused:
-                if (cmd == "resume") {
-                    ResumeGame();
-                } else if (cmd == "exit") {
-                    ReloadGame();
-                }
-                break;
-            default:
-                // wtf
-                break;
-        }
-
-        yield return new WaitForSecondsRealtime(1);
-    }
-
-    public void UpdateIndicator(Color col)
+    public void UpdateMicIndicator(Color col)
     {
         micIndicator.color = col;
     }

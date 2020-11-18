@@ -77,6 +77,7 @@ public class GameManager : MonoBehaviour
     {
         uiManager.EnterWaitingRoom();
         playerName = uiManager.GetPlayerName();
+        gameState.id = playerName;
         await connection.Connect(playerName);
 
         var player = Instantiate(crosshair, playersParent);
@@ -103,7 +104,6 @@ public class GameManager : MonoBehaviour
     private void InitializeMessageReceived(Initialize init)
     {
         pendingActions.Enqueue(() => uiManager.UpdatePlayerList(init.playerList));
-        //enemyManager.Initialize(init.enemyPositions);
         pendingActions.Enqueue(() => enemyManager.Initialize(init.enemyPositions));
     }
     private void EnemyKilledMessageReceived(EnemyKilled enemyKilled)
@@ -124,8 +124,8 @@ public class GameManager : MonoBehaviour
         {
             inputManager.UpdateInput();
             gameState.timestamp = DateTime.Now.Ticks;
-            gameState.playerPosition = allPlayers[playerName].transform.position.coordinates();
-            //await connection.SendState(gameState);
+            gameState.playerPosition = allPlayers[playerName].transform.position.normalizedCoordinates();
+            await connection.SendState(gameState);
         }
     }
 
@@ -142,7 +142,7 @@ public class GameManager : MonoBehaviour
     {
         if (state.id != playerName)
         {
-            Vector3 position = new Vector3(state.playerPosition[0], state.playerPosition[1], state.playerPosition[2]);
+            Vector3 position = new Vector3(state.playerPosition[0] * Screen.width, state.playerPosition[1] * Screen.height, 0);
             if (allPlayers.ContainsKey(state.id))
             {
                 allPlayers[state.id].transform.position = position;

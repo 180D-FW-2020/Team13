@@ -13,6 +13,7 @@ socketio = SocketIO(app, async_mode='eventlet', logging=True)
 socketio.init_app(app, cors_allowed_origins="*")
 port = int(os.environ.get("PORT", 5000))
 
+#test
 enemy_x_min = -5
 enemy_x_max = 5
 num_enemies = 10
@@ -24,10 +25,13 @@ enemies = {}
 def index():
     return render_template('index.html')
 
+# - received player state, send updates to all clients
 @socketio.on("state")
 def on_state(s):
     emit("remote_state", s, broadcast=True)
 
+# - client connected
+# - update connected player list
 @socketio.on("register")
 def on_register(s):
     data = json.loads(s)
@@ -42,6 +46,8 @@ def on_register(s):
     response["enemyPositions"] = enemies
     emit("initialize", json.dumps(response), broadcast=True)
 
+# - client disconnected
+# - updates the connected player list
 @socketio.on("leave")
 def on_leave(s):
     data = json.loads(s)
@@ -49,6 +55,9 @@ def on_leave(s):
     connected_clients.remove(name)
     print("Removed " + name)
 
+# - client updates that it shot a zombie
+# - server figures out if it is already shot or that it should
+# notify all clients that it is killed (to play animation/update score/etc)
 @socketio.on("shoot_enemy")
 def on_shoot_enemy(s):
     data = json.loads(s)
@@ -60,13 +69,14 @@ def on_shoot_enemy(s):
         print("Enemy " + enemy_id + " killed by " + player)
         del enemies[enemy_id]
 
+# - for testing, doesn't really work
+# - line up all enemies in a row
+# - each enemy has an id, so server can figure out which one is shot
+# - they all overlap
 def init_enemies():
-    for i in range(num_enemies):
+    for i in range(num_enemies): 
         enemies[str(i)] = random.uniform(enemy_x_min, enemy_x_max)
     print("Enemies initialized to: " + json.dumps(enemies))
-
-def get_timestamp():
-    return (datetime.now() - datetime(1, 1, 1)).total_seconds() * 10000000 # C# style ticks
 
 if __name__ == "__main__":
     socketio.run(app, debug=True, host='0.0.0.0', port=port)

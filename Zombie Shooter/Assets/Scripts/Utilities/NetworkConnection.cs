@@ -27,7 +27,7 @@ public class NetworkConnection
 
         client.On("remote_state", response =>
         {
-            PlayerStateReceived.Invoke(response.GetValue<GameState>());
+            PlayerStateReceived.Invoke(JsonConvert.DeserializeObject<GameState>(response.GetValue<string>(), settings));
         });
         client.On("enemy_killed", response =>
         {

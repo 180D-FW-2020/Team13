@@ -18,7 +18,6 @@ public static class Constants
 public class GameState
 {
     public long timestamp;
-    public long serverTimestamp;
     public string id;
     public List<float> playerPosition;
 }

@@ -29,6 +29,10 @@ public static class Vector3Extensions
     }
     public static List<float> coordinates(this Vector3 vector)
     {
-        return new List<float>() { vector.x, vector.y, vector.z };
+        return new List<float>() { vector.x, vector.y };
+    }
+    public static List<float> normalizedCoordinates(this Vector3 vector)
+    {
+        return new List<float>() { vector.x / Screen.width, vector.y / Screen.height};
     }
 }

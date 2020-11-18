@@ -71,6 +71,7 @@ public class GameManager : MonoBehaviour
         uiManager.startButton.onClick.AddListener(WaitForPlayers);
         uiManager.playButton.onClick.AddListener(StartGame);
         uiManager.ShowStart();
+        Health = 100;
     }
 
     public async void WaitForPlayers()

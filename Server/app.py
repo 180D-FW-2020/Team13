@@ -14,8 +14,13 @@ socketio.init_app(app, cors_allowed_origins="*")
 port = int(os.environ.get("PORT", 5000))
 
 #test
-enemy_x_min = -5
-enemy_x_max = 5
+spawn_points = [
+    (-20.0, 0.0), (-16.0, 0.0), (-12.0, 0.0), (-8.0, 0.0), (-4.0, 0.0), (0.0, 0.0), (4.0, 0.0), (8.0, 0.0), (12.0, 0.0), (16.0, 0.0), (20.0, 0.0),
+    (-20.0, 4.0), (-16.0, 4.0), (-12.0, 4.0), (-8.0, 4.0), (-4.0, 4.0), (0.0, 4.0), (4.0, 4.0), (8.0, 4.0), (12.0, 4.0), (16.0, 4.0), (20.0, 4.0),
+    (-20.0, 8.0), (-16.0, 8.0), (-12.0, 8.0), (-8.0, 8.0), (-4.0, 8.0), (0.0, 8.0), (4.0, 8.0), (8.0, 8.0), (12.0, 8.0), (16.0, 8.0), (20.0, 8.0),
+    (-20.0, 12.0), (-16.0, 12.0), (-12.0, 12.0), (-8.0, 12.0), (-4.0, 12.0), (0.0, 12.0), (4.0, 12.0), (8.0, 12.0), (12.0, 12.0), (16.0, 12.0), (20.0, 12.0),
+    (-20.0, 20.0), (-16.0, 20.0), (-12.0, 20.0), (-8.0, 20.0), (-4.0, 20.0), (0.0, 20.0), (4.0, 20.0), (8.0, 20.0), (12.0, 20.0), (16.0, 20.0), (20.0, 20.0)
+]
 num_enemies = 10
 
 connected_clients = []
@@ -74,8 +79,10 @@ def on_shoot_enemy(s):
 # - each enemy has an id, so server can figure out which one is shot
 # - they all overlap
 def init_enemies():
+    spawns = random.sample(spawn_points, num_enemies)
     for i in range(num_enemies): 
-        enemies[str(i)] = random.uniform(enemy_x_min, enemy_x_max)
+        enemies[str(i)] = str(spawns[i][0]) + "," + str(spawns[i][1])
+        # enemies[str(i)] = random.uniform(enemy_x_min, enemy_x_max)
     print("Enemies initialized to: " + json.dumps(enemies))
 
 if __name__ == "__main__":

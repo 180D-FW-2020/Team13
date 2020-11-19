@@ -32,7 +32,8 @@ public class Register
 public class Initialize
 {
     public List<string> playerList;
-    public Dictionary<string, float> enemyPositions;
+    // public Dictionary<string, float> enemyPositions;
+    public Dictionary<string, string> enemyPositions;
 }
 
 [Serializable]

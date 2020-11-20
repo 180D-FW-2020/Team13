@@ -20,7 +20,7 @@ public class EnemyManager : MonoBehaviour
     
     public void Initialize(Dictionary<string, string> positions)
     {
-        if (enemies.Count != 0) //check if already initialized
+        if (enemies.Count == 0) //check if already initialized
         {
             foreach (KeyValuePair<string, string> position in positions)
             {

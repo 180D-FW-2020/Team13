@@ -17,23 +17,21 @@ public class EnemyManager : MonoBehaviour
     {
         gameManager = GetComponent<GameManager>();
     }
-
-    // public void Initialize(Dictionary<string, float> positions)
+    
     public void Initialize(Dictionary<string, string> positions)
     {
-        // foreach (KeyValuePair<string, float> position in positions)
-        foreach (KeyValuePair<string, string> position in positions)
+        if (enemies.Count != 0) //check if already initialized
         {
-            // Debug.Log(position.Value);
-            string[] xz = position.Value.Split(',');
-            // Debug.Log(xz.Length);
-            var spawnedEnemy = Instantiate(enemy, new Vector3(float.Parse(xz[0]), 0, float.Parse(xz[1])), Quaternion.identity, transform);
-            // var spawnedEnemy = Instantiate(enemy, new Vector3(position.Value, 0), Quaternion.identity, transform);
-            var spawnedEnemyController = spawnedEnemy.GetComponent<EnemyController>();
-            spawnedEnemyController.SetTarget(target.transform);
-            spawnedEnemyController.SetGameManager(gameManager);
-            spawnedEnemy.name = position.Key;
-            enemies.Add(spawnedEnemy);
+            foreach (KeyValuePair<string, string> position in positions)
+            {
+                string[] xz = position.Value.Split(',');
+                var spawnedEnemy = Instantiate(enemy, new Vector3(float.Parse(xz[0]), 0, float.Parse(xz[1])), Quaternion.identity, transform);
+                var spawnedEnemyController = spawnedEnemy.GetComponent<EnemyController>();
+                spawnedEnemyController.SetTarget(target.transform);
+                spawnedEnemyController.SetGameManager(gameManager);
+                spawnedEnemy.name = position.Key;
+                enemies.Add(spawnedEnemy);
+            }
         }
     }
 

@@ -86,4 +86,4 @@ def init_enemies():
     print("Enemies initialized to: " + json.dumps(enemies))
 
 if __name__ == "__main__":
-    socketio.run(app, debug=True, host='0.0.0.0', port=port)
+    socketio.run(app, debug=False, host='0.0.0.0', port=port)

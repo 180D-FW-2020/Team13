@@ -46,8 +46,8 @@ public class PlayerController : MonoBehaviour
 
     void Update()
     {
-        if (Input.GetMouseButtonDown(0)) // click to shoot
-            Shoot();
+        //if (Input.GetMouseButtonDown(0)) // click to shoot
+        //    Shoot();
     }
 
     private void Shoot()

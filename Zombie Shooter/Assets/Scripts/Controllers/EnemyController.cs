@@ -67,6 +67,11 @@ public class EnemyController : MonoBehaviour
         }
     }
 
+    public void ChangeHealth(float health)
+    {
+        gameManager.KillEnemy(gameObject);
+    }
+
     public IEnumerator Die()
     {
         state = EnemyState.Dead;

@@ -8,6 +8,7 @@ public class InputManager : MonoBehaviour
     public InputType inputType;
     public float reticleStopVelocityThreshold;
     internal Transform playerReticle;
+    public WeaponController weapon;
 
     [Header("Computer Vision Tracking")]
     public RawImage webcamPreview;
@@ -31,6 +32,7 @@ public class InputManager : MonoBehaviour
     {
         previousPosition = playerReticle.position;
         playerReticle.position = GetReticleInput();
+        weapon.Aim(playerReticle.position);
         velocity = (playerReticle.position - previousPosition).magnitude / Time.fixedDeltaTime;
     }
 

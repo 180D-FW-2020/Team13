@@ -370,36 +370,36 @@ while True:
     accXnorm_array.insert(0,accXnorm);
     accYnorm_array.insert(0,accYnorm);
     accZnorm_array.insert(0,accZnorm);
-    
-    if len(accXnorm_array)>filter_length:
-        temp = 0
-        for index in range(6):
-            temp = temp + accXnorm_array[0]
-        temp = temp/6
-        temp = temp*temp # account for negative values
-        if accXavg!=0 and temp>accXavg*xfactor:
-            outputString += " detect X movement "
-        accXavg = temp
+    if 0:
+        if len(accXnorm_array)>filter_length:
+            temp = 0
+            for index in range(6):
+                temp = temp + accXnorm_array[0]
+            temp = temp/6
+            temp = temp*temp # account for negative values
+            if accXavg!=0 and temp>accXavg*xfactor:
+                outputString += " detect X movement "
+            accXavg = temp
 
-    if len(accYnorm_array)>filter_length:
-        temp = 0
-        for index in range(6):
-            temp = temp + accYnorm_array[0]
-        temp = temp/6
-        temp = temp*temp # account for negative values
-        if accYavg!=0 and temp>accYavg*yfactor:
-            outputString += " detect Y movement "  
-        accYavg = temp
-        
-    if len(accZnorm_array)>filter_length:
-           temp = 0
-           for index in range(6):
-               temp = temp + accZnorm_array[0]
-           temp = temp/6
-           temp = temp*temp # account for negative values
-           if accZavg!=0 and temp>accZavg*zfactor:
-               outputString += " detect Z movement "
-           accZavg = temp
+        if len(accYnorm_array)>filter_length:
+            temp = 0
+            for index in range(6):
+                temp = temp + accYnorm_array[0]
+            temp = temp/6
+            temp = temp*temp # account for negative values
+            if accYavg!=0 and temp>accYavg*yfactor:
+                outputString += " detect Y movement "
+            accYavg = temp
+            
+        if len(accZnorm_array)>filter_length:
+               temp = 0
+               for index in range(6):
+                   temp = temp + accZnorm_array[0]
+               temp = temp/6
+               temp = temp*temp # account for negative values
+               if accZavg!=0 and temp>accZavg*zfactor:
+                   outputString += " detect Z movement "
+               accZavg = temp
 
     #Calculate pitch and roll
     pitch = math.asin(accXnorm)
@@ -436,6 +436,17 @@ while True:
     ##################### END Tilt Compensation ########################
 
 
+   
+    if 1:
+        if (ACCz <= 6000 and ACCz >= 4000):
+            outputString += "U"
+        elif(ACCz >= 10500):
+            outputString += "D"
+        if (ACCx <= -1500):
+            outputString += "L"
+        elif (ACCx>=1500 and ACCx<=3000):
+            outputString += "R"
+        
     if 0:
         outputString += "\t# ACCx %5.2f ACCy %5.2f ACCz %5.2f # " % (ACCx, ACCy, ACCz)
 

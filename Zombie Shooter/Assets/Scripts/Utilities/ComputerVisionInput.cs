@@ -80,9 +80,4 @@ public class ComputerVisionInput
         if (previewEnabled) webcamPreview.texture = OpenCvSharp.Unity.MatToTexture(frame);
         return new Vector2(center.X, center.Y);
     }
-
-    private void Track()
-    {
-        
-    }
 }

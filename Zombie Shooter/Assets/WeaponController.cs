@@ -18,24 +18,31 @@ public class WeaponController : MonoBehaviour
         SwitchWeapon(leftWeapon);
     }
 
-    public void Update()
-    {
-        if (Input.GetKeyDown("left"))
-            SwitchWeapon(leftWeapon);
-        else if (Input.GetKeyDown("right"))
-            SwitchWeapon(rightWeapon);
-        else if (Input.GetKeyDown("up"))
-            SwitchWeapon(upWeapon);
-        else if (Input.GetKeyDown("down"))
-            SwitchWeapon(downWeapon);
-    }
-
     public void Aim(Vector3 reticlePosition)
     {
         reticlePosition.z = referenceRadius;
         var pos = Camera.main.ScreenToWorldPoint(reticlePosition);
         Debug.Log(pos);
         currentWeapon.transform.LookAt(pos, Vector3.up);
+    }
+
+    public void SwitchWeapon(GestureType direction)
+    {
+        switch (direction)
+        {
+            case GestureType.Left:
+                SwitchWeapon(leftWeapon);
+                break;
+            case GestureType.Right:
+                SwitchWeapon(rightWeapon);
+                break;
+            case GestureType.Up:
+                SwitchWeapon(upWeapon);
+                break;
+            case GestureType.Down:
+                SwitchWeapon(downWeapon);
+                break;
+        }
     }
 
     public void SwitchWeapon(Weapon newWeapon)

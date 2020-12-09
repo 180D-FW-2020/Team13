@@ -16,11 +16,12 @@ public class InputManager : MonoBehaviour
     public float[] greenLowerHSV = new float[3];
     public float[] greenUpperHSV = new float[3];
 
-    [Header("Serial Input from RPi")]
-    public string serialPortName;
+    [Header("Raspberry Pi Input")]
+    public string ipAddress = "raspberrypi.local";
+    public int port;
 
     private ComputerVisionInput cvInput;
-    private SerialInput serialInput;
+    private RaspberryPiInput rpiInput;
 
     private Vector3 previousPosition;
     internal float velocity = 0;
@@ -28,21 +29,22 @@ public class InputManager : MonoBehaviour
     public void Start()
     {
         webcamPreview.enabled = enablePreview;
-        serialInput = new SerialInput(serialPortName, GestureReceived);
+        rpiInput = new RaspberryPiInput(ipAddress, port);
         if (inputType == InputType.CV)
             cvInput = new ComputerVisionInput(WebCamTexture.devices[0], greenLowerHSV, greenUpperHSV, enablePreview, webcamPreview);
     }
 
     public void UpdateInput()
     {
-        //manual weapon switching
-        if (Input.GetKeyDown("left"))
+        //weapon switching
+        GestureType gesture = rpiInput.GetGesture();
+        if (Input.GetKeyDown("left") || gesture == GestureType.Left)
             weapon.SwitchWeapon(GestureType.Left);
-        else if (Input.GetKeyDown("right"))
+        else if (Input.GetKeyDown("right") || gesture == GestureType.Right)
             weapon.SwitchWeapon(GestureType.Right);
-        else if (Input.GetKeyDown("up"))
+        else if (Input.GetKeyDown("up") || gesture == GestureType.Up)
             weapon.SwitchWeapon(GestureType.Up);
-        else if (Input.GetKeyDown("down"))
+        else if (Input.GetKeyDown("down") || gesture == GestureType.Down)
             weapon.SwitchWeapon(GestureType.Down);
 
         previousPosition = playerReticle.position;
@@ -59,11 +61,6 @@ public class InputManager : MonoBehaviour
             return cvInput.Update();
     }
 
-    public void GestureReceived(GestureType gesture)
-    {
-        Debug.Log("Shit works");
-    }
-
     public bool IsReticleStopped()
     {
         return velocity < reticleStopVelocityThreshold;
@@ -71,6 +68,6 @@ public class InputManager : MonoBehaviour
 
     public void OnApplicationQuit()
     {
-        serialInput.Close();
+        rpiInput.Close();
     }
 }

@@ -23,7 +23,14 @@ import math
 import IMU
 import datetime
 import os
+import socket
 
+s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+s.bind(('', 5000))
+s.listen(1)
+print("Waiting for connection")
+connection, client_address = s.accept()
+print("Connected")
 
 RAD_TO_DEG = 57.29578
 M_PI = 3.14159265358979323846
@@ -440,12 +447,16 @@ while True:
     if 1:
         if (ACCz <= 6000 and ACCz >= 4000):
             outputString += "U"
+            s.send("Up")
         elif(ACCz >= 10500):
             outputString += "D"
+            s.send("Down")
         if (ACCx <= -1500):
             outputString += "L"
+            s.send("Left")
         elif (ACCx>=1500 and ACCx<=3000):
             outputString += "R"
+            s.send("Right")
         
     if 0:
         outputString += "\t# ACCx %5.2f ACCy %5.2f ACCz %5.2f # " % (ACCx, ACCy, ACCz)
@@ -480,3 +491,4 @@ while True:
     #slow program down a bit, makes the output more readable
     time.sleep(0.03)
 
+s.close()

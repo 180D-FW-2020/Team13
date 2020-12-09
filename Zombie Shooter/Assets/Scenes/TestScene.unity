@@ -3371,6 +3371,8 @@ MonoBehaviour:
   - 70
   - 255
   - 255
+  ipAddress: 10.0.0.33
+  port: 5000
 --- !u!114 &1988368591
 MonoBehaviour:
   m_ObjectHideFlags: 0

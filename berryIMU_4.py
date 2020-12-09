@@ -447,16 +447,16 @@ while True:
     if 1:
         if (ACCz <= 6000 and ACCz >= 4000):
             outputString += "U"
-            s.send("Up")
+            connection.send(b"U")
         elif(ACCz >= 10500):
             outputString += "D"
-            s.send("Down")
+            connection.send(b'D')
         if (ACCx <= -1500):
             outputString += "L"
-            s.send("Left")
+            connection.send(b'L')
         elif (ACCx>=1500 and ACCx<=3000):
             outputString += "R"
-            s.send("Right")
+            connection.send(b'R')
         
     if 0:
         outputString += "\t# ACCx %5.2f ACCy %5.2f ACCz %5.2f # " % (ACCx, ACCy, ACCz)

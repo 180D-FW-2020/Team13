@@ -9,10 +9,10 @@ using System.Text;
 
 public enum GestureType
 {
-    Left = 0,
-    Right = 1,
-    Up = 2,
-    Down = 3,
+    L = 0,
+    R = 1,
+    U = 2,
+    D = 3,
     None = 4,
 }
 
@@ -31,7 +31,7 @@ public class RaspberryPiInput
     {
         if (client.Available > 0)
         {
-            byte[] buffer = new byte[8];
+            byte[] buffer = new byte[1];
             client.Receive(buffer);
             string gesture = Encoding.UTF8.GetString(buffer);
             try

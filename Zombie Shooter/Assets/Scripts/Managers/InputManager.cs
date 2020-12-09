@@ -17,7 +17,7 @@ public class InputManager : MonoBehaviour
     public float[] greenUpperHSV = new float[3];
 
     [Header("Raspberry Pi Input")]
-    public string ipAddress = "raspberrypi.local";
+    public string ipAddress;
     public int port;
 
     private ComputerVisionInput cvInput;
@@ -38,14 +38,14 @@ public class InputManager : MonoBehaviour
     {
         //weapon switching
         GestureType gesture = rpiInput.GetGesture();
-        if (Input.GetKeyDown("left") || gesture == GestureType.Left)
-            weapon.SwitchWeapon(GestureType.Left);
-        else if (Input.GetKeyDown("right") || gesture == GestureType.Right)
-            weapon.SwitchWeapon(GestureType.Right);
-        else if (Input.GetKeyDown("up") || gesture == GestureType.Up)
-            weapon.SwitchWeapon(GestureType.Up);
-        else if (Input.GetKeyDown("down") || gesture == GestureType.Down)
-            weapon.SwitchWeapon(GestureType.Down);
+        if (Input.GetKeyDown("left") || gesture == GestureType.L)
+            weapon.SwitchWeapon(GestureType.L);
+        else if (Input.GetKeyDown("right") || gesture == GestureType.R)
+            weapon.SwitchWeapon(GestureType.R);
+        else if (Input.GetKeyDown("up") || gesture == GestureType.U)
+            weapon.SwitchWeapon(GestureType.U);
+        else if (Input.GetKeyDown("down") || gesture == GestureType.D)
+            weapon.SwitchWeapon(GestureType.D);
 
         previousPosition = playerReticle.position;
         playerReticle.position = GetReticleInput();
@@ -68,6 +68,6 @@ public class InputManager : MonoBehaviour
 
     public void OnApplicationQuit()
     {
-        rpiInput.Close();
+        rpiInput?.Close();
     }
 }

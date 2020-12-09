@@ -30,16 +30,16 @@ public class WeaponController : MonoBehaviour
     {
         switch (direction)
         {
-            case GestureType.Left:
+            case GestureType.L:
                 SwitchWeapon(leftWeapon);
                 break;
-            case GestureType.Right:
+            case GestureType.R:
                 SwitchWeapon(rightWeapon);
                 break;
-            case GestureType.Up:
+            case GestureType.U:
                 SwitchWeapon(upWeapon);
                 break;
-            case GestureType.Down:
+            case GestureType.D:
                 SwitchWeapon(downWeapon);
                 break;
         }

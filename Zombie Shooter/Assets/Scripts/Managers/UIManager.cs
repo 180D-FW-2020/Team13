@@ -8,9 +8,10 @@ using UnityEngine.SceneManagement;
 public enum GameStatus
 {
     Start = 0,
-    Waiting = 1,
-    Playing = 2,
-    Paused = 3
+    Connecting = 1,
+    Waiting = 2,
+    Playing = 3,
+    Paused = 4
 }
 
 public class UIManager : MonoBehaviour
@@ -19,6 +20,9 @@ public class UIManager : MonoBehaviour
     public GameObject startScreen;
     public Button startButton;
     public InputField playerName;
+
+    [Header("Connecting UI")]
+    public GameObject connectingScreen;
 
     [Header("Waiting Room UI")]
     public GameObject waitingScreen;
@@ -44,6 +48,7 @@ public class UIManager : MonoBehaviour
     public void SetScreensActive(GameStatus gameStatus)
     {
         startScreen.SetActive(gameStatus == GameStatus.Start);
+        connectingScreen.SetActive(gameStatus == GameStatus.Connecting);
         inGameScreen.SetActive(gameStatus == GameStatus.Playing);
         waitingScreen.SetActive(gameStatus == GameStatus.Waiting);
         pauseScreen.SetActive(gameStatus == GameStatus.Paused);
@@ -61,6 +66,11 @@ public class UIManager : MonoBehaviour
     public void EnterWaitingRoom()
     {
         SetScreensActive(GameStatus.Waiting);
+    }
+
+    public void ShowConnecting()
+    {
+        SetScreensActive(GameStatus.Connecting);
     }
 
     public void StartGame()
@@ -82,7 +92,6 @@ public class UIManager : MonoBehaviour
         playerListText.text = string.Join("\n", list);
     }
     #endregion
-
 
     #region In Game UI
     public void UpdateHealth(int value) //between 0 and 100

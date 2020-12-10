@@ -42,15 +42,3 @@ public class EnemyKilled
     public string id;
     public string enemyId;
 }
-
-public enum MouseControlType
-{
-    Reticle = 1,
-    Camera = 2
-}
-
-public enum InputType
-{
-    Mouse = 1,
-    CV = 2
-}

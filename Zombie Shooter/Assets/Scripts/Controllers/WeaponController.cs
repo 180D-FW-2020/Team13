@@ -22,8 +22,12 @@ public class WeaponController : MonoBehaviour
     {
         reticlePosition.z = referenceRadius;
         var pos = Camera.main.ScreenToWorldPoint(reticlePosition);
-        Debug.Log(pos);
         currentWeapon.transform.LookAt(pos, Vector3.up);
+    }
+
+    public void Shoot()
+    {
+        
     }
 
     public void SwitchWeapon(GestureType direction)

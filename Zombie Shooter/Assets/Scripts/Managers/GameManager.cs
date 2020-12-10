@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using System.Xml.Serialization;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -71,7 +72,7 @@ public class GameManager : MonoBehaviour
         connection.InitializeMessageReceived.AddListener(InitializeMessageReceived);
         connection.EnemyKilledMessageReceived.AddListener(EnemyKilledMessageReceived);
 
-        uiManager.startButton.onClick.AddListener(WaitForPlayers);
+        uiManager.startButton.onClick.AddListener(Connect);
         uiManager.playButton.onClick.AddListener(StartGame);
         uiManager.resumeButton.onClick.AddListener(ResumeGame);
         uiManager.exitButton.onClick.AddListener(ReloadGame);
@@ -101,13 +102,20 @@ public class GameManager : MonoBehaviour
         Debug.Log("Game Started");
     }
 
-    public async void WaitForPlayers()
+    public async void Connect()
     {
-        gameStatus = GameStatus.Waiting;
-        uiManager.EnterWaitingRoom();
+        gameStatus = GameStatus.Connecting;
+        uiManager.ShowConnecting();
         playerName = uiManager.GetPlayerName();
         gameState.id = playerName;
         await connection.Connect(playerName);
+        WaitForPlayers();
+    }
+
+    public void WaitForPlayers()
+    {
+        gameStatus = GameStatus.Waiting;
+        uiManager.EnterWaitingRoom();
 
         var player = Instantiate(crosshair, playersParent);
         player.GetComponent<Text>().text = playerName;
@@ -207,6 +215,8 @@ public class GameManager : MonoBehaviour
             var action = pendingActions.Dequeue();
             action();
         }
+        if (GameStarted)
+            inputManager.UpdateInput();
     }
 
     public async void KillEnemy(GameObject enemy)

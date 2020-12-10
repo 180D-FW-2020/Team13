@@ -11,13 +11,12 @@ public class PlayerController : MonoBehaviour
     public InputManager inputManager;
 
     public bool autoShoot;
-    public float autoShootInterval;
+    public float shootInterval;
 
     private Ray aimingRay;
     private RaycastHit hit;
 
     private Camera playerCamera;
-    private bool gameStarted = false;
 
     private void Awake()
     {
@@ -30,24 +29,13 @@ public class PlayerController : MonoBehaviour
             StartCoroutine(AutoShoot());
     }
 
-    public void StartGame()
-    {
-        gameStarted = true;
-    }
-
     private IEnumerator AutoShoot()
     {
         while (true)
         {
             if (inputManager.IsReticleStopped()) Shoot();
-            yield return new WaitForSeconds(autoShootInterval);
+            yield return new WaitForSeconds(shootInterval);
         }
-    }
-
-    void Update()
-    {
-        //if (Input.GetMouseButtonDown(0)) // click to shoot
-        //    Shoot();
     }
 
     private void Shoot()

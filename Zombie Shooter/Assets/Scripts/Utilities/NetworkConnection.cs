@@ -51,17 +51,20 @@ public class NetworkConnection
 
     public async Task SendState(GameState state)
     {
-        await client?.EmitAsync("state", JsonConvert.SerializeObject(state));
+        if (client.Connected)
+            await client?.EmitAsync("state", JsonConvert.SerializeObject(state));
     }
 
     public async Task SendEnemyShoot(EnemyKilled enemyKilled)
     {
-        await client?.EmitAsync("shoot_enemy", JsonConvert.SerializeObject(enemyKilled));
+        if (client.Connected)
+            await client?.EmitAsync("shoot_enemy", JsonConvert.SerializeObject(enemyKilled));
     }
 
     public async Task SendLeave(Register req)
     {
-        await client?.EmitAsync("leave", JsonConvert.SerializeObject(req));
+        if (client.Connected)
+            await client?.EmitAsync("leave", JsonConvert.SerializeObject(req));
     }
 
     public async Task Stop(string playerName)

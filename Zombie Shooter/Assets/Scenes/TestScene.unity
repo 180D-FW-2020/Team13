@@ -3617,6 +3617,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   crosshair: {fileID: 4750211024576252944, guid: 963be25848127f14d8f0e66c45db6417, type: 3}
   playersParent: {fileID: 74005631}
+  playerWeapon: {fileID: 1041269402}
   healthLossIncrement: 5
   hitScore: 10
   killScore: 100

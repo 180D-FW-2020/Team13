@@ -1,4 +1,4 @@
-﻿using System.Collections;
+﻿using System.Collections.Specialized;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -34,7 +34,7 @@ public class UIManager : MonoBehaviour
     public Slider healthBar;
     public GameObject scoreCard;
     public Text latencyText;
-    private Dictionary<string, Text> playerScores = new Dictionary<string, Text>();
+    private OrderedDictionary playerScores = new OrderedDictionary();
 
     [Header("Pause Menu UI")]
     public GameObject pauseScreen;
@@ -108,7 +108,10 @@ public class UIManager : MonoBehaviour
         if (playerScores.Count == 0)
             rectTransform.anchoredPosition = new Vector3(-padding, -padding, 0);
         else
-            rectTransform.anchoredPosition = new Vector3(playerScores.Last().Value.rectTransform.position.x - padding, -padding, 0);
+        {
+            RectTransform prev = ((Text)playerScores[playerScores.Count - 1]).rectTransform;
+            rectTransform.anchoredPosition = new Vector3(prev.anchoredPosition.x - prev.rect.width - padding, -padding, 0);
+        }
         Text scoreText = newPlayerCard.GetComponentsInChildren<Text>().Where(text => text.gameObject.name == "Score").FirstOrDefault();
         Text playerNameText = newPlayerCard.GetComponentsInChildren<Text>().Where(text => text.gameObject.name == "Name").FirstOrDefault();
         playerNameText.text = playerName;
@@ -117,7 +120,9 @@ public class UIManager : MonoBehaviour
 
     public void UpdateScore(string playerName, int newScore)
     {
-        playerScores[playerName].text = (int.Parse(playerScores[playerName].text) + newScore).ToString();
+        if (!playerScores.Contains(playerName)) return;
+        Text score = (Text)playerScores[playerName];
+        score.text = (int.Parse(score.text) + newScore).ToString();
     }
 
     public void UpdateAllScores(int newScore)

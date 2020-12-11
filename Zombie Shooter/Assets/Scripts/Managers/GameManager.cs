@@ -14,6 +14,7 @@ public class GameManager : MonoBehaviour
 {
     public GameObject crosshair;
     public Transform playersParent;
+    public GameObject playerWeapon;
 
     [Header("Game Scoring Constants")]
     public int healthLossIncrement;
@@ -56,11 +57,13 @@ public class GameManager : MonoBehaviour
 
     void Start()
     {
+        playerWeapon.SetActive(false);
+
         connection = new NetworkConnection();
         connection.PlayerStateReceived.AddListener(PlayerStateReceived);
         connection.InitializeMessageReceived.AddListener(InitializeMessageReceived);
         connection.EnemyKilledMessageReceived.AddListener(EnemyKilledMessageReceived);
-        connection.StartReceived.AddListener(StartGame);
+        connection.StartReceived.AddListener(StartReceived);
 
         uiManager.startButton.onClick.AddListener(Connect);
         uiManager.playButton.onClick.AddListener(SendStart);
@@ -82,13 +85,10 @@ public class GameManager : MonoBehaviour
     }
 
     #region Game Events
-    public async void SendStart()
-    {
-        await connection.SendStart();
-    }
 
     public void StartGame()
     {
+        playerWeapon.SetActive(true);
         gameStatus = GameStatus.Playing;
         GameStarted = true;
         uiManager.UpdateAllScores(0);
@@ -162,6 +162,16 @@ public class GameManager : MonoBehaviour
     #endregion
 
     #region Network callbacks
+    public async void SendStart()
+    {
+        await connection.SendStart();
+    }
+
+    private void StartReceived()
+    {
+        pendingActions.Enqueue(() => StartGame());
+    }
+
     private void PlayerStateReceived(GameState state)
     {
         pendingActions.Enqueue(() => UpdateRemoteState(state));

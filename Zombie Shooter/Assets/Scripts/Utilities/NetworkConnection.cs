@@ -9,10 +9,10 @@ using Newtonsoft.Json;
 
 public class NetworkConnection
 {
-    public UnityEvent StartReceived;
-    public UnityEvent<GameState> PlayerStateReceived;
-    public UnityEvent<Initialize> InitializeMessageReceived;
-    public UnityEvent<EnemyKilled> EnemyKilledMessageReceived;
+    public UnityEvent StartReceived = new UnityEvent();
+    public UnityEvent<GameState> PlayerStateReceived = new UnityEvent<GameState>();
+    public UnityEvent<Initialize> InitializeMessageReceived = new UnityEvent<Initialize>();
+    public UnityEvent<EnemyKilled> EnemyKilledMessageReceived = new UnityEvent<EnemyKilled>();
     private SocketIO client;
 
     public NetworkConnection()

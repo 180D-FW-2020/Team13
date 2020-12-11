@@ -389,7 +389,7 @@ MonoBehaviour:
   ammoCapacity: 70
   shotPerRound: 1
   reloadTime: 2
-  showCurrentAmmo: 1
+  showCurrentAmmo: 0
   reloadAutomatically: 1
   accuracy: 80
   accuracyDropPerShot: 8

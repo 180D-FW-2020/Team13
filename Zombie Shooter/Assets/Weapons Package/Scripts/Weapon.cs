@@ -430,7 +430,7 @@ public class Weapon : MonoBehaviour
 	// Determines when the AI can be firing
 	public void AIFiring()
 	{
-
+		canFire = true;
 		// Fire if this is a raycast type weapon
 		if (type == WeaponType.Raycast)
 		{
@@ -1125,6 +1125,13 @@ public class Weapon : MonoBehaviour
 
         return hitMesh;
     }
+
+	public int GetCurrentAmmo()
+    {
+		if (type == WeaponType.Beam)
+			return (int)((maxBeamHeat * 100) - (beamHeat * 100));
+		return currentAmmo;
+	}
 }
 
 

@@ -27,8 +27,15 @@ public class WeaponController : MonoBehaviour
 
     public void Shoot()
     {
-        
+        Debug.Log("Shoot");
+        currentWeapon?.RemoteFire();
     }
+
+    public int GetCurrentAmmo()
+    {
+        return currentWeapon.GetCurrentAmmo();
+    }
+
 
     public void SwitchWeapon(GestureType direction)
     {

@@ -89,9 +89,10 @@ public class InputManager : MonoBehaviour
         return gestureType;
     }
 
-    public bool IsReticleStopped()
+    public void ShootIfStopped()
     {
-        return velocity < reticleStopVelocityThreshold;
+        if (velocity < reticleStopVelocityThreshold) //reticle stopped 
+            weaponController.Shoot();
     }
 
     public void OnApplicationQuit()

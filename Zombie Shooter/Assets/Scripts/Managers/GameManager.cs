@@ -14,7 +14,8 @@ public class GameManager : MonoBehaviour
 {
     public GameObject crosshair;
     public Transform playersParent;
-    public GameObject playerWeapon;
+    public PlayerController playerController;
+    public GameObject playerWeaponObject;
 
     [Header("Game Scoring Constants")]
     public int healthLossIncrement;
@@ -48,6 +49,10 @@ public class GameManager : MonoBehaviour
     private GameStatus gameStatus = GameStatus.Start;
     internal bool GameStarted = false;
 
+    private int currentAmmo;
+    private int currentHeat;
+    private int maxHeat;
+
     public void Awake()
     {
         enemyManager = GetComponent<EnemyManager>();
@@ -57,7 +62,7 @@ public class GameManager : MonoBehaviour
 
     void Start()
     {
-        playerWeapon.SetActive(false);
+        playerWeaponObject.SetActive(false);
 
         connection = new NetworkConnection();
         connection.PlayerStateReceived.AddListener(PlayerStateReceived);
@@ -88,7 +93,8 @@ public class GameManager : MonoBehaviour
 
     public void StartGame()
     {
-        playerWeapon.SetActive(true);
+        playerWeaponObject.SetActive(true);
+        playerController.StartGame();
         gameStatus = GameStatus.Playing;
         GameStarted = true;
         uiManager.UpdateAllScores(0);
@@ -124,14 +130,14 @@ public class GameManager : MonoBehaviour
     {
         gameStatus = GameStatus.Paused;
         uiManager.SetScreensActive(GameStatus.Paused);
-        Time.timeScale = 0;
+        playerWeaponObject.SetActive(false);
     }
 
     public void ResumeGame()
     {
         gameStatus = GameStatus.Playing;
         uiManager.SetScreensActive(GameStatus.Playing);
-        Time.timeScale = 1;
+        playerWeaponObject.SetActive(true);
     }
 
     public void ReloadGame()
@@ -234,12 +240,13 @@ public class GameManager : MonoBehaviour
     private void Update()
     {
         while (pendingActions.Count > 0)
-        {
-            var action = pendingActions.Dequeue();
-            action();
-        }
+            pendingActions.Dequeue()();
+
         if (GameStarted)
+        {
             inputManager.UpdateInput();
+            uiManager.UpdateAmmo(inputManager.weaponController.GetCurrentAmmo());
+        }
     }
 
     #region Speech

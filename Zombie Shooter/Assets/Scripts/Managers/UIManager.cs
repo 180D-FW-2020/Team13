@@ -31,6 +31,7 @@ public class UIManager : MonoBehaviour
 
     [Header("In Game UI")]
     public GameObject inGameScreen;
+    public Text currentAmmo;
     public Slider healthBar;
     public GameObject scoreCard;
     public Text latencyText;
@@ -95,6 +96,10 @@ public class UIManager : MonoBehaviour
     #endregion
 
     #region In Game UI
+    public void UpdateAmmo(int value)
+    {
+        currentAmmo.text = $"Ammo: {value}";
+    }
     public void UpdateHealth(int value) //between 0 and 100
     {
         healthBar.value = value;

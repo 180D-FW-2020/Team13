@@ -32,8 +32,8 @@ def index():
 
 # - a player started the game
 @socketio.on("start")
-def on_start(s):
-    emit("start", s, broadcast=True)
+def on_start():
+    emit("start", broadcast=True)
 
 # - received player state, send updates to all clients
 @socketio.on("state")

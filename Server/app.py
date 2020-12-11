@@ -30,6 +30,11 @@ enemies = {}
 def index():
     return render_template('index.html')
 
+# - a player started the game
+@socketio.on("start")
+def on_start(s):
+    emit("start", s, broadcast=True)
+
 # - received player state, send updates to all clients
 @socketio.on("state")
 def on_state(s):

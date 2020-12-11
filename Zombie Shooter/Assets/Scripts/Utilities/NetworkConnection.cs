@@ -9,9 +9,10 @@ using Newtonsoft.Json;
 
 public class NetworkConnection
 {
-    public UnityEvent<GameState> PlayerStateReceived = new UnityEvent<GameState>();
-    public UnityEvent<Initialize> InitializeMessageReceived = new UnityEvent<Initialize>();
-    public UnityEvent<EnemyKilled> EnemyKilledMessageReceived = new UnityEvent<EnemyKilled>();
+    public UnityEvent StartReceived;
+    public UnityEvent<GameState> PlayerStateReceived;
+    public UnityEvent<Initialize> InitializeMessageReceived;
+    public UnityEvent<EnemyKilled> EnemyKilledMessageReceived;
     private SocketIO client;
 
     public NetworkConnection()
@@ -25,6 +26,10 @@ public class NetworkConnection
             TypeNameHandling = TypeNameHandling.All
         };
 
+        client.On("start", response =>
+        {
+            StartReceived.Invoke();
+        });
         client.On("remote_state", response =>
         {
             PlayerStateReceived.Invoke(JsonConvert.DeserializeObject<GameState>(response.GetValue<string>(), settings));
@@ -47,6 +52,12 @@ public class NetworkConnection
             id = playerName
         };
         await client?.EmitAsync("register", JsonConvert.SerializeObject(register));
+    }
+
+    public async Task SendStart()
+    {
+        if (client.Connected)
+            await client?.EmitAsync("start");
     }
 
     public async Task SendState(GameState state)

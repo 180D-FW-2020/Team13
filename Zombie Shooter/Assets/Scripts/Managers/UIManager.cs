@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
-
+using System.Linq;
 
 public enum GameStatus
 {
@@ -32,8 +32,9 @@ public class UIManager : MonoBehaviour
     [Header("In Game UI")]
     public GameObject inGameScreen;
     public Slider healthBar;
-    public Text scoreText;
+    public GameObject scoreCard;
     public Text latencyText;
+    private Dictionary<string, Text> playerScores = new Dictionary<string, Text>();
 
     [Header("Pause Menu UI")]
     public GameObject pauseScreen;
@@ -56,6 +57,7 @@ public class UIManager : MonoBehaviour
 
     private void Start()
     {
+        playerName.characterLimit = Constants.MAX_NAME_LENGTH;
         SetScreensActive(GameStatus.Start);
     }
 
@@ -75,7 +77,6 @@ public class UIManager : MonoBehaviour
 
     public void StartGame()
     {
-        scoreText.text = "Score: 0";
         SetScreensActive(GameStatus.Playing);
     }
 
@@ -99,9 +100,30 @@ public class UIManager : MonoBehaviour
         healthBar.value = value;
     }
 
-    public void UpdateScore(int newScore)
+    public void AddPlayer(string playerName)
     {
-        scoreText.text = "Score: " + newScore.ToString();
+        int padding = 5;
+        GameObject newPlayerCard = Instantiate(scoreCard, inGameScreen.transform);
+        RectTransform rectTransform = newPlayerCard.GetComponent<RectTransform>();
+        if (playerScores.Count == 0)
+            rectTransform.anchoredPosition = new Vector3(-padding, -padding, 0);
+        else
+            rectTransform.anchoredPosition = new Vector3(playerScores.Last().Value.rectTransform.position.x - padding, -padding, 0);
+        Text scoreText = newPlayerCard.GetComponentsInChildren<Text>().Where(text => text.gameObject.name == "Score").FirstOrDefault();
+        Text playerNameText = newPlayerCard.GetComponentsInChildren<Text>().Where(text => text.gameObject.name == "Name").FirstOrDefault();
+        playerNameText.text = playerName;
+        playerScores.Add(playerName, scoreText);
+    }
+
+    public void UpdateScore(string playerName, int newScore)
+    {
+        playerScores[playerName].text = (int.Parse(playerScores[playerName].text) + newScore).ToString();
+    }
+
+    public void UpdateAllScores(int newScore)
+    {
+        foreach (string player in playerScores.Keys)
+            UpdateScore(player, newScore);
     }
 
     public void UpdateLatency(double latency)

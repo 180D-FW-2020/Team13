@@ -21,7 +21,6 @@ public class GameManager : MonoBehaviour
     public int killScore;
 
     private int health;
-    private int score;
     public int Health
     {
         get { return health; }
@@ -29,16 +28,6 @@ public class GameManager : MonoBehaviour
         {
             health = value;
             uiManager?.UpdateHealth(health);
-        }
-    }
-
-    public int Score
-    {
-        get { return score; }
-        set
-        {
-            score = value;
-            uiManager?.UpdateScore(score);
         }
     }
 
@@ -71,9 +60,10 @@ public class GameManager : MonoBehaviour
         connection.PlayerStateReceived.AddListener(PlayerStateReceived);
         connection.InitializeMessageReceived.AddListener(InitializeMessageReceived);
         connection.EnemyKilledMessageReceived.AddListener(EnemyKilledMessageReceived);
+        connection.StartReceived.AddListener(StartGame);
 
         uiManager.startButton.onClick.AddListener(Connect);
-        uiManager.playButton.onClick.AddListener(StartGame);
+        uiManager.playButton.onClick.AddListener(SendStart);
         uiManager.resumeButton.onClick.AddListener(ResumeGame);
         uiManager.exitButton.onClick.AddListener(ReloadGame);
         uiManager.ShowStart();
@@ -92,11 +82,16 @@ public class GameManager : MonoBehaviour
     }
 
     #region Game Events
+    public async void SendStart()
+    {
+        await connection.SendStart();
+    }
+
     public void StartGame()
     {
         gameStatus = GameStatus.Playing;
         GameStarted = true;
-        uiManager.UpdateScore(0);
+        uiManager.UpdateAllScores(0);
         uiManager.StartGame();
         Health = 100;
         Debug.Log("Game Started");
@@ -121,6 +116,7 @@ public class GameManager : MonoBehaviour
         player.GetComponent<Text>().text = playerName;
         player.name = playerName;
         allPlayers.Add(playerName, player);
+        uiManager.AddPlayer(playerName);
         inputManager.playerReticle = player.transform;
     }
 
@@ -144,6 +140,25 @@ public class GameManager : MonoBehaviour
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
         Time.timeScale = 1;
     }
+    public async void KillEnemy(GameObject enemy)
+    {
+        EnemyKilled shotEnemy = new EnemyKilled
+        {
+            enemyId = enemy.name,
+            id = playerName
+        };
+        await connection.SendEnemyShoot(shotEnemy);
+    }
+
+    public void AttackPlayer()
+    {
+        Health -= healthLossIncrement;
+        if (Health <= 0)
+        {
+            Debug.Log("YOU DEAD AF");
+        }
+    }
+
     #endregion
 
     #region Network callbacks
@@ -161,10 +176,7 @@ public class GameManager : MonoBehaviour
     {
         pendingActions.Enqueue(() =>
         {
-            if (enemyKilled.id == playerName)
-            {
-                Score += killScore;
-            }
+            uiManager.UpdateScore(enemyKilled.id, killScore);
             enemyManager.KillEnemy(enemyKilled.enemyId);
         });
     }
@@ -185,6 +197,7 @@ public class GameManager : MonoBehaviour
                 newPlayer.transform.position = position;
                 newPlayer.name = state.id;
                 allPlayers.Add(state.id, newPlayer);
+                uiManager.AddPlayer(state.id);
             }
         }
         else // measure latency
@@ -217,24 +230,6 @@ public class GameManager : MonoBehaviour
         }
         if (GameStarted)
             inputManager.UpdateInput();
-    }
-
-    public async void KillEnemy(GameObject enemy)
-    {
-        EnemyKilled shotEnemy = new EnemyKilled
-        {
-            enemyId = enemy.name,
-            id = playerName
-        };
-        await connection.SendEnemyShoot(shotEnemy);
-    }
-
-    public void AttackPlayer()
-    {
-        Health -= healthLossIncrement;
-        if (Health <= 0) {
-            Debug.Log("YOU DEAD AF");
-        }
     }
 
     #region Speech

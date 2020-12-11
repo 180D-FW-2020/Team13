@@ -12,6 +12,8 @@ public static class Constants
 
     public const int CAMERA_INPUT_WIDTH = 640;
     public const int CAMERA_INPUT_FPS = 20;
+
+    public const int MAX_NAME_LENGTH = 10;
 }
 
 [Serializable]

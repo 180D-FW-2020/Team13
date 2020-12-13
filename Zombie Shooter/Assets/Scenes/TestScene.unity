@@ -951,8 +951,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 800, y: 450}
+  m_AnchoredPosition: {x: 0, y: 0.00021744}
+  m_SizeDelta: {x: 800, y: 450.0005}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &660047381
 GameObject:
@@ -2016,7 +2016,7 @@ RectTransform:
   m_GameObject: {fileID: 1028919569}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 0.4845, y: 0.4845, z: 0.4845}
   m_Children:
   - {fileID: 1217430770}
   - {fileID: 1797736415}
@@ -2025,7 +2025,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 23, y: -76}
+  m_AnchoredPosition: {x: 10, y: -71}
   m_SizeDelta: {x: 90, y: 50}
   m_Pivot: {x: 0, y: 1}
 --- !u!1 &1041269402
@@ -3744,7 +3744,7 @@ MonoBehaviour:
   reticleStopVelocityThreshold: 20
   weaponController: {fileID: 1041269404}
   webcamPreview: {fileID: 1306310098}
-  enablePreview: 0
+  enablePreview: 1
   greenLowerHSV:
   - 30
   - 80

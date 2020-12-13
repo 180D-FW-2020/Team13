@@ -77,16 +77,21 @@ public class GameManager : MonoBehaviour
         uiManager.ShowStart();
         Health = 100;
 
-        //sphinx = FindObjectOfType<SphinxExample>();
-        //sphinx.OnSpeechRecognized += UpdateSpeechUI;
+        StartCoroutine(initMicrophone());
+    }
 
-        //uiManager.UpdateMicIndicator(new Color(0, 1, 0, 1));
-        //while (sphinx.mic == null)
-        //{
-        //    yield return null;
-        //}
-        //Debug.Log($"<color=green><b>Connected to: {sphinx.mic.Name}</b></color>");
-        //uiManager.UpdateMicIndicator(new Color(1, 0, 0, 1));
+    private IEnumerator initMicrophone()
+    {
+        sphinx = FindObjectOfType<SphinxExample>();
+        sphinx.OnSpeechRecognized += UpdateSpeechUI;
+
+        uiManager.UpdateMicIndicator(new Color(0, 1, 0, 1));
+        while (sphinx.mic == null)
+        {
+           yield return null;
+        }
+        Debug.Log($"<color=green><b>Connected to: {sphinx.mic.Name}</b></color>");
+        uiManager.UpdateMicIndicator(new Color(1, 0, 0, 1));
     }
 
     #region Game Events
@@ -261,14 +266,18 @@ public class GameManager : MonoBehaviour
             cmd = cmd.Substring(0, cmd.IndexOf(" "));
 
         Debug.Log($"Voice Command: {cmd.ToUpper()}");
+        Debug.Log(gameStatus);
         cmd = cmd.ToLower();
 
         switch (gameStatus)
         {
             case GameStatus.Start:
+                // idk
+                break;
+            case GameStatus.Waiting:
                 if (cmd == "play")
                 {
-                    StartGame();
+                    SendStart();
                 }
                 break;
             case GameStatus.Playing:

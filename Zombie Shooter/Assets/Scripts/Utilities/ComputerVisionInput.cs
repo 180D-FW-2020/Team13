@@ -72,9 +72,11 @@ public class ComputerVisionInput
                 Cv2.Circle(frame, center, (int)radius, new Scalar(0, 0, 255), -1);
             }
 
-            float center_x = (float)((shape.x - center.X) / shape.x) * Screen.width;
-            float center_y = (float)((shape.y - center.Y) / shape.y) * Screen.height;
-            center = new Point2f(center_x, center_y);
+            Debug.Log($"Position: ({center.X},{center.Y}), Screen Size: ({Screen.width},{Screen.height})");
+
+            // float center_x = (float)((shape.x - center.X) / shape.x) * Screen.width;
+            // float center_y = (float)((shape.y - center.Y) / shape.y) * Screen.height;
+            // center = new Point2f(center_x, center_y);
         }
 
         if (previewEnabled) webcamPreview.texture = OpenCvSharp.Unity.MatToTexture(frame);

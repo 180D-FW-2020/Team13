@@ -9,7 +9,6 @@ public class ComputerVisionInput
 {
     private WebCamTexture webcamTexture;
     private RawImage webcamPreview;
-    private float aspectRatio = 1280f / 720f;
 
     private Mat frame = new Mat();
     private Mat blurredFrame = new Mat();
@@ -17,15 +16,14 @@ public class ComputerVisionInput
     private Mat mask = new Mat();
     private Mat greenLower, greenUpper;
 
-    private Vector2 shape;
     private Point2f center;
     private float radius;
     private bool previewEnabled;
 
-    public ComputerVisionInput(WebCamDevice device, float[] greenLowerHSV, float[] greenUpperHSV, bool enablePreview, RawImage preview)
+    public ComputerVisionInput(float[] greenLowerHSV, float[] greenUpperHSV, bool enablePreview, RawImage preview)
     {
         previewEnabled = enablePreview;
-
+        float aspectRatio = (float) Constants.CAMERA_INPUT_WIDTH / Constants.CAMERA_INPUT_HEIGHT;
         if (previewEnabled)
         {
             webcamPreview = preview;
@@ -37,10 +35,9 @@ public class ComputerVisionInput
             preview.enabled = false;
         }
 
-        webcamTexture = new WebCamTexture(Constants.CAMERA_INPUT_WIDTH, (int)(Constants.CAMERA_INPUT_WIDTH / aspectRatio), Constants.CAMERA_INPUT_FPS);
+        webcamTexture = new WebCamTexture(Constants.CAMERA_INPUT_WIDTH, Constants.CAMERA_INPUT_HEIGHT, Constants.CAMERA_INPUT_FPS);
         webcamTexture.Play();
 
-        shape = new Vector2(webcamTexture.width, webcamTexture.height);
         greenLower = new Mat(1, 3, MatType.CV_32F, greenLowerHSV);
         greenUpper = new Mat(1, 3, MatType.CV_32F, greenUpperHSV);
     }
@@ -72,11 +69,11 @@ public class ComputerVisionInput
                 Cv2.Circle(frame, center, (int)radius, new Scalar(0, 0, 255), -1);
             }
 
-            Debug.Log($"Position: ({center.X},{center.Y}), Screen Size: ({Screen.width},{Screen.height})");
+            Debug.Log($"Position: ({center.X},{center.Y}), Camera Size: ({webcamTexture.width},{webcamTexture.height}), Screen Size: ({Screen.width},{Screen.height})");
 
-            // float center_x = (float)((shape.x - center.X) / shape.x) * Screen.width;
-            // float center_y = (float)((shape.y - center.Y) / shape.y) * Screen.height;
-            // center = new Point2f(center_x, center_y);
+            float center_x = (float)((webcamTexture.width - center.X) / webcamTexture.width) * Screen.width;
+            float center_y = (float)((webcamTexture.height - center.Y) / webcamTexture.height) * Screen.height;
+            center = new Point2f(center_x, center_y);
         }
 
         if (previewEnabled) webcamPreview.texture = OpenCvSharp.Unity.MatToTexture(frame);

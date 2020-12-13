@@ -45,7 +45,7 @@ public class InputManager : MonoBehaviour
         if (weaponSelectInputType == WeaponSelectInputType.IMU)
             rpiInput = new RaspberryPiInput(ipAddress, port);
         if (aimInputType == AimInputType.CV)
-            cvInput = new ComputerVisionInput(WebCamTexture.devices[0], greenLowerHSV, greenUpperHSV, enablePreview, webcamPreview);
+            cvInput = new ComputerVisionInput(greenLowerHSV, greenUpperHSV, enablePreview, webcamPreview);
     }
 
     public void UpdateInput()

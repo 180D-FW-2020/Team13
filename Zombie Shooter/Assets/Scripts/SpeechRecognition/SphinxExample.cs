@@ -1,4 +1,5 @@
 ﻿using Pocketsphinx;
+using System;
 using System.Collections;
 using System.IO;
 using TarCs;
@@ -48,20 +49,31 @@ public class SphinxExample : MonoBehaviour
     private void Update()
     {
         // If we press our key, we toggle our microphone.
-        if(Input.GetKeyDown(toggleRecordingKey))
+        try
         {
-            if(!Microphone.IsRecording(mic.Name))
+            if (uiManager.micConnected != null && uiManager.micConnected == true)
             {
-                mic.BeginRecording();
-                uiManager.UpdateMicIndicator(new Color(1,1,0,1));
-            }
-            else
-            {
-                mic.EndRecording();
-                uiManager.UpdateMicIndicator(new Color(1,0,0,1));
-                StartCoroutine(ResetMicIndicator());
+                if(Input.GetKeyDown(toggleRecordingKey))
+                {
+                    if(!Microphone.IsRecording(mic.Name))
+                    {
+                        mic.BeginRecording();
+                        uiManager.UpdateMicIndicator(new Color(1,1,0,1));
+                    }
+                    else
+                    {
+                        mic.EndRecording();
+                        uiManager.UpdateMicIndicator(new Color(1,0,0,1));
+                        StartCoroutine(ResetMicIndicator());
+                    }
+                }
             }
         }
+        catch (Exception e)
+        {
+            // Debug.Log(e);
+        }
+        
     }
 
     // Desc: Pretty self-explanatory, wait until you actually have a microphone plugged in.
@@ -81,7 +93,7 @@ public class SphinxExample : MonoBehaviour
     // Desc: Creates a new decoder looking for specific keyphrases. 
     private void SetupDecoderKWS()
     {
-        Debug.Log("<color=red>Initializing decoder...</color>");
+        // Debug.Log("<color=red>Initializing decoder...</color>");
         // Create a new configuration for our decoder.
         Config c = Decoder.DefaultConfig();
         // Find our decompressed acoustic model.
@@ -125,13 +137,13 @@ public class SphinxExample : MonoBehaviour
 
         // Starts the decoder.
         d.StartUtt();
-        Debug.Log("<color=green><b>Decoder initialized!</b></color>");
+        // Debug.Log("<color=green><b>Decoder initialized!</b></color>");
     }
 
     // Desc: Creates a new decoder looking for any words. Instead of looking for a specific keyword, attempts to interpret what you say and turn it into text.
     private void SetupDecoderLM()
     {
-        Debug.Log("<color=red>Initializing decoder...</color>");
+        // Debug.Log("<color=red>Initializing decoder...</color>");
         // Create a new configuration for our decoder.
         Config c = Decoder.DefaultConfig();
         // Find our decompressed acoustic model.
@@ -167,7 +179,7 @@ public class SphinxExample : MonoBehaviour
 
         // Starts the decoder.
         d.StartUtt();
-        Debug.Log("<color=green><b>Decoder initialized!</b></color>");
+        // Debug.Log("<color=green><b>Decoder initialized!</b></color>");
     }
 
     // Desc: This is the "secret-sauce" of PocketSphinx. This method actually provides Sphinx with data and checks to see if we detect a keyphrase.
@@ -202,7 +214,7 @@ public class SphinxExample : MonoBehaviour
     */
     private IEnumerator Decompress()
     {
-        Debug.Log("<color=red>Decompressing language model...</color>");
+        // Debug.Log("<color=red>Decompressing language model...</color>");
         // Locate your language model.
         string dataPath = Path.Combine(Application.streamingAssetsPath, lang + ".tar");
         Stream dataStream;
@@ -231,7 +243,7 @@ public class SphinxExample : MonoBehaviour
         reader.ReadToEnd(Application.persistentDataPath);
         yield return null;
 
-        Debug.Log("<color=green><b>Decompress complete!</b></color>");
+        // Debug.Log("<color=green><b>Decompress complete!</b></color>");
     }
 
     /*

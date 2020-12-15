@@ -49,6 +49,7 @@ public class UIManager : MonoBehaviour
 
     [Header("Speech UI")]
     public Image micIndicator;
+    public bool micConnected = false;
 
     private GameManager gameManager;
 

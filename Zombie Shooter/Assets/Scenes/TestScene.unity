@@ -944,7 +944,6 @@ RectTransform:
   - {fileID: 1873949279}
   - {fileID: 1446446940}
   - {fileID: 383388760}
-  - {fileID: 1028919570}
   - {fileID: 1306310097}
   m_Father: {fileID: 925159251}
   m_RootOrder: 0
@@ -1872,6 +1871,7 @@ RectTransform:
   - {fileID: 2116661331}
   - {fileID: 461145406}
   - {fileID: 1144280676}
+  - {fileID: 1372247210}
   m_Father: {fileID: 0}
   m_RootOrder: 4
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -2100,12 +2100,12 @@ RectTransform:
   m_Children:
   - {fileID: 1217430770}
   - {fileID: 1797736415}
-  m_Father: {fileID: 631917015}
-  m_RootOrder: 4
+  m_Father: {fileID: 1372247210}
+  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 10, y: -71}
+  m_AnchoredPosition: {x: 10, y: -70.99954}
   m_SizeDelta: {x: 90, y: 50}
   m_Pivot: {x: 0, y: 1}
 --- !u!1 &1041269402
@@ -2703,7 +2703,7 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 631917015}
-  m_RootOrder: 5
+  m_RootOrder: 4
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 0}
   m_AnchorMax: {x: 1, y: 0}
@@ -2745,6 +2745,42 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1306310096}
   m_CullTransparentMesh: 0
+--- !u!1 &1372247209
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1372247210}
+  m_Layer: 5
+  m_Name: Constant Screen
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &1372247210
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1372247209}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children:
+  - {fileID: 1028919570}
+  m_Father: {fileID: 925159251}
+  m_RootOrder: 6
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 800, y: 450}
+  m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &1405675769
 GameObject:
   m_ObjectHideFlags: 0
@@ -3930,7 +3966,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ad298f44ab248474ab8725dd5c235706, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  aimInputType: 2
+  aimInputType: 1
   weaponSelectInputType: 2
   reticleStopVelocityThreshold: 20
   weaponController: {fileID: 1041269404}

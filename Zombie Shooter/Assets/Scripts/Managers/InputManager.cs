@@ -44,7 +44,7 @@ public class InputManager : MonoBehaviour
 
     public void Start()
     {
-        webcamPreview.enabled = enablePreview;
+        webcamPreview.enabled = enablePreview && (aimInputType != AimInputType.Mouse);
         if (weaponSelectInputType == WeaponSelectInputType.IMU)
             rpiInput = new RaspberryPiInput(ipAddress, port);
         if (aimInputType == AimInputType.CV)

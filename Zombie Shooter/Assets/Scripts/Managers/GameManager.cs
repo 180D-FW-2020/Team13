@@ -85,13 +85,14 @@ public class GameManager : MonoBehaviour
         sphinx = FindObjectOfType<SphinxExample>();
         sphinx.OnSpeechRecognized += UpdateSpeechUI;
 
-        uiManager.UpdateMicIndicator(new Color(0, 1, 0, 1));
+        uiManager.UpdateMicIndicator(new Color(1, 0, 0, 1));
         while (sphinx.mic == null)
         {
            yield return null;
         }
         Debug.Log($"<color=green><b>Connected to: {sphinx.mic.Name}</b></color>");
-        uiManager.UpdateMicIndicator(new Color(1, 0, 0, 1));
+        uiManager.micConnected = true;
+        uiManager.UpdateMicIndicator(new Color(0, 1, 0, 1));
     }
 
     #region Game Events

@@ -70,7 +70,7 @@ public class GameManager : MonoBehaviour
         connection.EnemyKilledMessageReceived.AddListener(EnemyKilledMessageReceived);
         connection.StartReceived.AddListener(StartReceived);
 
-        uiManager.startButton.onClick.AddListener(Connect);
+        uiManager.startButton.onClick.AddListener(Calibrate);
         uiManager.playButton.onClick.AddListener(SendStart);
         uiManager.resumeButton.onClick.AddListener(ResumeGame);
         uiManager.exitButton.onClick.AddListener(ReloadGame);
@@ -106,6 +106,16 @@ public class GameManager : MonoBehaviour
         uiManager.StartGame();
         Health = 100;
         Debug.Log("Game Started");
+    }
+
+    public void Calibrate()
+    {
+        if (inputManager.aimInputType == AimInputType.Finger) {
+            uiManager.calibrationText.text = "Cover all boxes with hand/object." + Environment.NewLine + "Press 'C' to calibrate.";
+            uiManager.StartCalibration();
+            gameStatus = GameStatus.Calibrating;
+        } else
+            Connect();
     }
 
     public async void Connect()
@@ -246,6 +256,11 @@ public class GameManager : MonoBehaviour
     {
         while (pendingActions.Count > 0)
             pendingActions.Dequeue()();
+
+        if (gameStatus == GameStatus.Calibrating)
+        {
+            inputManager.UpdateCalibration();
+        }
 
         if (GameStarted)
         {

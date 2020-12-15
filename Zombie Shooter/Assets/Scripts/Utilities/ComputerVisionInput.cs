@@ -69,8 +69,6 @@ public class ComputerVisionInput
                 Cv2.Circle(frame, center, (int)radius, new Scalar(0, 0, 255), -1);
             }
 
-            Debug.Log($"Position: ({center.X},{center.Y}), Camera Size: ({webcamTexture.width},{webcamTexture.height}), Screen Size: ({Screen.width},{Screen.height})");
-
             float center_x = (float)((webcamTexture.width - center.X) / webcamTexture.width) * Screen.width;
             float center_y = (float)((webcamTexture.height - center.Y) / webcamTexture.height) * Screen.height;
             center = new Point2f(center_x, center_y);

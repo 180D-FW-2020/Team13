@@ -6,7 +6,8 @@ using UnityEngine.UI;
 public enum AimInputType
 {
     Mouse = 1,
-    CV = 2
+    CV = 2,
+    Finger = 3
 }
 
 public enum WeaponSelectInputType
@@ -23,8 +24,9 @@ public class InputManager : MonoBehaviour
     internal Transform playerReticle;
     public WeaponController weaponController;
 
-    [Header("Computer Vision Tracking")]
+    [Header("Computer Vision Options")]
     public RawImage webcamPreview;
+    public RawImage calibrationPreview;
     public bool enablePreview;
     public float[] greenLowerHSV = new float[3];
     public float[] greenUpperHSV = new float[3];
@@ -34,6 +36,7 @@ public class InputManager : MonoBehaviour
     public int port;
 
     private ComputerVisionInput cvInput;
+    public FingerTracking ftInput;
     private RaspberryPiInput rpiInput;
 
     private Vector3 previousPosition;
@@ -46,6 +49,16 @@ public class InputManager : MonoBehaviour
             rpiInput = new RaspberryPiInput(ipAddress, port);
         if (aimInputType == AimInputType.CV)
             cvInput = new ComputerVisionInput(greenLowerHSV, greenUpperHSV, enablePreview, webcamPreview);
+        else if (aimInputType == AimInputType.Finger) {
+            ftInput = new FingerTracking(enablePreview, webcamPreview, calibrationPreview);
+        }
+    }
+
+    public void UpdateCalibration()
+    {
+        ftInput.Update();
+        if (Input.GetKeyDown("c"))
+            ftInput.AnalyzeFrame();
     }
 
     public void UpdateInput()
@@ -62,10 +75,12 @@ public class InputManager : MonoBehaviour
 
     public Vector3 GetReticleInput()
     {
-        if (aimInputType == AimInputType.Mouse)
-            return new Vector3(Input.mousePosition.x, Input.mousePosition.y);
-        else
+        if (aimInputType == AimInputType.CV)
             return cvInput.Update();
+        else if (aimInputType == AimInputType.Finger)
+            return ftInput.getPosition();
+        else //mouse
+            return new Vector3(Input.mousePosition.x, Input.mousePosition.y);
     }
 
     public GestureType GetGesture()

@@ -11,7 +11,8 @@ public enum GameStatus
     Connecting = 1,
     Waiting = 2,
     Playing = 3,
-    Paused = 4
+    Paused = 4,
+    Calibrating = 5
 }
 
 public class UIManager : MonoBehaviour
@@ -20,6 +21,10 @@ public class UIManager : MonoBehaviour
     public GameObject startScreen;
     public Button startButton;
     public InputField playerName;
+
+    [Header("Calibration UI")]
+    public GameObject calibrationScreen;
+    public Text calibrationText;
 
     [Header("Connecting UI")]
     public GameObject connectingScreen;
@@ -54,6 +59,7 @@ public class UIManager : MonoBehaviour
         inGameScreen.SetActive(gameStatus == GameStatus.Playing);
         waitingScreen.SetActive(gameStatus == GameStatus.Waiting);
         pauseScreen.SetActive(gameStatus == GameStatus.Paused);
+        calibrationScreen.SetActive(gameStatus == GameStatus.Calibrating);
     }
 
     private void Start()
@@ -79,6 +85,11 @@ public class UIManager : MonoBehaviour
     public void StartGame()
     {
         SetScreensActive(GameStatus.Playing);
+    }
+
+    public void StartCalibration()
+    {
+        SetScreensActive(GameStatus.Calibrating);
     }
 
     #region Start Screen UI

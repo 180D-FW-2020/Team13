@@ -3,6 +3,8 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+// EnemyManager initialized enemy locations and maintains a map of enemy ids and positions.
+// This data is updated as enemies are killed
 public class EnemyManager : MonoBehaviour
 {
     public GameObject target;

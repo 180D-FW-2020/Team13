@@ -15,6 +15,9 @@ public enum GameStatus
     Calibrating = 5
 }
 
+// UIManager coordinates the changing of screens and UI element initialization
+// In addition, the value of input fields (i.e. player name) can be retrived and
+// in-game elements can be dynamically updated (i.e. player list and scores)
 public class UIManager : MonoBehaviour
 {
     [Header("Start UI")]
@@ -53,6 +56,7 @@ public class UIManager : MonoBehaviour
 
     private GameManager gameManager;
 
+    // Set the correct UI screen active based on current game state
     public void SetScreensActive(GameStatus gameStatus)
     {
         startScreen.SetActive(gameStatus == GameStatus.Start);
@@ -117,6 +121,7 @@ public class UIManager : MonoBehaviour
         healthBar.value = value;
     }
 
+    // dynamically add new score card
     public void AddPlayer(string playerName)
     {
         int padding = 5;

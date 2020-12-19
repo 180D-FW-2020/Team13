@@ -9,6 +9,10 @@ public enum EnemyState
     Attacking = 2,
     Dead = 3
 }
+
+
+// EnemyController controls an individual enemy, allowing it to walk towards the player and 
+// attack it. Animations and health are both maintained.
 public class EnemyController : MonoBehaviour
 {
     public Animator animator;

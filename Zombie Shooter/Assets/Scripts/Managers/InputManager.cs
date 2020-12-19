@@ -16,6 +16,8 @@ public enum WeaponSelectInputType
     ArrowKeys = 2,
 }
 
+// InputManager is responsible for receiving both Computer Vision and IMU inputs, and 
+// triggering the corresponding game events. 
 public class InputManager : MonoBehaviour
 {
     public AimInputType aimInputType;

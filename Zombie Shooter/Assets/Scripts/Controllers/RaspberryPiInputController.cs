@@ -16,10 +16,12 @@ public enum GestureType
     None = 4,
 }
 
+// Performs all networking and data aquisition to receive gestures from the Pi
 public class RaspberryPiInput
 {
     private Socket client;
 
+    // initialize to user-specified RPi IP address
     public RaspberryPiInput(string ip, int port)
     {
         IPAddress ipAddress = IPAddress.Parse(ip);
@@ -27,6 +29,7 @@ public class RaspberryPiInput
         client.Connect(ipAddress, port);
     }
 
+    // receive a single character
     public GestureType GetGesture()
     {
         if (client.Available > 0)

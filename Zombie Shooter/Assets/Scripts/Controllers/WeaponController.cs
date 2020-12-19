@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+// WeaponController swaps the current weapon based on a specified gesture
 public class WeaponController : MonoBehaviour
 {
     public float referenceRadius;

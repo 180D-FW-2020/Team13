@@ -15,6 +15,8 @@ public class NetworkConnection
     public UnityEvent<EnemyKilled> EnemyKilledMessageReceived = new UnityEvent<EnemyKilled>();
     private SocketIO client;
 
+
+    // Connect to server and initialize async events
     public NetworkConnection()
     {
         client = new SocketIO("https://zombie-shooter-server.herokuapp.com/");

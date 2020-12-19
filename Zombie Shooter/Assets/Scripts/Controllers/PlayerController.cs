@@ -5,6 +5,7 @@ using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.UI;
 
+// PlayerController controls autoshooting of the weapon
 public class PlayerController : MonoBehaviour
 {
     public InputManager inputManager;

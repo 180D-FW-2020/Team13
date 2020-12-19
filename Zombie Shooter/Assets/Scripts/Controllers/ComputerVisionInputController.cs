@@ -5,6 +5,7 @@ using OpenCvSharp;
 using System.ComponentModel;
 using UnityEngine.UI;
 
+// Performs all CV related tasks using the OpenCVSharp library
 public class ComputerVisionInput
 {
     private WebCamTexture webcamTexture;
@@ -20,6 +21,7 @@ public class ComputerVisionInput
     private float radius;
     private bool previewEnabled;
 
+    // initialize OpenCV variables and preview window
     public ComputerVisionInput(float[] greenLowerHSV, float[] greenUpperHSV, bool enablePreview, RawImage preview)
     {
         previewEnabled = enablePreview;
@@ -43,6 +45,7 @@ public class ComputerVisionInput
     }
 
 
+    // Process next webcam frame
     public Vector2 Update()
     {
         frame = OpenCvSharp.Unity.TextureToMat(webcamTexture);

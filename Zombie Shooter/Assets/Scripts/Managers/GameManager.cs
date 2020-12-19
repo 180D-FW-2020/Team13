@@ -10,6 +10,9 @@ using UnityEngine.UI;
 [RequireComponent(typeof(EnemyManager))]
 [RequireComponent(typeof(UIManager))]
 [RequireComponent(typeof(InputManager))]
+// GameManager performs all game logic, from determining the game state to correctly parsing
+// networking messages. This script manages all data being sent/received over the network, as well
+// as work with the UIManager to coordinate UI events
 public class GameManager : MonoBehaviour
 {
     public GameObject crosshair;
@@ -64,6 +67,7 @@ public class GameManager : MonoBehaviour
     {
         playerWeaponObject.SetActive(false);
 
+        // connect all event listeners to the proper networking and UI events
         connection = new NetworkConnection();
         connection.PlayerStateReceived.AddListener(PlayerStateReceived);
         connection.InitializeMessageReceived.AddListener(InitializeMessageReceived);
@@ -77,10 +81,10 @@ public class GameManager : MonoBehaviour
         uiManager.ShowStart();
         Health = 100;
 
-        StartCoroutine(initMicrophone());
+        StartCoroutine(InitMicrophone());
     }
 
-    private IEnumerator initMicrophone()
+    private IEnumerator InitMicrophone()
     {
         sphinx = FindObjectOfType<SphinxExample>();
         sphinx.OnSpeechRecognized += UpdateSpeechUI;

@@ -1142,7 +1142,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   inputManager: {fileID: 1988368590}
   autoShoot: 1
-  shootInterval: 1
+  shootInterval: 5
 --- !u!4 &736461857
 Transform:
   m_ObjectHideFlags: 0
@@ -3939,6 +3939,7 @@ MonoBehaviour:
   resumeButton: {fileID: 12783495}
   exitButton: {fileID: 571851323}
   micIndicator: {fileID: 1797736416}
+  micConnected: 0
 --- !u!114 &1988368589
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3966,8 +3967,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ad298f44ab248474ab8725dd5c235706, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  aimInputType: 1
-  weaponSelectInputType: 2
+  aimInputType: 2
+  weaponSelectInputType: 1
   reticleStopVelocityThreshold: 20
   weaponController: {fileID: 1041269404}
   webcamPreview: {fileID: 1306310098}

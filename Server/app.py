@@ -39,7 +39,7 @@ def error_handler(e):
 # - reset cache
 @socketio.on("reset")
 def on_reset():
-    connected_clients = []
+    connected_clients = {}
     enemies = {}
     print("Reset")
 
@@ -74,7 +74,7 @@ def on_register(s):
     print("Player list: " + ", ".join(connected_clients))
 
     response = {}
-    response["playerList"] = connected_clients.keys()
+    response["playerList"] = list(connected_clients.keys())
     response["enemyPositions"] = enemies
     emit("initialize", json.dumps(response), broadcast=True)
 
@@ -89,7 +89,7 @@ def on_leave(s):
 
     response = {}
     response["id"] = name
-    response["playerList"] = connected_clients
+    response["playerList"] = list(connected_clients.keys())
     emit("leave", json.dumps(response), broadcast=True)
 
 # - client updates that it shot a zombie

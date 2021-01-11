@@ -18,30 +18,31 @@ public static class Constants
     public const int MAX_NAME_LENGTH = 10;
 }
 
+
+public class Ping
+{
+    public long timestamp;
+}
+
 //sent from client to server
 [Serializable]
 public class GameState
 {
-    public long timestamp;
     public string id;
     public List<float> rotation;
+    public bool shooting;
 }
 
 //sent from server to client
 [Serializable]
-public class GameValues
+public class RemoteState
 {
     public string id;
     public int health;
     public int score;
     public int kills;
-}
-
-[Serializable]
-public class WeaponShoot
-{
-    public string id;
-    public int weapon;
+    public List<float> rotation;
+    public int shooting;
 }
 
 [Serializable]

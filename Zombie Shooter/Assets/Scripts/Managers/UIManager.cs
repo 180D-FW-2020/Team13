@@ -120,7 +120,7 @@ public class UIManager : MonoBehaviour
     {
         if (!playerHealthBars.Contains(playerName)) return;
         Slider healthBar = (Slider)playerHealthBars[playerName];
-        healthBar.value = value / 100;
+        healthBar.value = value / 100f;
     }
 
     // dynamically add new score card

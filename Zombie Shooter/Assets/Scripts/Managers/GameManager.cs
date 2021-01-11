@@ -21,23 +21,6 @@ public class GameManager : MonoBehaviour
     public Transform playersParent;
     public GameObject playerWeaponObject;
 
-    //[Header("Game Scoring Constants")]
-    //public int healthLossIncrement;
-    //public int hitScore;
-    //public int killScore;
-
-    //private int health;
-    //public int Health
-    //{
-    //    get { return health; }
-    //    set
-    //    {
-    //        health = value;
-    //        uiManager?.UpdateHealth(health);
-    //    }
-    //}
-
-
     private EnemyManager enemyManager;
     private InputManager inputManager;
     private UIManager uiManager;
@@ -70,7 +53,7 @@ public class GameManager : MonoBehaviour
         connection.InitializeMessageReceived.AddListener(InitializeMessageReceived);
         connection.LeaveMessageReceived.AddListener(LeaveMessageReceived);
         connection.EnemyKilledMessageReceived.AddListener(EnemyKilledMessageReceived);
-        connection.GameValuesUpdateReceived.AddListener(GameValuesUpdateReceived);
+        connection.RemoteStateUpdateReceived.AddListener(GameValuesUpdateReceived);
         connection.StartReceived.AddListener(StartReceived);
 
         uiManager.startButton.onClick.AddListener(Calibrate);
@@ -203,13 +186,23 @@ public class GameManager : MonoBehaviour
         pendingActions.Enqueue(() => UpdateRemoteState(state));
     }
 
-    private void GameValuesUpdateReceived(GameValues values)
+    private void RemoteStateUpdateReceived(RemoteState state)
     {
-        Debug.Log($"{values.id}\tScore: {values.score}, Health: {values.health}, Kills: {values.kills}");
+        Debug.Log($"{state.id}\tScore: {state.score}, Health: {state.health}, Kills: {state.kills}");
         pendingActions.Enqueue(() =>
         {
-            uiManager.UpdateScore(values.id, values.score);
-            uiManager.UpdateHealth(values.id, values.health);
+            uiManager.UpdateScore(state.id, state.score);
+            uiManager.UpdateHealth(state.id, state.health);
+
+            if (state.id != playerName && state.shooting != (int)GestureType.None)
+            {
+                WeaponController weaponController = allPlayers[state.id].GetComponentInChildren<WeaponController>();
+                weaponController.SwitchWeapon((GestureType)state.shooting);
+                weaponController.Shoot();
+
+                Vector3 rotation = new Vector3(state.rotation[0], state.rotation[1], state.rotation[2]);
+                allPlayers[state.id].transform.eulerAngles = rotation;
+            }
         });
     }
 
@@ -260,37 +253,21 @@ public class GameManager : MonoBehaviour
         });
     }
 
-    private void WeaponShootReceived(WeaponShoot shoot)
-    {
-        if (shoot.id != playerName)
-        {
-            if (shoot.weapon != (int)GestureType.None)
-            {
-                pendingActions.Enqueue(() =>
-                {
-                    WeaponController weaponController = allPlayers[shoot.id].GetComponentInChildren<WeaponController>();
-                    weaponController.SwitchWeapon((GestureType)shoot.weapon);
-                    weaponController.Shoot();
-                });
-            }
-        }
-    }
-
-    public void UpdateRemoteState(GameState state)
-    {
-        if (state.id != playerName)
-        {
-            Vector3 rotation = new Vector3(state.rotation[0], state.rotation[1], state.rotation[2]);
-            allPlayers[state.id].transform.eulerAngles = rotation;
-        }
-        else // measure latency
-        {
-            long now = DateTime.Now.Ticks;
-            double roundtripLatency = TimeSpan.FromTicks(now - state.timestamp).TotalMilliseconds;
-            //oneWayLatency = roundtripLatency/2 
-            uiManager.UpdateLatency(roundtripLatency);
-        }
-    }
+    //public void UpdateRemoteState(GameState state)
+    //{
+    //    if (state.id != playerName)
+    //    {
+    //        Vector3 rotation = new Vector3(state.rotation[0], state.rotation[1], state.rotation[2]);
+    //        allPlayers[state.id].transform.eulerAngles = rotation;
+    //    }
+    //    else // measure latency
+    //    {
+    //        long now = DateTime.Now.Ticks;
+    //        double roundtripLatency = TimeSpan.FromTicks(now - state.timestamp).TotalMilliseconds;
+    //        //oneWayLatency = roundtripLatency/2 
+    //        uiManager.UpdateLatency(roundtripLatency);
+    //    }
+    //}
     #endregion
 
     public async void FixedUpdate()

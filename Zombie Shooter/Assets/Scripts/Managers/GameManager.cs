@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
 using UnityEngine;
@@ -15,9 +16,10 @@ using UnityEngine.UI;
 // as work with the UIManager to coordinate UI events
 public class GameManager : MonoBehaviour
 {
-    public GameObject crosshair;
+    public GameObject player;
+    public GameObject mainPlayer;
+    public float playerHeight;
     public Transform playersParent;
-    public PlayerController playerController;
     public GameObject playerWeaponObject;
 
     [Header("Game Scoring Constants")]
@@ -46,15 +48,10 @@ public class GameManager : MonoBehaviour
     private GameState gameState = new GameState();
     private Queue<Action> pendingActions = new Queue<Action>();
     private Dictionary<string, GameObject> allPlayers = new Dictionary<string, GameObject>();
-    private string playerName, room;
-    private long serverTimeOffset;
+    private string playerName;
 
     private GameStatus gameStatus = GameStatus.Start;
     internal bool GameStarted = false;
-
-    private int currentAmmo;
-    private int currentHeat;
-    private int maxHeat;
 
     public void Awake()
     {
@@ -70,7 +67,9 @@ public class GameManager : MonoBehaviour
         // connect all event listeners to the proper networking and UI events
         connection = new NetworkConnection();
         connection.PlayerStateReceived.AddListener(PlayerStateReceived);
+        connection.WeaponShootReceived.AddListener(WeaponShootReceived);
         connection.InitializeMessageReceived.AddListener(InitializeMessageReceived);
+        connection.LeaveMessageReceived.AddListener(LeaveMessageReceived);
         connection.EnemyKilledMessageReceived.AddListener(EnemyKilledMessageReceived);
         connection.StartReceived.AddListener(StartReceived);
 
@@ -104,7 +103,7 @@ public class GameManager : MonoBehaviour
     public void StartGame()
     {
         playerWeaponObject.SetActive(true);
-        playerController.StartGame();
+        mainPlayer.GetComponent<PlayerController>().StartGame();
         gameStatus = GameStatus.Playing;
         GameStarted = true;
         uiManager.UpdateAllScores(0);
@@ -137,13 +136,6 @@ public class GameManager : MonoBehaviour
     {
         gameStatus = GameStatus.Waiting;
         uiManager.EnterWaitingRoom();
-
-        var player = Instantiate(crosshair, playersParent);
-        player.GetComponent<Text>().text = playerName;
-        player.name = playerName;
-        allPlayers.Add(playerName, player);
-        uiManager.AddPlayer(playerName);
-        inputManager.playerReticle = player.transform;
     }
 
     public void PauseGame()
@@ -173,6 +165,7 @@ public class GameManager : MonoBehaviour
             enemyId = enemy.name,
             id = playerName
         };
+        enemyManager.KillEnemy(enemy.name);
         await connection.SendEnemyShoot(shotEnemy);
     }
 
@@ -183,6 +176,16 @@ public class GameManager : MonoBehaviour
         {
             Debug.Log("YOU DEAD AF");
         }
+    }
+
+    public async void Shoot(int weapon)
+    {
+        WeaponShoot shoot = new WeaponShoot
+        {
+            id = playerName,
+            weapon = weapon
+        };
+        await connection.SendShoot(shoot);
     }
 
     #endregion
@@ -205,42 +208,83 @@ public class GameManager : MonoBehaviour
 
     private void InitializeMessageReceived(Initialize init)
     {
-        pendingActions.Enqueue(() => uiManager.UpdatePlayerList(init.playerList));
+        pendingActions.Enqueue(() => {
+            uiManager.UpdatePlayerList(init.playerList);
+
+            for (int i = allPlayers.Count; i < init.playerList.Count; i++)
+            {
+                var name = init.playerList[i];
+                var parent = playersParent.Find(allPlayers.Count.ToString());
+                if (name == playerName)
+                {
+                    mainPlayer.transform.SetParent(parent, false);
+                    mainPlayer.transform.position += new Vector3(0, playerHeight, 0);
+                    allPlayers.Add(playerName, mainPlayer);
+                }
+                else
+                {
+                    Debug.Log($"New player joined: {name}");
+                    var newPlayer = Instantiate(player, parent);
+                    newPlayer.name = name;
+                    newPlayer.transform.position += new Vector3(0, playerHeight, 0);
+                    allPlayers.Add(name, newPlayer);
+                }
+                uiManager.AddPlayer(name);
+            }
+        });
         pendingActions.Enqueue(() => enemyManager.Initialize(init.enemyPositions));
     }
+
+    private void LeaveMessageReceived(Leave leave)
+    {
+        Debug.Log($"{leave.id} leaving");
+        pendingActions.Enqueue(() => {
+            uiManager.UpdatePlayerList(leave.playerList);
+
+            Destroy(allPlayers[leave.id]);
+            allPlayers.Remove(leave.id);
+        });
+    }
+
     private void EnemyKilledMessageReceived(EnemyKilled enemyKilled)
     {
+        Debug.Log($"Enemy {enemyKilled.enemyId} killed by {enemyKilled.id}");
         pendingActions.Enqueue(() =>
         {
             uiManager.UpdateScore(enemyKilled.id, killScore);
             enemyManager.KillEnemy(enemyKilled.enemyId);
         });
     }
+
+    private void WeaponShootReceived(WeaponShoot shoot)
+    {
+        if (shoot.id != playerName)
+        {
+            Debug.Log($"Weapon Shoot event received form {shoot.id}");
+            if (shoot.weapon != (int)GestureType.None)
+            {
+                pendingActions.Enqueue(() =>
+                {
+                    WeaponController weaponController = allPlayers[shoot.id].GetComponentInChildren<WeaponController>();
+                    weaponController.SwitchWeapon((GestureType)shoot.weapon);
+                    weaponController.Shoot();
+                });
+            }
+        }
+    }
+
     public void UpdateRemoteState(GameState state)
     {
         if (state.id != playerName)
         {
-            Vector3 position = new Vector3(state.playerPosition[0] * Screen.width, state.playerPosition[1] * Screen.height, 0);
-            if (allPlayers.ContainsKey(state.id))
-            {
-                allPlayers[state.id].transform.position = position;
-            }
-            else
-            {
-                Debug.Log($"New player joined: {state.id}");
-                var newPlayer = Instantiate(crosshair, playersParent);
-                newPlayer.GetComponent<Text>().text = state.id;
-                newPlayer.transform.position = position;
-                newPlayer.name = state.id;
-                allPlayers.Add(state.id, newPlayer);
-                uiManager.AddPlayer(state.id);
-            }
+            Vector3 rotation = new Vector3(state.playerPosition[0], state.playerPosition[1], state.playerPosition[2]);
+            allPlayers[state.id].transform.eulerAngles = rotation;
         }
         else // measure latency
         {
             long now = DateTime.Now.Ticks;
             double roundtripLatency = TimeSpan.FromTicks(now - state.timestamp).TotalMilliseconds;
-            //serverTimeOffset = (now - state.timestamp)/2 
+            //oneWayLatency = roundtripLatency/2 
             uiManager.UpdateLatency(roundtripLatency);
         }
     }
@@ -252,7 +296,7 @@ public class GameManager : MonoBehaviour
         {
             inputManager.UpdateInput();
             gameState.timestamp = DateTime.Now.Ticks;
-            gameState.playerPosition = allPlayers[playerName].transform.position.normalizedCoordinates();
+            gameState.playerPosition = allPlayers[playerName].transform.eulerAngles.coordinates();
             await connection.SendState(gameState);
         }
     }

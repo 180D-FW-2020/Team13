@@ -71,16 +71,33 @@ public class EnemyController : MonoBehaviour
         }
     }
 
-    public void ChangeHealth(float health)
+    public void Kill(Transform killElement)
     {
-        gameManager.KillEnemy(gameObject);
+        if (state != EnemyState.Dead)
+        {
+            Transform parent = killElement.parent;
+            WeaponController weaponController;
+            while (parent != null)
+            {
+                if ((weaponController = parent.GetComponent<WeaponController>()) != null)
+                {
+                    if (weaponController.playerWeapon)
+                    {
+                        gameManager.KillEnemy(gameObject);
+                        break;
+                    }
+                }
+                parent = parent.parent;
+            }
+        }
     }
 
     public IEnumerator Die()
     {
+        if (state == EnemyState.Dead)
+            yield break;
         state = EnemyState.Dead;
         animator.SetTrigger(Constants.TRIGGER_FALLDOWN);
-        gameObject.tag = "DeadEnemy"; //prevent double shoot
         yield return new WaitForSeconds(dieDelay);
         Destroy(gameObject);
     }

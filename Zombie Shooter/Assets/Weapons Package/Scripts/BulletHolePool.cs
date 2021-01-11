@@ -70,7 +70,7 @@ public class BulletHolePool : MonoBehaviour
 		// If the bullet hole at the current index has been destroyed, instantiate a new one
 		if (bulletHoles[currentIndex] == null)
 		{
-			GameObject bh = Instantiate(replacementBulletHole, transform.position, transform.rotation) as GameObject;
+			GameObject bh = Instantiate(replacementBulletHole, transform.position, transform.rotation, transform) as GameObject;
 			bulletHoles[currentIndex] = bh;
 		}
 	}

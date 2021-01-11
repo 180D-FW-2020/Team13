@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections;
+using System.Threading.Tasks;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -23,8 +25,11 @@ public class InputManager : MonoBehaviour
     public AimInputType aimInputType;
     public WeaponSelectInputType weaponSelectInputType;
     public float reticleStopVelocityThreshold;
-    internal Transform playerReticle;
+    public Transform player;
     public WeaponController weaponController;
+
+    [Header("First Person Aim")]
+    public float sensitivity;
 
     [Header("Computer Vision Options")]
     public RawImage webcamPreview;
@@ -41,8 +46,16 @@ public class InputManager : MonoBehaviour
     public FingerTracking ftInput;
     private RaspberryPiInput rpiInput;
 
-    private Vector3 previousPosition;
+    private Vector3 previousRotation;
     internal float velocity = 0;
+    private Vector2 rotation = Vector2.zero;
+
+    private GameManager gameManager;
+
+    private void Awake()
+    {
+        gameManager = GetComponent<GameManager>();
+    }
 
     public void Start()
     {
@@ -69,20 +82,20 @@ public class InputManager : MonoBehaviour
         weaponController.SwitchWeapon(GetGesture());
 
         //aim reticle
-        previousPosition = playerReticle.position;
-        playerReticle.position = GetReticleInput();
-        weaponController.Aim(playerReticle.position);
-        velocity = (playerReticle.position - previousPosition).magnitude / Time.fixedDeltaTime;
+        rotation += GetAimInput();
+        player.eulerAngles = rotation * sensitivity;
+        velocity = (player.eulerAngles - previousRotation).sqrMagnitude / Time.deltaTime;
+        previousRotation = player.eulerAngles;
     }
 
-    public Vector3 GetReticleInput()
+    public Vector2 GetAimInput()
     {
         if (aimInputType == AimInputType.CV)
             return cvInput.Update();
         else if (aimInputType == AimInputType.Finger)
             return ftInput.getPosition();
         else //mouse
-            return new Vector3(Input.mousePosition.x, Input.mousePosition.y);
+            return new Vector2(-Input.GetAxis("Mouse Y"), Input.GetAxis("Mouse X"));
     }
 
     public GestureType GetGesture()
@@ -108,8 +121,11 @@ public class InputManager : MonoBehaviour
 
     public void ShootIfStopped()
     {
-        if (velocity < reticleStopVelocityThreshold) //reticle stopped 
+        if (Mathf.Abs(velocity) < reticleStopVelocityThreshold) //aim stopped
+        {
             weaponController.Shoot();
+            gameManager.Shoot((int)weaponController.GetWeaponType());
+        }
     }
 
     public void OnApplicationQuit()

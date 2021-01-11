@@ -1,4 +1,5 @@
-﻿using System;
+﻿using JetBrains.Annotations;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -26,6 +27,13 @@ public class GameState
 }
 
 [Serializable]
+public class WeaponShoot
+{
+    public string id;
+    public int weapon;
+}
+
+[Serializable]
 public class Register
 {
     public string id;
@@ -35,8 +43,14 @@ public class Register
 public class Initialize
 {
     public List<string> playerList;
-    // public Dictionary<string, float> enemyPositions;
     public Dictionary<string, string> enemyPositions;
+}
+
+[Serializable]
+public class Leave
+{
+    public string id;
+    public List<string> playerList;
 }
 
 [Serializable]

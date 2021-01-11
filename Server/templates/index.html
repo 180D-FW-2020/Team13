@@ -1,7 +1,12 @@
+<button type="button" id="reset">Reset</button>
 <div id="log"></div>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/3.0.5/socket.io.js"></script>
 <script>
+	var resetButton = document.getElementById("reset");
 	socket = io()
+	resetButton.onclick = function() {
+		socket.emit("reset");
+	}
 	socket.on("initialize", (data)=>{
 		document.getElementById("log").innerHTML += "<br>" + "Initialize: " + data;
 	})

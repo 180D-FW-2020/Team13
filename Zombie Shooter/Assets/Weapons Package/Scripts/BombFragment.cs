@@ -34,7 +34,7 @@ public class BombFragment : MonoBehaviour
 		// Instantiate the explosion
 		if (explosion != null)
 		{
-			Instantiate(explosion, position, Quaternion.identity);
+			Instantiate(explosion, position, Quaternion.identity, transform.parent);
 		}
 
 		// Destroy this projectile

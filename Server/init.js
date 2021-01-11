@@ -8,7 +8,11 @@ const server = express()
   .use((req, res) => res.sendFile(INDEX, { root: __dirname }))
   .listen(PORT, () => console.log(`Listening on port ${PORT}`));
 
-const io = socketIO(server);
+const io = socketIO(server, {
+  cors: {
+    origin: '*',
+  }
+});
 
 
 module.exports = io;

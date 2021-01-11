@@ -4370,9 +4370,6 @@ MonoBehaviour:
   playerHeight: 0
   playersParent: {fileID: 725508276}
   playerWeaponObject: {fileID: 1041269402}
-  healthLossIncrement: 5
-  hitScore: 10
-  killScore: 100
 --- !u!4 &1988368587
 Transform:
   m_ObjectHideFlags: 0
@@ -4410,8 +4407,7 @@ MonoBehaviour:
   playerListText: {fileID: 2003857517}
   inGameScreen: {fileID: 631917014}
   currentAmmo: {fileID: 383388761}
-  healthBar: {fileID: 1446446941}
-  scoreCard: {fileID: 7047744577363238287, guid: 4cf1f6e9af662294ba3227068c02616b, type: 3}
+  scoreCard: {fileID: 7572660672433185773, guid: 4cf1f6e9af662294ba3227068c02616b, type: 3}
   latencyText: {fileID: 1873949280}
   pauseScreen: {fileID: 1658564455}
   resumeButton: {fileID: 12783495}

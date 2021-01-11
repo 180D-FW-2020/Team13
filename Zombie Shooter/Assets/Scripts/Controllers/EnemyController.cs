@@ -29,7 +29,7 @@ public class EnemyController : MonoBehaviour
     public void Start()
     {
         state = EnemyState.Idle;
-        //StartCoroutine(WaitForMove());
+        StartCoroutine(WaitForMove());
     }
 
     public void FixedUpdate()
@@ -38,8 +38,8 @@ public class EnemyController : MonoBehaviour
         Quaternion rotation = Quaternion.LookRotation(dir);
         transform.rotation = Quaternion.Euler(0, rotation.eulerAngles.y, 0);
 
-        //if (state == EnemyState.Moving && Vector2.Distance(target.position.xz(), transform.position.xz()) < attackDistance)
-        //    StartCoroutine(Attack());
+        if (state == EnemyState.Moving && Vector2.Distance(target.position.xz(), transform.position.xz()) < attackDistance)
+            StartCoroutine(Attack());
     }
 
     public IEnumerator WaitForMove()

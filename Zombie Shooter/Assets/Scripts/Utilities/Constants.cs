@@ -18,12 +18,23 @@ public static class Constants
     public const int MAX_NAME_LENGTH = 10;
 }
 
+//sent from client to server
 [Serializable]
 public class GameState
 {
     public long timestamp;
     public string id;
-    public List<float> playerPosition;
+    public List<float> rotation;
+}
+
+//sent from server to client
+[Serializable]
+public class GameValues
+{
+    public string id;
+    public int health;
+    public int score;
+    public int kills;
 }
 
 [Serializable]
@@ -58,4 +69,10 @@ public class EnemyKilled
 {
     public string id;
     public string enemyId;
+}
+
+[Serializable]
+public class EnemyAttack
+{
+    public string id;
 }

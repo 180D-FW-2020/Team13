@@ -15,6 +15,7 @@ public class NetworkConnection
     public UnityEvent<Initialize> InitializeMessageReceived = new UnityEvent<Initialize>();
     public UnityEvent<Leave> LeaveMessageReceived = new UnityEvent<Leave>();
     public UnityEvent<EnemyKilled> EnemyKilledMessageReceived = new UnityEvent<EnemyKilled>();
+    public UnityEvent<GameValues> GameValuesUpdateReceived = new UnityEvent<GameValues>();
     private SocketIO client;
 
 
@@ -46,6 +47,10 @@ public class NetworkConnection
         client.On("enemy_killed", response =>
         {
             EnemyKilledMessageReceived.Invoke(JsonConvert.DeserializeObject<EnemyKilled>(response.GetValue<string>(), settings));
+        });
+        client.On("update_values", response =>
+        {
+            GameValuesUpdateReceived.Invoke(JsonConvert.DeserializeObject<GameValues>(response.GetValue<string>(), settings));
         });
         client.On("initialize", response =>
         {
@@ -95,6 +100,12 @@ public class NetworkConnection
     {
         if (client.Connected)
             await client.EmitAsync("leave", JsonConvert.SerializeObject(req));
+    }
+
+    public async Task SendEnemyAttack(EnemyAttack attack)
+    {
+        if (client.Connected)
+            await client.EmitAsync("enemy_attack", JsonConvert.SerializeObject(attack));
     }
 
     public async Task Stop(string playerName)

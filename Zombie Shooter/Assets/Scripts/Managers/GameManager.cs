@@ -18,25 +18,24 @@ public class GameManager : MonoBehaviour
 {
     public GameObject player;
     public GameObject mainPlayer;
-    public float playerHeight;
     public Transform playersParent;
     public GameObject playerWeaponObject;
 
-    [Header("Game Scoring Constants")]
-    public int healthLossIncrement;
-    public int hitScore;
-    public int killScore;
+    //[Header("Game Scoring Constants")]
+    //public int healthLossIncrement;
+    //public int hitScore;
+    //public int killScore;
 
-    private int health;
-    public int Health
-    {
-        get { return health; }
-        set
-        {
-            health = value;
-            uiManager?.UpdateHealth(health);
-        }
-    }
+    //private int health;
+    //public int Health
+    //{
+    //    get { return health; }
+    //    set
+    //    {
+    //        health = value;
+    //        uiManager?.UpdateHealth(health);
+    //    }
+    //}
 
 
     private EnemyManager enemyManager;
@@ -71,6 +70,7 @@ public class GameManager : MonoBehaviour
         connection.InitializeMessageReceived.AddListener(InitializeMessageReceived);
         connection.LeaveMessageReceived.AddListener(LeaveMessageReceived);
         connection.EnemyKilledMessageReceived.AddListener(EnemyKilledMessageReceived);
+        connection.GameValuesUpdateReceived.AddListener(GameValuesUpdateReceived);
         connection.StartReceived.AddListener(StartReceived);
 
         uiManager.startButton.onClick.AddListener(Calibrate);
@@ -78,7 +78,6 @@ public class GameManager : MonoBehaviour
         uiManager.resumeButton.onClick.AddListener(ResumeGame);
         uiManager.exitButton.onClick.AddListener(ReloadGame);
         uiManager.ShowStart();
-        Health = 100;
 
         StartCoroutine(InitMicrophone());
     }
@@ -106,9 +105,7 @@ public class GameManager : MonoBehaviour
         mainPlayer.GetComponent<PlayerController>().StartGame();
         gameStatus = GameStatus.Playing;
         GameStarted = true;
-        uiManager.UpdateAllScores(0);
         uiManager.StartGame();
-        Health = 100;
         Debug.Log("Game Started");
     }
 
@@ -169,13 +166,13 @@ public class GameManager : MonoBehaviour
         await connection.SendEnemyShoot(shotEnemy);
     }
 
-    public void AttackPlayer()
+    public async void AttackPlayer()
     {
-        Health -= healthLossIncrement;
-        if (Health <= 0)
+        EnemyAttack attack = new EnemyAttack
         {
-            Debug.Log("YOU DEAD AF");
-        }
+            id = playerName
+        };
+        await connection.SendEnemyAttack(attack);
     }
 
     public async void Shoot(int weapon)
@@ -206,6 +203,16 @@ public class GameManager : MonoBehaviour
         pendingActions.Enqueue(() => UpdateRemoteState(state));
     }
 
+    private void GameValuesUpdateReceived(GameValues values)
+    {
+        Debug.Log($"{values.id}\tScore: {values.score}, Health: {values.health}, Kills: {values.kills}");
+        pendingActions.Enqueue(() =>
+        {
+            uiManager.UpdateScore(values.id, values.score);
+            uiManager.UpdateHealth(values.id, values.health);
+        });
+    }
+
     private void InitializeMessageReceived(Initialize init)
     {
         pendingActions.Enqueue(() => {
@@ -218,7 +225,6 @@ public class GameManager : MonoBehaviour
                 if (name == playerName)
                 {
                     mainPlayer.transform.SetParent(parent, false);
-                    mainPlayer.transform.position += new Vector3(0, playerHeight, 0);
                     allPlayers.Add(playerName, mainPlayer);
                 }
                 else
@@ -226,7 +232,6 @@ public class GameManager : MonoBehaviour
                     Debug.Log($"New player joined: {name}");
                     var newPlayer = Instantiate(player, parent);
                     newPlayer.name = name;
-                    newPlayer.transform.position += new Vector3(0, playerHeight, 0);
                     allPlayers.Add(name, newPlayer);
                 }
                 uiManager.AddPlayer(name);
@@ -251,7 +256,6 @@ public class GameManager : MonoBehaviour
         Debug.Log($"Enemy {enemyKilled.enemyId} killed by {enemyKilled.id}");
         pendingActions.Enqueue(() =>
         {
-            uiManager.UpdateScore(enemyKilled.id, killScore);
             enemyManager.KillEnemy(enemyKilled.enemyId);
         });
     }
@@ -276,7 +280,7 @@ public class GameManager : MonoBehaviour
     {
         if (state.id != playerName)
         {
-            Vector3 rotation = new Vector3(state.playerPosition[0], state.playerPosition[1], state.playerPosition[2]);
+            Vector3 rotation = new Vector3(state.rotation[0], state.rotation[1], state.rotation[2]);
             allPlayers[state.id].transform.eulerAngles = rotation;
         }
         else // measure latency
@@ -295,7 +299,7 @@ public class GameManager : MonoBehaviour
         {
             inputManager.UpdateInput();
             gameState.timestamp = DateTime.Now.Ticks;
-            gameState.playerPosition = allPlayers[playerName].transform.eulerAngles.coordinates();
+            gameState.rotation = allPlayers[playerName].transform.eulerAngles.coordinates();
             await connection.SendState(gameState);
         }
     }

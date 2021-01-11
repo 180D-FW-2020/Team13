@@ -6,10 +6,16 @@ from flask_socketio import SocketIO, send, emit, join_room, leave_room
 import os
 import random
 import json
+import redis
+import eventlet
 from client import Client
 
+eventlet.monkey_patch()
+
+REDIS_URL = os.environ.get("REDIS_URL")
+r = redis.from_url(REDIS_URL)
 app = Flask(__name__)
-socketio = SocketIO(app, async_mode='eventlet', logging=True)
+socketio = SocketIO(app, async_mode='eventlet', logging=True, message_queue=REDIS_URL)
 socketio.init_app(app, cors_allowed_origins="*")
 port = int(os.environ.get("PORT", 5000))
 

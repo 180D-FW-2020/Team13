@@ -5,3 +5,4 @@ greenlet==0.4.15
 gunicorn==19.10.0
 python-engineio==3.12.1
 python-socketio==4.5.1
+redis

@@ -260,7 +260,6 @@ public class GameManager : MonoBehaviour
     {
         if (shoot.id != playerName)
         {
-            Debug.Log($"Weapon Shoot event received form {shoot.id}");
             if (shoot.weapon != (int)GestureType.None)
             {
                 pendingActions.Enqueue(() =>

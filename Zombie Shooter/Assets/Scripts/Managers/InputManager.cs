@@ -30,6 +30,8 @@ public class InputManager : MonoBehaviour
 
     [Header("First Person Aim")]
     public float sensitivity;
+    public float xLimit;
+    public float yLimit;
 
     [Header("Computer Vision Options")]
     public RawImage webcamPreview;
@@ -82,8 +84,10 @@ public class InputManager : MonoBehaviour
         weaponController.SwitchWeapon(GetGesture());
 
         //aim reticle
-        rotation += GetAimInput();
-        player.eulerAngles = rotation * sensitivity;
+        rotation += GetAimInput() * sensitivity;
+        rotation.x = Mathf.Clamp(rotation.x, -xLimit / 2, xLimit / 2);
+        rotation.y = Mathf.Clamp(rotation.y, -yLimit / 2, yLimit / 2);
+        player.eulerAngles = rotation;
         velocity = (player.eulerAngles - previousRotation).sqrMagnitude / Time.deltaTime;
         previousRotation = player.eulerAngles;
     }

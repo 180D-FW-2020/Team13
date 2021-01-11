@@ -4451,6 +4451,8 @@ MonoBehaviour:
   player: {fileID: 736461857}
   weaponController: {fileID: 1041269404}
   sensitivity: 10
+  xLimit: 110
+  yLimit: 180
   webcamPreview: {fileID: 1306310098}
   calibrationPreview: {fileID: 1936927460}
   enablePreview: 1

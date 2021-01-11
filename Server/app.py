@@ -6,13 +6,14 @@ from flask_socketio import SocketIO, send, emit, join_room, leave_room
 import os
 import random
 import json
+from client import Client
 
 app = Flask(__name__)
 socketio = SocketIO(app, async_mode='eventlet', logging=True)
 socketio.init_app(app, cors_allowed_origins="*")
 port = int(os.environ.get("PORT", 5000))
 
-connected_clients = []
+connected_clients = {}
 enemies = {}
 
 #test
@@ -67,12 +68,13 @@ def on_register(s):
         init_enemies()
 
     name = data["id"]
-    connected_clients.append(name)
+    client = Client(name)
+    connected_clients[name] = client
     print("Registered " + name)
     print("Player list: " + ", ".join(connected_clients))
 
     response = {}
-    response["playerList"] = connected_clients
+    response["playerList"] = connected_clients.keys()
     response["enemyPositions"] = enemies
     emit("initialize", json.dumps(response), broadcast=True)
 
@@ -82,7 +84,7 @@ def on_register(s):
 def on_leave(s):
     data = json.loads(s)
     name = data["id"]
-    connected_clients.remove(name)
+    del connected_clients[name]
     print("Removed " + name)
 
     response = {}
@@ -92,18 +94,32 @@ def on_leave(s):
 
 # - client updates that it shot a zombie
 # - server figures out if it is already shot or that it should
-# notify all clients that it is killed (to play animation/update score/etc)
+# - notify all clients that it is killed (to play animation/update score/etc)
 @socketio.on("shoot_enemy")
 def on_shoot_enemy(s):
     data = json.loads(s)
     enemy_id = data["enemyId"]
-    player = data["id"]
+    name = data["id"]
 
-    print("Enemy " + enemy_id + " shot by " + player)
+    print("Enemy " + enemy_id + " shot by " + name)
     if str(enemy_id) in enemies.keys():
-        emit("enemy_killed", json.dumps(data), broadcast=True)
-        print("Enemy " + enemy_id + " killed by " + player)
+        connected_clients[name].register_kill()
+        response = connected_clients[name].get_json()
+        emit("enemy_killed", json.dumps(s), broadcast=True)
+        emit("update_values", json.dumps(response), broadcast=True)
+        print("Enemy " + enemy_id + " killed by " + name)
         del enemies[enemy_id]
+
+@socketio.on("enemy_attack")
+def on_attach_player(s):
+    data = json.loads(s)
+    name = data["id"]
+
+    print("Enemy attacking " + name)
+    connected_clients[name].decrease_health()
+    response = connected_clients[name].get_json()
+    emit("update_values", json.dumps(response), broadcast=True)
+
 
 # - each enemy has an id, so server can figure out which one is shot
 # - randomly sampled positions

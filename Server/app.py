@@ -8,14 +8,14 @@ import random
 import json
 import redis
 import eventlet
-from client import Client
-
 eventlet.monkey_patch()
+
+from client import Client
 
 REDIS_URL = os.environ.get("REDIS_URL")
 r = redis.from_url(REDIS_URL)
 app = Flask(__name__)
-socketio = SocketIO(app, async_mode='eventlet', logging=True, message_queue=REDIS_URL)
+socketio = SocketIO(app, async_mode='eventlet', logging=True)
 socketio.init_app(app, cors_allowed_origins="*")
 port = int(os.environ.get("PORT", 5000))
 

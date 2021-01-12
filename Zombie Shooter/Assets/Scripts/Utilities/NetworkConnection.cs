@@ -36,12 +36,10 @@ public class NetworkConnection
 
         client.OnOpen += () =>
         {
-            Debug.Log("Connected to server");
             messageQueue.Enqueue("OPEN");
         };
         client.OnClose += (e) =>
         {
-            Debug.Log("Disconnected from server");
             messageQueue.Enqueue("CLOSE");
         };
         client.OnError += (e) =>

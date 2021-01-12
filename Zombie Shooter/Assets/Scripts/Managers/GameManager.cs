@@ -189,6 +189,7 @@ public class GameManager : MonoBehaviour
     #region Network callbacks
     public async void ConnectionOpened()
     {
+        Debug.Log("Connected to server");
         Register register = new Register
         {
             id = playerName
@@ -197,9 +198,9 @@ public class GameManager : MonoBehaviour
         WaitForPlayers();
     }
 
-    public async void ConnectionClosed()
+    public void ConnectionClosed()
     {
-
+        Debug.Log("Disconnected from server");
     }
 
     public async void SendStart()
@@ -290,7 +291,6 @@ public class GameManager : MonoBehaviour
         long now = DateTime.Now.Ticks;
         double roundtripLatency = TimeSpan.FromTicks(now - pong.timestamp).TotalMilliseconds;
         //oneWayLatency = roundtripLatency/2
-        Debug.Log($"Latency: {roundtripLatency}");
         pendingActions.Enqueue(() =>
         {
             uiManager.UpdateLatency(roundtripLatency);

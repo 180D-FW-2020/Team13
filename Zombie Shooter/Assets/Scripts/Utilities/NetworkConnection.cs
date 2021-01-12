@@ -6,12 +6,12 @@ using UnityEngine;
 using UnityEngine.Events;
 using SocketIOClient;
 using Newtonsoft.Json;
+using SocketIOClient.Packgers;
 
 public class NetworkConnection
 {
     public UnityEvent StartReceived = new UnityEvent();
     public UnityEvent<Ping> PongReceived = new UnityEvent<Ping>();
-    public UnityEvent<GameState> PlayerStateReceived = new UnityEvent<GameState>();
     public UnityEvent<Initialize> InitializeMessageReceived = new UnityEvent<Initialize>();
     public UnityEvent<Leave> LeaveMessageReceived = new UnityEvent<Leave>();
     public UnityEvent<EnemyKilled> EnemyKilledMessageReceived = new UnityEvent<EnemyKilled>();
@@ -22,7 +22,8 @@ public class NetworkConnection
     // Connect to server and initialize async events
     public NetworkConnection()
     {
-        client = new SocketIO("https://zombie-shooter-server.herokuapp.com/");
+        client = new SocketIO("http://localhost:3000");
+        //client = new SocketIO("https://zombie-shooter-server.herokuapp.com/");
 
         client.OnConnected += (s, e) => Debug.Log("Connected to server");
         client.OnDisconnected += (s, e) => Debug.Log("Disconnected from server");
@@ -32,17 +33,17 @@ public class NetworkConnection
             TypeNameHandling = TypeNameHandling.All
         };
 
-        client.On("pong", response =>
-        {
-            PlayerStateReceived.Invoke(JsonConvert.DeserializeObject<GameState>(response.GetValue<string>(), settings));
-        });
         client.On("start", response =>
         {
             StartReceived.Invoke();
         });
+        client.On("pong", response =>
+        {
+            PongReceived.Invoke(JsonConvert.DeserializeObject<Ping>(response.GetValue<string>(), settings));
+        });
         client.On("remoteState", response =>
         {
-            PlayerStateReceived.Invoke(JsonConvert.DeserializeObject<GameState>(response.GetValue<string>(), settings));
+            RemoteStateUpdateReceived.Invoke(JsonConvert.DeserializeObject<RemoteState>(response.GetValue<string>(), settings));
         });
         client.On("enemyKilled", response =>
         {
@@ -59,13 +60,9 @@ public class NetworkConnection
 
     }
 
-    public async Task Connect(string playerName)
+    public async Task Connect(Register register)
     {
         await client.ConnectAsync();
-        Register register = new Register
-        {
-            id = playerName
-        };
         await client.EmitAsync("register", JsonConvert.SerializeObject(register));
     }
 

@@ -20,7 +20,8 @@ io.on('connection', socket => {
         io.emit('start', data);
     });
     
-    socket.on('register', (data) => {
+    socket.on('register', (j) => {
+        const data = JSON.parse(j);
         console.log("Adding " + data.id);
     
         if (Object.keys(connectedClients).length == 0){
@@ -34,35 +35,39 @@ io.on('connection', socket => {
             playerList: Object.keys(connectedClients),
             enemyPositions: enemies
         }
-        io.emit('initialize', init);
+        io.emit('initialize', JSON.stringify(init));
     });
     
-    socket.on('leave', (data) => {
+    socket.on('leave', (j) => {
+        const data = JSON.parse(j);
         console.log("Removing " + data.id);
         delete connectedClients[data.id];
     
         let leave = {
             playerList: Object.keys(connectedClients)
         }
-        io.emit('leave', leave);
+        io.emit('leave', JSON.stringify(leave));
     });
     
-    socket.on('enemyAttack', (data) => {
+    socket.on('enemyAttack', (j) => {
+        const data = JSON.parse(j);
         console.log("Enemy attacking " + data.id);
         connectedClients[data.id].decrementHealth();
     });
     
-    socket.on('enemyShot', (data) => {
+    socket.on('enemyShot', (j) => {
+        const data = JSON.parse(j);
         console.log("Enemy " + data.enemyId + " shot by " + data.id);
         if (data.enemyId in enemies) {
             console.log("Enemy " + data.enemyId + " killed by " + data.id);
-            io.emit('enemyKilled', data);
+            io.emit('enemyKilled', j);
             connectedClients[data.id].registerKill();
         }
     });
     
-    socket.on('state', (data) => {
-        connectedClients[data.id].updateRotation(data.rotation);
+    socket.on('state', (j) => {
+        const data = JSON.parse(j);
+        connectedClients[data.id].updatePlayerState(data);
     })
 });
 
@@ -75,6 +80,6 @@ function initEnemies() {
 
 setInterval(function(){
     for (const name in connectedClients) {
-        io.emit('remoteState', connectedClients[name].state); 
+        io.emit('remoteState', JSON.stringify(connectedClients[name].state)); 
     }
 }, updateInterval);

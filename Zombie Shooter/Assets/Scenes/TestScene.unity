@@ -4367,9 +4367,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   player: {fileID: 4284596150926379969, guid: ff2ba6fa864fef84cb94c3b85ed94c95, type: 3}
   mainPlayer: {fileID: 736461855}
-  playerHeight: 0
   playersParent: {fileID: 725508276}
   playerWeaponObject: {fileID: 1041269402}
+  pingInterval: 2
 --- !u!4 &1988368587
 Transform:
   m_ObjectHideFlags: 0

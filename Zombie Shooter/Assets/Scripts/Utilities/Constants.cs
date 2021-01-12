@@ -30,7 +30,7 @@ public class GameState
 {
     public string id;
     public List<float> rotation;
-    public bool shooting;
+    public int shooting;
 }
 
 //sent from server to client

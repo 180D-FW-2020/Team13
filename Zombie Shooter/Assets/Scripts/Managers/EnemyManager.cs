@@ -13,13 +13,21 @@ public class EnemyManager : MonoBehaviour
     public float dieDelay;
 
     private GameManager gameManager;
-    private List<GameObject> enemies = new List<GameObject>();
+    private List<EnemyController> enemies = new List<EnemyController>();
 
     public void Awake()
     {
         gameManager = GetComponent<GameManager>();
     }
     
+    public void StartGame()
+    {
+        foreach (EnemyController enemyController in enemies)
+        {
+            enemyController.StartGame();
+        }
+    }
+
     public void Initialize(Dictionary<string, string> positions)
     {
         if (enemies.Count == 0) //check if already initialized
@@ -32,7 +40,7 @@ public class EnemyManager : MonoBehaviour
                 spawnedEnemyController.SetTarget(target.transform);
                 spawnedEnemyController.SetGameManager(gameManager);
                 spawnedEnemy.name = position.Key;
-                enemies.Add(spawnedEnemy);
+                enemies.Add(spawnedEnemyController);
             }
         }
     }
@@ -41,7 +49,7 @@ public class EnemyManager : MonoBehaviour
     {
         var enemy = transform.Find(enemyId);
         var enemyController = enemy.GetComponent<EnemyController>();
+        enemies.Remove(enemyController);
         StartCoroutine(enemyController.Die());
-        enemies.Remove(enemy.gameObject);
     }
 }

@@ -4,10 +4,11 @@ using UnityEngine;
 
 public enum EnemyState
 {
-    Idle = 0,
-    Moving = 1,
-    Attacking = 2,
-    Dead = 3
+    None = 0,
+    Idle = 1,
+    Moving = 2,
+    Attacking = 3,
+    Dead = 4
 }
 
 
@@ -26,20 +27,24 @@ public class EnemyController : MonoBehaviour
 
     private EnemyState state;
 
-    public void Start()
+    private void Start()
     {
         state = EnemyState.Idle;
-        StartCoroutine(WaitForMove());
+    }
+
+    public void StartGame()
+    {
+        //StartCoroutine(WaitForMove());
     }
 
     public void FixedUpdate()
     {
-        Vector3 dir = target.position - transform.position;
-        Quaternion rotation = Quaternion.LookRotation(dir);
-        transform.rotation = Quaternion.Euler(0, rotation.eulerAngles.y, 0);
+        //Vector3 dir = target.position - transform.position;
+        //Quaternion rotation = Quaternion.LookRotation(dir);
+        //transform.rotation = Quaternion.Euler(0, rotation.eulerAngles.y, 0);
 
-        if (state == EnemyState.Moving && Vector2.Distance(target.position.xz(), transform.position.xz()) < attackDistance)
-            StartCoroutine(Attack());
+        //if (state == EnemyState.Moving && Vector2.Distance(target.position.xz(), transform.position.xz()) < attackDistance)
+        //    StartCoroutine(Attack());
     }
 
     public IEnumerator WaitForMove()

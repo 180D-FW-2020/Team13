@@ -22,7 +22,7 @@ class Client {
     }
 
     decrementHealth() {
-        this.json.health -= healthIncrement;
+        this.state.health -= healthIncrement;
     }
 
     updatePlayerState(data) {

@@ -21,6 +21,8 @@ public class GameManager : MonoBehaviour
     public Transform playersParent;
     public GameObject playerWeaponObject;
 
+    public float pingInterval;
+
     private EnemyManager enemyManager;
     private InputManager inputManager;
     private UIManager uiManager;
@@ -48,12 +50,10 @@ public class GameManager : MonoBehaviour
 
         // connect all event listeners to the proper networking and UI events
         connection = new NetworkConnection();
-        connection.PlayerStateReceived.AddListener(PlayerStateReceived);
-        connection.WeaponShootReceived.AddListener(WeaponShootReceived);
         connection.InitializeMessageReceived.AddListener(InitializeMessageReceived);
         connection.LeaveMessageReceived.AddListener(LeaveMessageReceived);
         connection.EnemyKilledMessageReceived.AddListener(EnemyKilledMessageReceived);
-        connection.RemoteStateUpdateReceived.AddListener(GameValuesUpdateReceived);
+        connection.RemoteStateUpdateReceived.AddListener(RemoteStateUpdateReceived);
         connection.StartReceived.AddListener(StartReceived);
 
         uiManager.startButton.onClick.AddListener(Calibrate);
@@ -63,6 +63,20 @@ public class GameManager : MonoBehaviour
         uiManager.ShowStart();
 
         StartCoroutine(InitMicrophone());
+        StartCoroutine(MeasureLatency());
+    }
+
+    private IEnumerator MeasureLatency()
+    {
+        while (true)
+        {
+            yield return new WaitForSeconds(pingInterval);
+            Ping ping = new Ping
+            {
+                timestamp = DateTime.Now.Ticks
+            };
+            Task.Run(() => connection.SendPing(ping)).Wait();
+        }
     }
 
     private IEnumerator InitMicrophone()
@@ -89,6 +103,7 @@ public class GameManager : MonoBehaviour
         gameStatus = GameStatus.Playing;
         GameStarted = true;
         uiManager.StartGame();
+        enemyManager.StartGame();
         Debug.Log("Game Started");
     }
 
@@ -108,7 +123,11 @@ public class GameManager : MonoBehaviour
         uiManager.ShowConnecting();
         playerName = uiManager.GetPlayerName();
         gameState.id = playerName;
-        await connection.Connect(playerName);
+        Register register = new Register
+        {
+            id = playerName
+        };
+        await connection.Connect(register);
         WaitForPlayers();
     }
 
@@ -158,14 +177,9 @@ public class GameManager : MonoBehaviour
         await connection.SendEnemyAttack(attack);
     }
 
-    public async void Shoot(int weapon)
+    public void Shoot(int weapon)
     {
-        WeaponShoot shoot = new WeaponShoot
-        {
-            id = playerName,
-            weapon = weapon
-        };
-        await connection.SendShoot(shoot);
+        gameState.shooting = weapon;
     }
 
     #endregion
@@ -179,11 +193,6 @@ public class GameManager : MonoBehaviour
     private void StartReceived()
     {
         pendingActions.Enqueue(() => StartGame());
-    }
-
-    private void PlayerStateReceived(GameState state)
-    {
-        pendingActions.Enqueue(() => UpdateRemoteState(state));
     }
 
     private void RemoteStateUpdateReceived(RemoteState state)
@@ -253,39 +262,31 @@ public class GameManager : MonoBehaviour
         });
     }
 
-    //public void UpdateRemoteState(GameState state)
-    //{
-    //    if (state.id != playerName)
-    //    {
-    //        Vector3 rotation = new Vector3(state.rotation[0], state.rotation[1], state.rotation[2]);
-    //        allPlayers[state.id].transform.eulerAngles = rotation;
-    //    }
-    //    else // measure latency
-    //    {
-    //        long now = DateTime.Now.Ticks;
-    //        double roundtripLatency = TimeSpan.FromTicks(now - state.timestamp).TotalMilliseconds;
-    //        //oneWayLatency = roundtripLatency/2 
-    //        uiManager.UpdateLatency(roundtripLatency);
-    //    }
-    //}
+    public void PongReceived(Ping pong)
+    {
+        long now = DateTime.Now.Ticks;
+        double roundtripLatency = TimeSpan.FromTicks(now - pong.timestamp).TotalMilliseconds;
+        //oneWayLatency = roundtripLatency/2
+        Debug.Log($"Latency: {roundtripLatency}");
+        uiManager.UpdateLatency(roundtripLatency);
+    }
     #endregion
 
     public async void FixedUpdate()
     {
         if (GameStarted)
         {
-            inputManager.UpdateInput();
-            gameState.timestamp = DateTime.Now.Ticks;
+            uiManager.UpdateAmmo(inputManager.weaponController.GetCurrentAmmo());
             gameState.rotation = allPlayers[playerName].transform.eulerAngles.coordinates();
             await connection.SendState(gameState);
+            gameState.shooting = 0;
         }
+        while (pendingActions.Count > 0)
+            pendingActions.Dequeue()();
     }
 
     private void Update()
     {
-        while (pendingActions.Count > 0)
-            pendingActions.Dequeue()();
-
         if (gameStatus == GameStatus.Calibrating)
         {
             inputManager.UpdateCalibration();
@@ -294,7 +295,6 @@ public class GameManager : MonoBehaviour
         if (GameStarted)
         {
             inputManager.UpdateInput();
-            uiManager.UpdateAmmo(inputManager.weaponController.GetCurrentAmmo());
         }
     }
 

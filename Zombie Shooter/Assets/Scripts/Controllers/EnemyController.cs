@@ -39,9 +39,9 @@ public class EnemyController : MonoBehaviour
 
     public void FixedUpdate()
     {
-        //Vector3 dir = target.position - transform.position;
-        //Quaternion rotation = Quaternion.LookRotation(dir);
-        //transform.rotation = Quaternion.Euler(0, rotation.eulerAngles.y, 0);
+        Vector3 dir = target.position - transform.position;
+        Quaternion rotation = Quaternion.LookRotation(dir);
+        transform.rotation = Quaternion.Euler(0, rotation.eulerAngles.y, 0);
 
         //if (state == EnemyState.Moving && Vector2.Distance(target.position.xz(), transform.position.xz()) < attackDistance)
         //    StartCoroutine(Attack());

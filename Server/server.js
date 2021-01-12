@@ -51,23 +51,29 @@ io.on('connection', socket => {
     
     socket.on('enemyAttack', (j) => {
         const data = JSON.parse(j);
-        console.log("Enemy attacking " + data.id);
+        const name = data.id;
+        console.log("Enemy attacking " + name);
         connectedClients[data.id].decrementHealth();
+        io.emit('remoteState', JSON.stringify(connectedClients[name].state));
     });
     
     socket.on('enemyShot', (j) => {
         const data = JSON.parse(j);
-        console.log("Enemy " + data.enemyId + " shot by " + data.id);
+        const name = data.id;
+        console.log("Enemy " + data.enemyId + " shot by " + name);
         if (data.enemyId in enemies) {
-            console.log("Enemy " + data.enemyId + " killed by " + data.id);
+            console.log("Enemy " + data.enemyId + " killed by " + name);
             io.emit('enemyKilled', j);
             connectedClients[data.id].registerKill();
+            io.emit('remoteState', JSON.stringify(connectedClients[name].state));
         }
     });
     
     socket.on('state', (j) => {
         const data = JSON.parse(j);
+        const name = data.id;
         connectedClients[data.id].updatePlayerState(data);
+        io.emit('remoteState', JSON.stringify(connectedClients[name].state));
     })
 });
 
@@ -77,9 +83,3 @@ function initEnemies() {
     }
     console.log('Enemies initialized to: ' + JSON.stringify(enemies));
 }
-
-setInterval(function(){
-    for (const name in connectedClients) {
-        io.emit('remoteState', JSON.stringify(connectedClients[name].state)); 
-    }
-}, updateInterval);

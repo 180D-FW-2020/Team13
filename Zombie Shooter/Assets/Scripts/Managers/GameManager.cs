@@ -22,6 +22,7 @@ public class GameManager : MonoBehaviour
     public GameObject playerWeaponObject;
 
     public float pingInterval;
+    public int maxBufferSize;
 
     private EnemyManager enemyManager;
     private InputManager inputManager;
@@ -197,22 +198,27 @@ public class GameManager : MonoBehaviour
 
     private void RemoteStateUpdateReceived(RemoteState state)
     {
-        Debug.Log($"{state.id}\tScore: {state.score}, Health: {state.health}, Kills: {state.kills}");
-        pendingActions.Enqueue(() =>
+        if (pendingActions.Count < maxBufferSize)
         {
-            uiManager.UpdateScore(state.id, state.score);
-            uiManager.UpdateHealth(state.id, state.health);
-
-            if (state.id != playerName && state.shooting != (int)GestureType.None)
+            pendingActions.Enqueue(() =>
             {
-                WeaponController weaponController = allPlayers[state.id].GetComponentInChildren<WeaponController>();
-                weaponController.SwitchWeapon((GestureType)state.shooting);
-                weaponController.Shoot();
+                uiManager.UpdateScore(state.id, state.score);
+                uiManager.UpdateHealth(state.id, state.health);
 
-                Vector3 rotation = new Vector3(state.rotation[0], state.rotation[1], state.rotation[2]);
-                allPlayers[state.id].transform.eulerAngles = rotation;
-            }
-        });
+                if (state.id != playerName)
+                {
+                    if (state.shooting != (int)GestureType.None)
+                    {
+                        WeaponController weaponController = allPlayers[state.id].GetComponentInChildren<WeaponController>();
+                        weaponController.SwitchWeapon((GestureType)state.shooting);
+                        weaponController.Shoot();
+                    }
+
+                    Vector3 rotation = new Vector3(state.rotation[0], state.rotation[1], state.rotation[2]);
+                    allPlayers[state.id].transform.eulerAngles = rotation;
+                }
+            });
+        }
     }
 
     private void InitializeMessageReceived(Initialize init)
@@ -281,12 +287,16 @@ public class GameManager : MonoBehaviour
             await connection.SendState(gameState);
             gameState.shooting = 0;
         }
-        while (pendingActions.Count > 0)
-            pendingActions.Dequeue()();
     }
 
     private void Update()
     {
+        while (pendingActions.Count > 0)
+        {
+            Debug.Log($"Queue has {pendingActions.Count} elements");
+            pendingActions.Dequeue()();
+        }
+
         if (gameStatus == GameStatus.Calibrating)
         {
             inputManager.UpdateCalibration();

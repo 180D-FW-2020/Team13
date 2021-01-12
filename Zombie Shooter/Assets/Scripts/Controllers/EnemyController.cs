@@ -4,10 +4,11 @@ using UnityEngine;
 
 public enum EnemyState
 {
-    Idle = 0,
-    Moving = 1,
-    Attacking = 2,
-    Dead = 3
+    None = 0,
+    Idle = 1,
+    Moving = 2,
+    Attacking = 3,
+    Dead = 4
 }
 
 
@@ -26,9 +27,13 @@ public class EnemyController : MonoBehaviour
 
     private EnemyState state;
 
-    public void Start()
+    private void Start()
     {
         state = EnemyState.Idle;
+    }
+
+    public void StartGame()
+    {
         //StartCoroutine(WaitForMove());
     }
 
@@ -71,16 +76,33 @@ public class EnemyController : MonoBehaviour
         }
     }
 
-    public void ChangeHealth(float health)
+    public void Kill(Transform killElement)
     {
-        gameManager.KillEnemy(gameObject);
+        if (state != EnemyState.Dead)
+        {
+            Transform parent = killElement.parent;
+            WeaponController weaponController;
+            while (parent != null)
+            {
+                if ((weaponController = parent.GetComponent<WeaponController>()) != null)
+                {
+                    if (weaponController.playerWeapon)
+                    {
+                        gameManager.KillEnemy(gameObject);
+                        break;
+                    }
+                }
+                parent = parent.parent;
+            }
+        }
     }
 
     public IEnumerator Die()
     {
+        if (state == EnemyState.Dead)
+            yield break;
         state = EnemyState.Dead;
         animator.SetTrigger(Constants.TRIGGER_FALLDOWN);
-        gameObject.tag = "DeadEnemy"; //prevent double shoot
         yield return new WaitForSeconds(dieDelay);
         Destroy(gameObject);
     }

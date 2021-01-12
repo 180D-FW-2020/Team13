@@ -1,0 +1,10 @@
+<div id="log"></div>
+<script>
+	var HOST = location.origin.replace(/^http/, 'ws')
+    var ws = new WebSocket(HOST);
+    var log = document.getElementById("log");
+
+    ws.onmessage = function (event) {
+        el.innerHTML += "<br>" + event.data;
+    };
+</script>

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
 using UnityEngine;
@@ -15,27 +16,13 @@ using UnityEngine.UI;
 // as work with the UIManager to coordinate UI events
 public class GameManager : MonoBehaviour
 {
-    public GameObject crosshair;
+    public GameObject player;
+    public GameObject mainPlayer;
     public Transform playersParent;
-    public PlayerController playerController;
     public GameObject playerWeaponObject;
 
-    [Header("Game Scoring Constants")]
-    public int healthLossIncrement;
-    public int hitScore;
-    public int killScore;
-
-    private int health;
-    public int Health
-    {
-        get { return health; }
-        set
-        {
-            health = value;
-            uiManager?.UpdateHealth(health);
-        }
-    }
-
+    public float pingInterval;
+    public int maxBufferSize;
 
     private EnemyManager enemyManager;
     private InputManager inputManager;
@@ -46,15 +33,10 @@ public class GameManager : MonoBehaviour
     private GameState gameState = new GameState();
     private Queue<Action> pendingActions = new Queue<Action>();
     private Dictionary<string, GameObject> allPlayers = new Dictionary<string, GameObject>();
-    private string playerName, room;
-    private long serverTimeOffset;
+    private string playerName;
 
     private GameStatus gameStatus = GameStatus.Start;
     internal bool GameStarted = false;
-
-    private int currentAmmo;
-    private int currentHeat;
-    private int maxHeat;
 
     public void Awake()
     {
@@ -69,19 +51,35 @@ public class GameManager : MonoBehaviour
 
         // connect all event listeners to the proper networking and UI events
         connection = new NetworkConnection();
-        connection.PlayerStateReceived.AddListener(PlayerStateReceived);
         connection.InitializeMessageReceived.AddListener(InitializeMessageReceived);
+        connection.LeaveMessageReceived.AddListener(LeaveMessageReceived);
         connection.EnemyKilledMessageReceived.AddListener(EnemyKilledMessageReceived);
+        connection.RemoteStateUpdateReceived.AddListener(RemoteStateUpdateReceived);
         connection.StartReceived.AddListener(StartReceived);
+        connection.PongReceived.AddListener(PongReceived);
+        connection.Opened.AddListener(ConnectionOpened);
 
         uiManager.startButton.onClick.AddListener(Calibrate);
         uiManager.playButton.onClick.AddListener(SendStart);
         uiManager.resumeButton.onClick.AddListener(ResumeGame);
         uiManager.exitButton.onClick.AddListener(ReloadGame);
         uiManager.ShowStart();
-        Health = 100;
 
         StartCoroutine(InitMicrophone());
+        StartCoroutine(MeasureLatency());
+    }
+
+    private IEnumerator MeasureLatency()
+    {
+        while (true)
+        {
+            yield return new WaitForSeconds(pingInterval);
+            Ping ping = new Ping
+            {
+                timestamp = DateTime.Now.Ticks
+            };
+            Task.Run(async () => await connection.Send(ping));
+        }
     }
 
     private IEnumerator InitMicrophone()
@@ -104,23 +102,26 @@ public class GameManager : MonoBehaviour
     public void StartGame()
     {
         playerWeaponObject.SetActive(true);
-        playerController.StartGame();
+        mainPlayer.GetComponent<PlayerController>().StartGame();
         gameStatus = GameStatus.Playing;
         GameStarted = true;
-        uiManager.UpdateAllScores(0);
         uiManager.StartGame();
-        Health = 100;
+        enemyManager.StartGame();
         Debug.Log("Game Started");
     }
 
     public void Calibrate()
     {
-        if (inputManager.aimInputType == AimInputType.Finger) {
+        if (inputManager.aimInputType == AimInputType.Finger)
+        {
             uiManager.calibrationText.text = "Cover all boxes with hand/object." + Environment.NewLine + "Press 'C' to calibrate.";
             uiManager.StartCalibration();
             gameStatus = GameStatus.Calibrating;
-        } else
+        }
+        else
+        {
             Connect();
+        }
     }
 
     public async void Connect()
@@ -129,21 +130,13 @@ public class GameManager : MonoBehaviour
         uiManager.ShowConnecting();
         playerName = uiManager.GetPlayerName();
         gameState.id = playerName;
-        await connection.Connect(playerName);
-        WaitForPlayers();
+        await connection.Connect();
     }
 
     public void WaitForPlayers()
     {
         gameStatus = GameStatus.Waiting;
         uiManager.EnterWaitingRoom();
-
-        var player = Instantiate(crosshair, playersParent);
-        player.GetComponent<Text>().text = playerName;
-        player.name = playerName;
-        allPlayers.Add(playerName, player);
-        uiManager.AddPlayer(playerName);
-        inputManager.playerReticle = player.transform;
     }
 
     public void PauseGame()
@@ -173,24 +166,50 @@ public class GameManager : MonoBehaviour
             enemyId = enemy.name,
             id = playerName
         };
-        await connection.SendEnemyShoot(shotEnemy);
+        enemyManager.KillEnemy(enemy.name);
+        await connection.Send(shotEnemy);
     }
 
-    public void AttackPlayer()
+    public async void AttackPlayer()
     {
-        Health -= healthLossIncrement;
-        if (Health <= 0)
+        EnemyAttack attack = new EnemyAttack
         {
-            Debug.Log("YOU DEAD AF");
-        }
+            id = playerName
+        };
+        await connection.Send(attack);
+    }
+
+    public void Shoot(int weapon)
+    {
+        gameState.shooting = weapon;
     }
 
     #endregion
 
     #region Network callbacks
+    public async void ConnectionOpened()
+    {
+        Debug.Log("Connected to server");
+        Register register = new Register
+        {
+            id = playerName
+        };
+        await connection.Send(register);
+        WaitForPlayers();
+    }
+
+    public void ConnectionClosed()
+    {
+        Debug.Log("Disconnected from server");
+    }
+
     public async void SendStart()
     {
-        await connection.SendStart();
+        Message start = new Message
+        {
+            type = "start"
+        };
+        await connection.Send(start);
     }
 
     private void StartReceived()
@@ -198,51 +217,84 @@ public class GameManager : MonoBehaviour
         pendingActions.Enqueue(() => StartGame());
     }
 
-    private void PlayerStateReceived(GameState state)
+    private void RemoteStateUpdateReceived(RemoteState state)
     {
-        pendingActions.Enqueue(() => UpdateRemoteState(state));
+        pendingActions.Enqueue(() =>
+        {
+            uiManager.UpdateScore(state.id, state.score);
+            uiManager.UpdateHealth(state.id, state.health);
+
+            if (state.id != playerName)
+            {
+                if (state.shooting != (int)GestureType.None)
+                {
+                    WeaponController weaponController = allPlayers[state.id].GetComponentInChildren<WeaponController>();
+                    weaponController.SwitchWeapon((GestureType)state.shooting);
+                    weaponController.Shoot();
+                }
+
+                Vector3 rotation = new Vector3(state.rotation[0], state.rotation[1], state.rotation[2]);
+                allPlayers[state.id].transform.eulerAngles = rotation;
+            }
+        });
     }
 
     private void InitializeMessageReceived(Initialize init)
     {
-        pendingActions.Enqueue(() => uiManager.UpdatePlayerList(init.playerList));
+        pendingActions.Enqueue(() => {
+            uiManager.UpdatePlayerList(init.playerList);
+
+            for (int i = allPlayers.Count; i < init.playerList.Count; i++)
+            {
+                var name = init.playerList[i];
+                var parent = playersParent.Find(allPlayers.Count.ToString());
+                if (name == playerName)
+                {
+                    mainPlayer.transform.SetParent(parent, false);
+                    allPlayers.Add(playerName, mainPlayer);
+                }
+                else
+                {
+                    Debug.Log($"New player joined: {name}");
+                    var newPlayer = Instantiate(player, parent);
+                    newPlayer.name = name;
+                    allPlayers.Add(name, newPlayer);
+                }
+                uiManager.AddPlayer(name);
+            }
+        });
         pendingActions.Enqueue(() => enemyManager.Initialize(init.enemyPositions));
     }
+
+    private void LeaveMessageReceived(Leave leave)
+    {
+        Debug.Log($"{leave.id} leaving");
+        pendingActions.Enqueue(() => {
+            uiManager.UpdatePlayerList(leave.playerList);
+
+            Destroy(allPlayers[leave.id]);
+            allPlayers.Remove(leave.id);
+        });
+    }
+
     private void EnemyKilledMessageReceived(EnemyKilled enemyKilled)
     {
+        Debug.Log($"Enemy {enemyKilled.enemyId} killed by {enemyKilled.id}");
         pendingActions.Enqueue(() =>
         {
-            uiManager.UpdateScore(enemyKilled.id, killScore);
             enemyManager.KillEnemy(enemyKilled.enemyId);
         });
     }
-    public void UpdateRemoteState(GameState state)
+
+    public void PongReceived(Ping pong)
     {
-        if (state.id != playerName)
+        long now = DateTime.Now.Ticks;
+        double roundtripLatency = TimeSpan.FromTicks(now - pong.timestamp).TotalMilliseconds;
+        //oneWayLatency = roundtripLatency/2
+        pendingActions.Enqueue(() =>
         {
-            Vector3 position = new Vector3(state.playerPosition[0] * Screen.width, state.playerPosition[1] * Screen.height, 0);
-            if (allPlayers.ContainsKey(state.id))
-            {
-                allPlayers[state.id].transform.position = position;
-            }
-            else
-            {
-                Debug.Log($"New player joined: {state.id}");
-                var newPlayer = Instantiate(crosshair, playersParent);
-                newPlayer.GetComponent<Text>().text = state.id;
-                newPlayer.transform.position = position;
-                newPlayer.name = state.id;
-                allPlayers.Add(state.id, newPlayer);
-                uiManager.AddPlayer(state.id);
-            }
-        }
-        else // measure latency
-        {
-            long now = DateTime.Now.Ticks;
-            double roundtripLatency = TimeSpan.FromTicks(now - state.timestamp).TotalMilliseconds;
-            //serverTimeOffset = (now - state.timestamp)/2 
             uiManager.UpdateLatency(roundtripLatency);
-        }
+        });
     }
     #endregion
 
@@ -250,17 +302,20 @@ public class GameManager : MonoBehaviour
     {
         if (GameStarted)
         {
-            inputManager.UpdateInput();
-            gameState.timestamp = DateTime.Now.Ticks;
-            gameState.playerPosition = allPlayers[playerName].transform.position.normalizedCoordinates();
-            await connection.SendState(gameState);
+            uiManager.UpdateAmmo(inputManager.weaponController.GetCurrentAmmo());
+            gameState.rotation = allPlayers[playerName].transform.eulerAngles.coordinates();
+            await connection.Send(gameState);
+            gameState.shooting = 0;
         }
     }
 
     private void Update()
     {
+        connection.Update();
         while (pendingActions.Count > 0)
+        {
             pendingActions.Dequeue()();
+        }
 
         if (gameStatus == GameStatus.Calibrating)
         {
@@ -270,7 +325,6 @@ public class GameManager : MonoBehaviour
         if (GameStarted)
         {
             inputManager.UpdateInput();
-            uiManager.UpdateAmmo(inputManager.weaponController.GetCurrentAmmo());
         }
     }
 

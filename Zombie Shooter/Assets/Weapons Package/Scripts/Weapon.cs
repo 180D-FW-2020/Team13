@@ -294,7 +294,7 @@ public class Weapon : MonoBehaviour
 		// CheckForUserInput() handles the firing based on user input
 		if (playerWeapon)
 		{
-			CheckForUserInput();
+			//CheckForUserInput();
 		}
 
 		// Reload if the weapon is out of ammo
@@ -615,7 +615,7 @@ public class Weapon : MonoBehaviour
 				}
 				
 				// Damage
-				hit.collider.gameObject.SendMessageUpwards("ChangeHealth", -damage, SendMessageOptions.DontRequireReceiver);
+				hit.collider.gameObject.SendMessageUpwards("Kill", transform, SendMessageOptions.DontRequireReceiver);
 				
 				if (shooterAIEnabled)
 				{
@@ -767,7 +767,7 @@ public class Weapon : MonoBehaviour
 					foreach (GameObject hitEffect in hitEffects)
 					{
 						if (hitEffect != null)
-                            Instantiate(hitEffect, hit.point, Quaternion.FromToRotation(Vector3.up, hit.normal));
+                            Instantiate(hitEffect, hit.point, Quaternion.FromToRotation(Vector3.up, hit.normal), transform);
 					}
 				}
 
@@ -788,13 +788,13 @@ public class Weapon : MonoBehaviour
 		{
 			GameObject muzfx = muzzleEffects[Random.Range(0, muzzleEffects.Length)];
 			if (muzfx != null)
-				Instantiate(muzfx, muzzleEffectsPosition.position, muzzleEffectsPosition.rotation);
+				Instantiate(muzfx, muzzleEffectsPosition.position, muzzleEffectsPosition.rotation, transform);
 		}
 
 		// Instantiate shell props
 		if (spitShells)
 		{
-			GameObject shellGO = Instantiate(shell, shellSpitPosition.position, shellSpitPosition.rotation) as GameObject;
+			GameObject shellGO = Instantiate(shell, shellSpitPosition.position, shellSpitPosition.rotation, transform) as GameObject;
 			shellGO.GetComponent<Rigidbody>().AddRelativeForce(new Vector3(shellSpitForce + Random.Range(0, shellForceRandom), 0, 0), ForceMode.Impulse);
 			shellGO.GetComponent<Rigidbody>().AddRelativeTorque(new Vector3(shellSpitTorqueX + Random.Range(-shellTorqueRandom, shellTorqueRandom), shellSpitTorqueY + Random.Range(-shellTorqueRandom, shellTorqueRandom), 0), ForceMode.Impulse);
 		}
@@ -833,7 +833,7 @@ public class Weapon : MonoBehaviour
 			// Instantiate the projectile
 			if (projectile != null)
 			{
-				GameObject proj = Instantiate(projectile, projectileSpawnSpot.position, projectileSpawnSpot.rotation) as GameObject;
+				GameObject proj = Instantiate(projectile, projectileSpawnSpot.position, projectileSpawnSpot.rotation, transform) as GameObject;
 
 				// Warmup heat
 				if (warmup)
@@ -861,13 +861,13 @@ public class Weapon : MonoBehaviour
 		{
 			GameObject muzfx = muzzleEffects[Random.Range(0, muzzleEffects.Length)];
 			if (muzfx != null)
-				Instantiate(muzfx, muzzleEffectsPosition.position, muzzleEffectsPosition.rotation);
+				Instantiate(muzfx, muzzleEffectsPosition.position, muzzleEffectsPosition.rotation, transform);
 		}
 
 		// Instantiate shell props
 		if (spitShells)
 		{
-			GameObject shellGO = Instantiate(shell, shellSpitPosition.position, shellSpitPosition.rotation) as GameObject;
+			GameObject shellGO = Instantiate(shell, shellSpitPosition.position, shellSpitPosition.rotation, transform) as GameObject;
 			shellGO.GetComponent<Rigidbody>().AddRelativeForce(new Vector3(shellSpitForce + Random.Range(0, shellForceRandom), 0, 0), ForceMode.Impulse);
 			shellGO.GetComponent<Rigidbody>().AddRelativeTorque(new Vector3(shellSpitTorqueX + Random.Range(-shellTorqueRandom, shellTorqueRandom), shellSpitTorqueY + Random.Range(-shellTorqueRandom, shellTorqueRandom), 0), ForceMode.Impulse);
 		}
@@ -898,7 +898,8 @@ public class Weapon : MonoBehaviour
 		LineRenderer beamLR = beamGO.GetComponent<LineRenderer>();
 		beamLR.material = beamMaterial;
 		beamLR.material.SetColor("_TintColor", beamColor);
-		beamLR.SetWidth(startBeamWidth, endBeamWidth);
+		beamLR.startWidth = startBeamWidth;
+		beamLR.endWidth = endBeamWidth;
 
 		// The number of reflections
 		int reflections = 0;
@@ -948,12 +949,12 @@ public class Weapon : MonoBehaviour
 					foreach (GameObject hitEffect in hitEffects)
 					{
 						if (hitEffect != null)
-							Instantiate(hitEffect, hit.point, Quaternion.FromToRotation(Vector3.up, hit.normal));
+							Instantiate(hitEffect, hit.point, Quaternion.FromToRotation(Vector3.up, hit.normal), transform);
 					}
 				}
 
 				// Damage
-				hit.collider.gameObject.SendMessageUpwards("ChangeHealth", -beamPower, SendMessageOptions.DontRequireReceiver);
+				hit.collider.gameObject.SendMessageUpwards("Kill", transform, SendMessageOptions.DontRequireReceiver);
 
 				// Shooter AI support
 				if (shooterAIEnabled)
@@ -999,7 +1000,7 @@ public class Weapon : MonoBehaviour
 		} while (keepReflecting && reflections < maxReflections && reflect && (reflectionMaterial == null || (FindMeshRenderer(hit.collider.gameObject) != null && FindMeshRenderer(hit.collider.gameObject).sharedMaterial == reflectionMaterial)));
 
 		// Set the positions of the vertices of the line renderer beam
-		beamLR.SetVertexCount(reflectionPoints.Count);
+		beamLR.positionCount = reflectionPoints.Count;
 		for (int i = 0; i < reflectionPoints.Count; i++)
 		{
 			beamLR.SetPosition(i, reflectionPoints[i]);
@@ -1010,7 +1011,7 @@ public class Weapon : MonoBehaviour
 				GameObject muzfx = muzzleEffects[Random.Range(0, muzzleEffects.Length)];
 				if (muzfx != null)
 				{
-					Instantiate(muzfx, reflectionPoints[i], muzzleEffectsPosition.rotation);
+					Instantiate(muzfx, reflectionPoints[i], muzzleEffectsPosition.rotation, transform);
 				}
 			}
 		}
@@ -1021,7 +1022,7 @@ public class Weapon : MonoBehaviour
 			GameObject muzfx = muzzleEffects[Random.Range(0, muzzleEffects.Length)];
 			if (muzfx != null)
 			{
-				GameObject mfxGO = Instantiate(muzfx, muzzleEffectsPosition.position, muzzleEffectsPosition.rotation) as GameObject;
+				GameObject mfxGO = Instantiate(muzfx, muzzleEffectsPosition.position, muzzleEffectsPosition.rotation, transform) as GameObject;
 				mfxGO.transform.parent = raycastStartSpot;
 			}
 		}

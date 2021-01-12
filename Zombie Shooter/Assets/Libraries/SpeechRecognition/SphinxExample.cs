@@ -34,6 +34,11 @@ public class SphinxExample : MonoBehaviour
     // not part of original source; added for Zombie Shooter UI (mic indicator)
     private UIManager uiManager;
 
+    private void Awake()
+    {
+        uiManager = GetComponent<UIManager>();
+    }
+
     private IEnumerator Start()
     {
         yield return WaitForMicrophoneInput();
@@ -42,36 +47,27 @@ public class SphinxExample : MonoBehaviour
         SetupDecoderKWS();
         //SetupDecoderLM();
         SetupMicrophone();
-
-        uiManager = GetComponent<UIManager>();
     }
 
     private void Update()
     {
         // If we press our key, we toggle our microphone.
-        try
+        if (uiManager.micConnected)
         {
-            if (uiManager.micConnected != null && uiManager.micConnected == true)
+            if(Input.GetKeyDown(toggleRecordingKey))
             {
-                if(Input.GetKeyDown(toggleRecordingKey))
+                if(!Microphone.IsRecording(mic.Name))
                 {
-                    if(!Microphone.IsRecording(mic.Name))
-                    {
-                        mic.BeginRecording();
-                        uiManager.UpdateMicIndicator(new Color(1,1,0,1));
-                    }
-                    else
-                    {
-                        mic.EndRecording();
-                        uiManager.UpdateMicIndicator(new Color(1,0,0,1));
-                        StartCoroutine(ResetMicIndicator());
-                    }
+                    mic.BeginRecording();
+                    uiManager.UpdateMicIndicator(new Color(1,1,0,1));
+                }
+                else
+                {
+                    mic.EndRecording();
+                    uiManager.UpdateMicIndicator(new Color(1,0,0,1));
+                    StartCoroutine(ResetMicIndicator());
                 }
             }
-        }
-        catch (Exception e)
-        {
-            // Debug.Log(e);
         }
         
     }

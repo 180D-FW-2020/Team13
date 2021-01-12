@@ -9,11 +9,11 @@ using System.Text;
 
 public enum GestureType
 {
-    L = 0,
-    R = 1,
-    U = 2,
-    D = 3,
-    None = 4,
+    None = 0,
+    L = 1,
+    R = 2,
+    U = 3,
+    D = 4
 }
 
 // Performs all networking and data aquisition to receive gestures from the Pi

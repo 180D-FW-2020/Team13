@@ -5,18 +5,19 @@ using UnityEngine;
 // WeaponController swaps the current weapon based on a specified gesture
 public class WeaponController : MonoBehaviour
 {
+    public bool playerWeapon;
     public float referenceRadius;
-    public Vector3 weaponLocation = new Vector3(0.25f, -0.4f, 0.9f);
     public Weapon leftWeapon;
     public Weapon rightWeapon;
     public Weapon upWeapon;
     public Weapon downWeapon;
 
     private Weapon currentWeapon;
+    private GestureType currentWeaponType;
 
     public void Start()
     {
-        SwitchWeapon(leftWeapon);
+        SwitchWeapon(GestureType.L);
     }
 
     public void Aim(Vector3 reticlePosition)
@@ -28,7 +29,6 @@ public class WeaponController : MonoBehaviour
 
     public void Shoot()
     {
-        Debug.Log("Shoot");
         currentWeapon?.RemoteFire();
     }
 
@@ -40,6 +40,10 @@ public class WeaponController : MonoBehaviour
 
     public void SwitchWeapon(GestureType direction)
     {
+        if (direction == GestureType.None || direction == currentWeaponType)
+            return;
+        Debug.Log($"Switching weapon: {direction}");
+        currentWeaponType = direction;
         switch (direction)
         {
             case GestureType.L:
@@ -61,7 +65,13 @@ public class WeaponController : MonoBehaviour
     {
         if (currentWeapon)
             Destroy(currentWeapon.gameObject);
-        var weapon = Instantiate(newWeapon.gameObject, weaponLocation, Quaternion.identity, transform);
+        var weapon = Instantiate(newWeapon.gameObject, transform.position, transform.rotation);
+        weapon.transform.SetParent(transform);
         currentWeapon = weapon.GetComponent<Weapon>();
+    }
+
+    public GestureType GetWeaponType()
+    {
+        return currentWeaponType;
     }
 }

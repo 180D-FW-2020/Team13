@@ -128,7 +128,7 @@ public class Projectile : MonoBehaviour
 		// Apply damage to the hit object if damageType is set to Direct
 		if (damageType == DamageType.Direct)
 		{
-			col.collider.gameObject.SendMessageUpwards("ChangeHealth", -damage, SendMessageOptions.DontRequireReceiver);
+			col.collider.gameObject.SendMessageUpwards("Kill", transform, SendMessageOptions.DontRequireReceiver);
 
 			//call the ApplyDamage() function on the enenmy CharacterSetup script
 			if (col.collider.gameObject.layer == LayerMask.NameToLayer("Limb"))
@@ -153,7 +153,7 @@ public class Projectile : MonoBehaviour
 		// Instantiate the explosion
 		if (explosion != null)
 		{
-			Instantiate(explosion, position, Quaternion.identity);
+			Instantiate(explosion, position, Quaternion.identity, transform.parent);
 		}
 
 		// Cluster bombs
@@ -163,7 +163,7 @@ public class Projectile : MonoBehaviour
 			{
 				for (int i = 0; i <= clusterBombNum; i++)
 				{
-					Instantiate(clusterBomb, transform.position, transform.rotation);
+					Instantiate(clusterBomb, transform.position, transform.rotation, transform.parent);
 				}
 			}
 		}

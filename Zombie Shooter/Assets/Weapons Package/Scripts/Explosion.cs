@@ -39,7 +39,7 @@ public class Explosion : MonoBehaviour
 				float damageAmount = damage * (1 / Vector3.Distance(transform.position, col.transform.position));
 
 				// The Easy Weapons health system
-				col.GetComponent<Collider>().gameObject.SendMessageUpwards("ChangeHealth", -damageAmount, SendMessageOptions.DontRequireReceiver);
+				col.GetComponent<Collider>().gameObject.SendMessageUpwards("Kill", transform, SendMessageOptions.DontRequireReceiver);
 
 				// The Shooter AI health system
 				if (shooterAISupport)

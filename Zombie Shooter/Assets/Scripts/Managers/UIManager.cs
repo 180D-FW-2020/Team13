@@ -40,10 +40,10 @@ public class UIManager : MonoBehaviour
     [Header("In Game UI")]
     public GameObject inGameScreen;
     public Text currentAmmo;
-    public Slider healthBar;
     public GameObject scoreCard;
     public Text latencyText;
     private OrderedDictionary playerScores = new OrderedDictionary();
+    private OrderedDictionary playerHealthBars = new OrderedDictionary();
 
     [Header("Pause Menu UI")]
     public GameObject pauseScreen;
@@ -116,9 +116,11 @@ public class UIManager : MonoBehaviour
     {
         currentAmmo.text = $"Ammo: {value}";
     }
-    public void UpdateHealth(int value) //between 0 and 100
+    public void UpdateHealth(string playerName, int value) //between 0 and 100
     {
-        healthBar.value = value;
+        if (!playerHealthBars.Contains(playerName)) return;
+        Slider healthBar = (Slider)playerHealthBars[playerName];
+        healthBar.value = value / 100f;
     }
 
     // dynamically add new score card
@@ -135,22 +137,19 @@ public class UIManager : MonoBehaviour
             rectTransform.anchoredPosition = new Vector3(prev.anchoredPosition.x - prev.rect.width - padding, -padding, 0);
         }
         Text scoreText = newPlayerCard.GetComponentsInChildren<Text>().Where(text => text.gameObject.name == "Score").FirstOrDefault();
+        Slider healthBar = newPlayerCard.GetComponentsInChildren<Slider>().FirstOrDefault();
         Text playerNameText = newPlayerCard.GetComponentsInChildren<Text>().Where(text => text.gameObject.name == "Name").FirstOrDefault();
         playerNameText.text = playerName;
+        healthBar.value = 1;
         playerScores.Add(playerName, scoreText);
+        playerHealthBars.Add(playerName, healthBar);
     }
 
     public void UpdateScore(string playerName, int newScore)
     {
         if (!playerScores.Contains(playerName)) return;
         Text score = (Text)playerScores[playerName];
-        score.text = (int.Parse(score.text) + newScore).ToString();
-    }
-
-    public void UpdateAllScores(int newScore)
-    {
-        foreach (string player in playerScores.Keys)
-            UpdateScore(player, newScore);
+        score.text = newScore.ToString();
     }
 
     public void UpdateLatency(double latency)

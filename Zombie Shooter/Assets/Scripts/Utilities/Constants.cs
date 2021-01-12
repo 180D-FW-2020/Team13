@@ -19,8 +19,17 @@ public static class Constants
 }
 
 
+
+[Serializable]
+public class Message
+{
+    public string type;
+}
+
+[Serializable]
 public class Ping
 {
+    public string type = "ping";
     public long timestamp;
 }
 
@@ -28,6 +37,7 @@ public class Ping
 [Serializable]
 public class GameState
 {
+    public string type = "state";
     public string id;
     public List<float> rotation;
     public int shooting;
@@ -37,6 +47,7 @@ public class GameState
 [Serializable]
 public class RemoteState
 {
+    public string type = "remoteState";
     public string id;
     public int health;
     public int score;
@@ -48,12 +59,14 @@ public class RemoteState
 [Serializable]
 public class Register
 {
+    public string type = "register";
     public string id;
 }
 
 [Serializable]
 public class Initialize
 {
+    public string type = "initialize";
     public List<string> playerList;
     public Dictionary<string, string> enemyPositions;
 }
@@ -61,6 +74,7 @@ public class Initialize
 [Serializable]
 public class Leave
 {
+    public string type = "leave";
     public string id;
     public List<string> playerList;
 }
@@ -68,6 +82,7 @@ public class Leave
 [Serializable]
 public class EnemyKilled
 {
+    public string type = "enemyShot";
     public string id;
     public string enemyId;
 }
@@ -75,5 +90,6 @@ public class EnemyKilled
 [Serializable]
 public class EnemyAttack
 {
+    public string type = "enemyAttack";
     public string id;
 }

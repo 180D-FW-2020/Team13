@@ -7,6 +7,7 @@ var killScore = 100;
 class Client {
     constructor(name) {
         this.state = {
+            type: "remoteState",
             id: name,
             score: 0,
             kills: 0,

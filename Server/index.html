@@ -1,11 +1,10 @@
 <div id="log"></div>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.3.0/socket.io.js"></script>
 <script>
-	socket = io()
-	socket.on("initialize", (data)=>{
-		document.getElementById("log").innerHTML += "<br>" + "Initialize: " + data.playerList;
-	})
-	socket.on("enemyKilled", (data)=>{
-		document.getElementById("log").innerHTML += "<br>" + "Enemy " + data.enemyId + " killed by " + data.id;
-	})
+	var HOST = location.origin.replace(/^http/, 'ws')
+    var ws = new WebSocket(HOST);
+    var log = document.getElementById("log");
+
+    ws.onmessage = function (event) {
+        el.innerHTML += "<br>" + event.data;
+    };
 </script>

@@ -1,114 +1,130 @@
 ﻿using System;
-using System.Collections;
+using System.Text;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Events;
-using SocketIOClient;
 using Newtonsoft.Json;
-using SocketIOClient.Packgers;
+
+using NativeWebSocket;
 
 public class NetworkConnection
 {
+    public UnityEvent Opened = new UnityEvent();
+    public UnityEvent Closed = new UnityEvent();
     public UnityEvent StartReceived = new UnityEvent();
     public UnityEvent<Ping> PongReceived = new UnityEvent<Ping>();
     public UnityEvent<Initialize> InitializeMessageReceived = new UnityEvent<Initialize>();
     public UnityEvent<Leave> LeaveMessageReceived = new UnityEvent<Leave>();
     public UnityEvent<EnemyKilled> EnemyKilledMessageReceived = new UnityEvent<EnemyKilled>();
     public UnityEvent<RemoteState> RemoteStateUpdateReceived = new UnityEvent<RemoteState>();
-    private SocketIO client;
+    private WebSocket client;
+
+    private Queue<string> messageQueue = new Queue<string>();
+
+    private JsonSerializerSettings settings = new JsonSerializerSettings()
+    {
+        TypeNameHandling = TypeNameHandling.All
+    };
 
 
     // Connect to server and initialize async events
     public NetworkConnection()
     {
-        client = new SocketIO("http://localhost:3000");
-        //client = new SocketIO("https://zombie-shooter-server.herokuapp.com/");
+        //client = new WebSocket("ws://localhost:3000");
+        client = new WebSocket("wss://zombie-shooter-server.herokuapp.com/");
 
-        client.OnConnected += (s, e) => Debug.Log("Connected to server");
-        client.OnDisconnected += (s, e) => Debug.Log("Disconnected from server");
-
-        var settings = new JsonSerializerSettings()
+        client.OnOpen += () =>
         {
-            TypeNameHandling = TypeNameHandling.All
+            Debug.Log("Connected to server");
+            messageQueue.Enqueue("OPEN");
+        };
+        client.OnClose += (e) =>
+        {
+            Debug.Log("Disconnected from server");
+            messageQueue.Enqueue("CLOSE");
+        };
+        client.OnError += (e) =>
+        {
+            Debug.LogError("NetworkConnection Error: " + e);
         };
 
-        client.On("start", response =>
+
+        client.OnMessage += (e) =>
         {
-            StartReceived.Invoke();
-        });
-        client.On("pong", response =>
+            string message = Encoding.UTF8.GetString(e);
+            messageQueue.Enqueue(message);
+        };
+
+    }
+
+    public void Update()
+    {
+        while (messageQueue.Count > 0)
         {
-            PongReceived.Invoke(JsonConvert.DeserializeObject<Ping>(response.GetValue<string>(), settings));
-        });
-        client.On("remoteState", response =>
+            ProcessMessage(messageQueue.Dequeue());
+        }
+        client.DispatchMessageQueue();
+    }
+
+    public void ProcessMessage(string data)
+    {
+        if (data == "OPEN")
         {
-            RemoteStateUpdateReceived.Invoke(JsonConvert.DeserializeObject<RemoteState>(response.GetValue<string>(), settings));
-        });
-        client.On("enemyKilled", response =>
+            Opened.Invoke();
+            return;
+        }
+        else if (data == "CLOSE")
         {
-            EnemyKilledMessageReceived.Invoke(JsonConvert.DeserializeObject<EnemyKilled>(response.GetValue<string>(), settings));
-        });
-        client.On("initialize", response =>
+            Closed.Invoke();
+            return;
+        }
+
+        Message message = JsonConvert.DeserializeObject<Message>(data, settings);
+        switch(message.type)
         {
-            InitializeMessageReceived.Invoke(JsonConvert.DeserializeObject<Initialize>(response.GetValue<string>(), settings));
-        });
-        client.On("leave", response =>
+            case "ping":
+                PongReceived.Invoke(JsonConvert.DeserializeObject<Ping>(data, settings));
+                break;
+            case "start":
+                StartReceived.Invoke();
+                break;
+            case "remoteState":
+                RemoteStateUpdateReceived.Invoke(JsonConvert.DeserializeObject<RemoteState>(data, settings));
+                break;
+            case "enemyKilled":
+                EnemyKilledMessageReceived.Invoke(JsonConvert.DeserializeObject<EnemyKilled>(data, settings));
+                break;
+            case "initialize":
+                InitializeMessageReceived.Invoke(JsonConvert.DeserializeObject<Initialize>(data, settings));
+                break;
+            case "leave":
+                LeaveMessageReceived.Invoke(JsonConvert.DeserializeObject<Leave>(data, settings));
+                break;
+        }
+    }
+
+    public async Task Send<T>(T message)
+    {
+        if (client.State == WebSocketState.Open)
         {
-            LeaveMessageReceived.Invoke(JsonConvert.DeserializeObject<Leave>(response.GetValue<string>(), settings));
-        });
-
+            await client.SendText(JsonConvert.SerializeObject(message));
+        }
     }
 
-    public async Task Connect(Register register)
+    public async Task Connect()
     {
-        await client.ConnectAsync();
-        await client.EmitAsync("register", JsonConvert.SerializeObject(register));
-    }
-
-    public async Task SendPing(Ping ping)
-    {
-        if (client.Connected)
-            await client.EmitAsync("ping", JsonConvert.SerializeObject(ping));
-    }
-
-    public async Task SendStart()
-    {
-        if (client.Connected)
-            await client.EmitAsync("start");
-    }
-
-    public async Task SendState(GameState state)
-    {
-        if (client.Connected)
-            await client.EmitAsync("state", JsonConvert.SerializeObject(state));
-    }
-
-    public async Task SendEnemyShoot(EnemyKilled enemyKilled)
-    {
-        if (client.Connected)
-            await client.EmitAsync("enemyShot", JsonConvert.SerializeObject(enemyKilled));
-    }
-
-    public async Task SendLeave(Register req)
-    {
-        if (client.Connected)
-            await client.EmitAsync("leave", JsonConvert.SerializeObject(req));
-    }
-
-    public async Task SendEnemyAttack(EnemyAttack attack)
-    {
-        if (client.Connected)
-            await client.EmitAsync("enemyAttack", JsonConvert.SerializeObject(attack));
+        await client.Connect();
     }
 
     public async Task Stop(string playerName)
     {
         Register leaveReq = new Register
         {
+            type = "leave",
             id = playerName
         };
-        await SendLeave(leaveReq);
-        await client?.DisconnectAsync();
+        await Send(leaveReq);
+        await client.Close();
     }
 }

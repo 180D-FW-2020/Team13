@@ -56,6 +56,8 @@ public class GameManager : MonoBehaviour
         connection.EnemyKilledMessageReceived.AddListener(EnemyKilledMessageReceived);
         connection.RemoteStateUpdateReceived.AddListener(RemoteStateUpdateReceived);
         connection.StartReceived.AddListener(StartReceived);
+        connection.PongReceived.AddListener(PongReceived);
+        connection.Opened.AddListener(ConnectionOpened);
 
         uiManager.startButton.onClick.AddListener(Calibrate);
         uiManager.playButton.onClick.AddListener(SendStart);
@@ -76,7 +78,7 @@ public class GameManager : MonoBehaviour
             {
                 timestamp = DateTime.Now.Ticks
             };
-            Task.Run(() => connection.SendPing(ping)).Wait();
+            Task.Run(async () => await connection.Send(ping));
         }
     }
 
@@ -110,12 +112,16 @@ public class GameManager : MonoBehaviour
 
     public void Calibrate()
     {
-        if (inputManager.aimInputType == AimInputType.Finger) {
+        if (inputManager.aimInputType == AimInputType.Finger)
+        {
             uiManager.calibrationText.text = "Cover all boxes with hand/object." + Environment.NewLine + "Press 'C' to calibrate.";
             uiManager.StartCalibration();
             gameStatus = GameStatus.Calibrating;
-        } else
+        }
+        else
+        {
             Connect();
+        }
     }
 
     public async void Connect()
@@ -124,12 +130,7 @@ public class GameManager : MonoBehaviour
         uiManager.ShowConnecting();
         playerName = uiManager.GetPlayerName();
         gameState.id = playerName;
-        Register register = new Register
-        {
-            id = playerName
-        };
-        await connection.Connect(register);
-        WaitForPlayers();
+        await connection.Connect();
     }
 
     public void WaitForPlayers()
@@ -166,7 +167,7 @@ public class GameManager : MonoBehaviour
             id = playerName
         };
         enemyManager.KillEnemy(enemy.name);
-        await connection.SendEnemyShoot(shotEnemy);
+        await connection.Send(shotEnemy);
     }
 
     public async void AttackPlayer()
@@ -175,7 +176,7 @@ public class GameManager : MonoBehaviour
         {
             id = playerName
         };
-        await connection.SendEnemyAttack(attack);
+        await connection.Send(attack);
     }
 
     public void Shoot(int weapon)
@@ -186,9 +187,28 @@ public class GameManager : MonoBehaviour
     #endregion
 
     #region Network callbacks
+    public async void ConnectionOpened()
+    {
+        Register register = new Register
+        {
+            id = playerName
+        };
+        await connection.Send(register);
+        WaitForPlayers();
+    }
+
+    public async void ConnectionClosed()
+    {
+
+    }
+
     public async void SendStart()
     {
-        await connection.SendStart();
+        Message start = new Message
+        {
+            type = "start"
+        };
+        await connection.Send(start);
     }
 
     private void StartReceived()
@@ -198,27 +218,24 @@ public class GameManager : MonoBehaviour
 
     private void RemoteStateUpdateReceived(RemoteState state)
     {
-        if (pendingActions.Count < maxBufferSize)
+        pendingActions.Enqueue(() =>
         {
-            pendingActions.Enqueue(() =>
+            uiManager.UpdateScore(state.id, state.score);
+            uiManager.UpdateHealth(state.id, state.health);
+
+            if (state.id != playerName)
             {
-                uiManager.UpdateScore(state.id, state.score);
-                uiManager.UpdateHealth(state.id, state.health);
-
-                if (state.id != playerName)
+                if (state.shooting != (int)GestureType.None)
                 {
-                    if (state.shooting != (int)GestureType.None)
-                    {
-                        WeaponController weaponController = allPlayers[state.id].GetComponentInChildren<WeaponController>();
-                        weaponController.SwitchWeapon((GestureType)state.shooting);
-                        weaponController.Shoot();
-                    }
-
-                    Vector3 rotation = new Vector3(state.rotation[0], state.rotation[1], state.rotation[2]);
-                    allPlayers[state.id].transform.eulerAngles = rotation;
+                    WeaponController weaponController = allPlayers[state.id].GetComponentInChildren<WeaponController>();
+                    weaponController.SwitchWeapon((GestureType)state.shooting);
+                    weaponController.Shoot();
                 }
-            });
-        }
+
+                Vector3 rotation = new Vector3(state.rotation[0], state.rotation[1], state.rotation[2]);
+                allPlayers[state.id].transform.eulerAngles = rotation;
+            }
+        });
     }
 
     private void InitializeMessageReceived(Initialize init)
@@ -274,7 +291,10 @@ public class GameManager : MonoBehaviour
         double roundtripLatency = TimeSpan.FromTicks(now - pong.timestamp).TotalMilliseconds;
         //oneWayLatency = roundtripLatency/2
         Debug.Log($"Latency: {roundtripLatency}");
-        uiManager.UpdateLatency(roundtripLatency);
+        pendingActions.Enqueue(() =>
+        {
+            uiManager.UpdateLatency(roundtripLatency);
+        });
     }
     #endregion
 
@@ -284,16 +304,16 @@ public class GameManager : MonoBehaviour
         {
             uiManager.UpdateAmmo(inputManager.weaponController.GetCurrentAmmo());
             gameState.rotation = allPlayers[playerName].transform.eulerAngles.coordinates();
-            await connection.SendState(gameState);
+            await connection.Send(gameState);
             gameState.shooting = 0;
         }
     }
 
     private void Update()
     {
+        connection.Update();
         while (pendingActions.Count > 0)
         {
-            Debug.Log($"Queue has {pendingActions.Count} elements");
             pendingActions.Dequeue()();
         }
 

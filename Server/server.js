@@ -23,7 +23,7 @@ io.on('connection', socket => {
     socket.on('register', (data) => {
         console.log("Adding " + data.id);
     
-        if (connectedClients.length() == 0){
+        if (Object.keys(connectedClients).length == 0){
             initEnemies();
         }
     

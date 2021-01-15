@@ -85,6 +85,7 @@ function processMessage(socket, message) {
                 broadcast(JSON.stringify({type: "enemyKilled", enemyId: data.enemyId, id: name}));
                 connectedClients[data.id].registerKill();
                 broadcast(JSON.stringify(connectedClients[name].state));
+                delete connectedClients[name];
             }
             break;
         case "state":

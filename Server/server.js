@@ -4,8 +4,8 @@ const wss = require('./init.js');
 const WebSocket = require('ws');
 const Client = require('./client.js');
 
-var updateInterval = 100; 
 var numEnemies = 5;
+var readyCount = 0;
 
 var connectedClients = {};
 var enemies = {};
@@ -41,9 +41,12 @@ function processMessage(socket, message) {
         case "ping":
             socket.send(message);
             break;
-        case "start":
-            console.log('Game started');
-            broadcast(message);
+        case "ready":
+            readyCount++;
+            if (readyCount == Object.keys(connectedClients).length) {
+                console.log('Game started');
+                broadcast(JSON.stringify({type: "start"}));
+            }
             break;
         case "register":
             console.log("Adding " + name);
@@ -55,13 +58,21 @@ function processMessage(socket, message) {
             let client = new Client(name);
             connectedClients[name] = client;
         
-            let init = {
-                type: "initialize",
-                playerList: Object.keys(connectedClients),
-                enemyPositions: enemies
+            let playerList = {
+                type: "playerList",
+                playerList: Object.keys(connectedClients)
             }
             broadcast(JSON.stringify(init));
             break;
+        case "requestEnemies":
+            if (Object.keys(enemies).length == 0) {
+                initEnemies();
+            }
+            let locations = {
+                type: "enemyLocations",
+                enemyPositions: enemies
+            }
+            socket.send(JSON.stringify(locations));
         case "leave":
             console.log("Removing " + name);
             delete connectedClients[name];

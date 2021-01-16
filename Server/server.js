@@ -43,6 +43,7 @@ function processMessage(socket, message) {
             break;
         case "ready":
             readyCount++;
+            console.log(name + " is ready");
             if (readyCount == Object.keys(connectedClients).length) {
                 console.log('Game started');
                 broadcast(JSON.stringify({type: "start"}));

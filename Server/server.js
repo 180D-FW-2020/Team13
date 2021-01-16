@@ -62,7 +62,7 @@ function processMessage(socket, message) {
                 type: "playerList",
                 playerList: Object.keys(connectedClients)
             }
-            broadcast(JSON.stringify(init));
+            broadcast(JSON.stringify(playerList));
             break;
         case "requestEnemies":
             if (Object.keys(enemies).length == 0) {

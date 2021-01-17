@@ -4,6 +4,8 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using System.Linq;
+using System.Runtime.CompilerServices;
+using System;
 
 public enum GameStatus
 {
@@ -11,8 +13,10 @@ public enum GameStatus
     Connecting = 1,
     Waiting = 2,
     Playing = 3,
-    Paused = 4,
-    Calibrating = 5
+    Moving = 4,
+    Transitioning = 5,
+    Paused = 6,
+    Calibrating = 7
 }
 
 // UIManager coordinates the changing of screens and UI element initialization
@@ -34,11 +38,12 @@ public class UIManager : MonoBehaviour
 
     [Header("Waiting Room UI")]
     public GameObject waitingScreen;
-    public Button playButton;
+    public Button readyButton;
     public Text playerListText;
 
     [Header("In Game UI")]
     public GameObject inGameScreen;
+    public GameObject reticle;
     public Text currentAmmo;
     public GameObject scoreCard;
     public Text latencyText;
@@ -56,21 +61,27 @@ public class UIManager : MonoBehaviour
 
     private GameManager gameManager;
 
-    // Set the correct UI screen active based on current game state
-    public void SetScreensActive(GameStatus gameStatus)
-    {
-        startScreen.SetActive(gameStatus == GameStatus.Start);
-        connectingScreen.SetActive(gameStatus == GameStatus.Connecting);
-        inGameScreen.SetActive(gameStatus == GameStatus.Playing);
-        waitingScreen.SetActive(gameStatus == GameStatus.Waiting);
-        pauseScreen.SetActive(gameStatus == GameStatus.Paused);
-        calibrationScreen.SetActive(gameStatus == GameStatus.Calibrating);
-    }
-
     private void Start()
     {
         playerName.characterLimit = Constants.MAX_NAME_LENGTH;
         SetScreensActive(GameStatus.Start);
+    }
+
+    // Set the correct UI screen active based on current game state
+    public void SetScreensActive(GameStatus gameStatus)
+    {
+        startScreen.SetActive(IsStatus(gameStatus, GameStatus.Start));
+        connectingScreen.SetActive(IsStatus(gameStatus, GameStatus.Connecting));
+        inGameScreen.SetActive(IsStatus(gameStatus, GameStatus.Playing, GameStatus.Moving, GameStatus.Transitioning));
+        reticle.SetActive(IsStatus(gameStatus, GameStatus.Playing));
+        waitingScreen.SetActive(IsStatus(gameStatus, GameStatus.Waiting));
+        pauseScreen.SetActive(IsStatus(gameStatus, GameStatus.Paused));
+        calibrationScreen.SetActive(IsStatus(gameStatus, GameStatus.Calibrating));
+    }
+
+    private bool IsStatus(GameStatus state, params GameStatus[] states)
+    {
+        return states.Contains(state);
     }
 
     public void ShowStart()

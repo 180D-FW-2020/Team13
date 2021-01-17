@@ -2,33 +2,38 @@
 var healthIncrement = 5;
 var maxHealth = 100;
 var killScore = 100;
-
+var hitScore = 50;
 
 class Client {
     constructor(name) {
-        this.state = {
-            type: "remoteState",
-            id: name,
-            score: 0,
-            kills: 0,
-            health: maxHealth,
-            rotation: [0, 0, 0],
-            shooting: 0
-        };
+        this.type = "remoteState";
+        this.id = name;
+        this.score = 0;
+        this.kills = 0;
+        this.health = maxHealth;
+        this.rotation = [0, 0, 0];
+        this.shooting = 0;
     }
 
     registerKill() {
-        this.state.score += killScore;
-        this.state.kills += 1;
+        this.score += killScore;
+        this.kills += 1;
+    }
+
+    registerShot() {
+        this.score += hitScore;
+        this.decrementHealth();
+        if (this.health < 0)
+            this.registerKill();
     }
 
     decrementHealth() {
-        this.state.health -= healthIncrement;
+        this.health -= healthIncrement;
     }
 
     updatePlayerState(data) {
-        this.state.rotation = data.rotation;
-        this.state.shooting = data.shooting;
+        this.rotation = data.rotation;
+        this.shooting = data.shooting;
     }
 }
 

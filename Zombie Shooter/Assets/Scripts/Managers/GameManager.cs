@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
+using TMPro.EditorUtilities;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -16,10 +18,12 @@ using UnityEngine.UI;
 // as work with the UIManager to coordinate UI events
 public class GameManager : MonoBehaviour
 {
+    public List<LevelController> levels;
+    public VehicleController vehicle;
+    public float cameraMovementSpeed;
+
+    public Transform mainCamera;
     public GameObject player;
-    public GameObject mainPlayer;
-    public Transform playersParent;
-    public GameObject playerWeaponObject;
 
     public float pingInterval;
     public int maxBufferSize;
@@ -32,11 +36,12 @@ public class GameManager : MonoBehaviour
     private NetworkConnection connection;
     private GameState gameState = new GameState();
     private Queue<Action> pendingActions = new Queue<Action>();
-    private Dictionary<string, GameObject> allPlayers = new Dictionary<string, GameObject>();
+    private Dictionary<string, PlayerController> allPlayers = new Dictionary<string, PlayerController>();
     private string playerName;
+    private PlayerController mainPlayer;
 
     private GameStatus gameStatus = GameStatus.Start;
-    internal bool GameStarted = false;
+    private int currentLevel = 0;
 
     public void Awake()
     {
@@ -47,11 +52,10 @@ public class GameManager : MonoBehaviour
 
     void Start()
     {
-        playerWeaponObject.SetActive(false);
-
         // connect all event listeners to the proper networking and UI events
         connection = new NetworkConnection();
-        connection.InitializeMessageReceived.AddListener(InitializeMessageReceived);
+        connection.PlayerListReceived.AddListener(PlayerListReceived);
+        connection.EnemyLocationsReceived.AddListener(EnemyLocationsReceived);
         connection.LeaveMessageReceived.AddListener(LeaveMessageReceived);
         connection.EnemyKilledMessageReceived.AddListener(EnemyKilledMessageReceived);
         connection.RemoteStateUpdateReceived.AddListener(RemoteStateUpdateReceived);
@@ -59,8 +63,8 @@ public class GameManager : MonoBehaviour
         connection.PongReceived.AddListener(PongReceived);
         connection.Opened.AddListener(ConnectionOpened);
 
-        uiManager.startButton.onClick.AddListener(Calibrate);
-        uiManager.playButton.onClick.AddListener(SendStart);
+        uiManager.startButton.onClick.AddListener(Connect);
+        uiManager.readyButton.onClick.AddListener(SendReady);
         uiManager.resumeButton.onClick.AddListener(ResumeGame);
         uiManager.exitButton.onClick.AddListener(ReloadGame);
         uiManager.ShowStart();
@@ -82,46 +86,82 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    private IEnumerator InitMicrophone()
-    {
-        sphinx = FindObjectOfType<SphinxExample>();
-        sphinx.OnSpeechRecognized += UpdateSpeechUI;
-
-        uiManager.UpdateMicIndicator(new Color(1, 0, 0, 1));
-        while (sphinx.mic == null)
-        {
-           yield return null;
-        }
-        Debug.Log($"<color=green><b>Connected to: {sphinx.mic.Name}</b></color>");
-        uiManager.micConnected = true;
-        uiManager.UpdateMicIndicator(new Color(0, 1, 0, 1));
-    }
-
     #region Game Events
 
-    public void StartGame()
+    public IEnumerator MoveToLevel()
     {
-        playerWeaponObject.SetActive(true);
-        mainPlayer.GetComponent<PlayerController>().StartGame();
-        gameStatus = GameStatus.Playing;
-        GameStarted = true;
+        Debug.Log("Move to level");
         uiManager.StartGame();
-        enemyManager.StartGame();
-        Debug.Log("Game Started");
+        gameStatus = GameStatus.Moving;
+        List<Transform> waypoints = levels[currentLevel].GetWaypoints();
+        vehicle.SetWaypoints(waypoints);
+        SendEnemyPositionRequest();
+        while (!vehicle.IsStopped())
+            yield return null;
+        StartCoroutine(TransitionToLevel());
     }
 
-    public void Calibrate()
+    public IEnumerator TransitionToLevel()
     {
-        if (inputManager.aimInputType == AimInputType.Finger)
+        Debug.Log("Transition to level");
+        gameStatus = GameStatus.Transitioning;
+        yield return null;
+        Transform pad = levels[currentLevel].playerPads[0];
+        StartCoroutine(mainPlayer.WalkToPad(pad));
+        while (mainPlayer.IsWalking())
         {
-            uiManager.calibrationText.text = "Cover all boxes with hand/object." + Environment.NewLine + "Press 'C' to calibrate.";
-            uiManager.StartCalibration();
-            gameStatus = GameStatus.Calibrating;
+            yield return null;
         }
-        else
+        while (mainCamera.position != mainPlayer.playerCamera.position)
         {
-            Connect();
+            mainCamera.position = Vector3.MoveTowards(mainCamera.position, mainPlayer.playerCamera.position, Time.deltaTime * cameraMovementSpeed);
+            mainCamera.eulerAngles = Vector3.MoveTowards(mainCamera.eulerAngles, mainPlayer.playerCamera.eulerAngles, Time.deltaTime * cameraMovementSpeed);
+            yield return mainCamera;
         }
+        mainCamera.parent = mainPlayer.playerCamera;
+        SendReady();
+        inputManager.ResetRotation();
+    }
+
+    public void StartLevel()
+    {
+        Debug.Log("Start level");
+        inputManager.EnableShooting(true);
+        gameStatus = GameStatus.Playing;
+        enemyManager.StartGame();
+    }
+    public IEnumerator TransitionFromLevel()
+    {
+        Debug.Log("Transition from level");
+        gameStatus = GameStatus.Transitioning;
+
+        while (mainCamera.position != vehicle.vehicleCamera.position)
+        {
+            mainCamera.position = Vector3.MoveTowards(mainCamera.position, vehicle.vehicleCamera.position, Time.deltaTime * cameraMovementSpeed);
+            mainCamera.eulerAngles = Vector3.MoveTowards(mainCamera.eulerAngles, vehicle.vehicleCamera.eulerAngles, Time.deltaTime * cameraMovementSpeed);
+            yield return mainCamera;
+        }
+
+        for (int i = 0; i < allPlayers.Count; i++)
+        {
+            Transform pad = vehicle.playerPads[i];
+            string key = allPlayers.Keys.ElementAt(i);
+            StartCoroutine(allPlayers[key].WalkToPad(pad));
+        }
+        while (!allPlayers.All(p => !p.Value.IsWalking()))
+        {
+            yield return null;
+        }
+        mainCamera.parent = vehicle.vehicleCamera;
+        StartCoroutine(MoveToLevel());
+    }
+
+    public void EndLevel()
+    {
+        inputManager.EnableShooting(false);
+        currentLevel++;
+        Debug.Log("End level");
+        StartCoroutine(TransitionFromLevel());
     }
 
     public async void Connect()
@@ -143,14 +183,14 @@ public class GameManager : MonoBehaviour
     {
         gameStatus = GameStatus.Paused;
         uiManager.SetScreensActive(GameStatus.Paused);
-        playerWeaponObject.SetActive(false);
+        inputManager.EnableShooting(false);
     }
 
     public void ResumeGame()
     {
         gameStatus = GameStatus.Playing;
         uiManager.SetScreensActive(GameStatus.Playing);
-        playerWeaponObject.SetActive(true);
+        inputManager.EnableShooting(true);
     }
 
     public void ReloadGame()
@@ -164,7 +204,8 @@ public class GameManager : MonoBehaviour
         EnemyKilled shotEnemy = new EnemyKilled
         {
             enemyId = enemy.name,
-            id = playerName
+            id = playerName,
+            damage = 100
         };
         enemyManager.KillEnemy(enemy.name);
         await connection.Send(shotEnemy);
@@ -179,11 +220,88 @@ public class GameManager : MonoBehaviour
         await connection.Send(attack);
     }
 
+    public async void SendEnemyPositionRequest()
+    {
+        EnemiesRequest request = new EnemiesRequest();
+        await connection.Send(request);
+    }
+
     public void Shoot(int weapon)
     {
         gameState.shooting = weapon;
     }
 
+    #endregion
+
+    #region Speech
+    private IEnumerator InitMicrophone()
+    {
+        sphinx = FindObjectOfType<SphinxExample>();
+        sphinx.OnSpeechRecognized += UpdateSpeechUI;
+
+        uiManager.UpdateMicIndicator(new Color(1, 0, 0, 1));
+        while (sphinx.mic == null)
+        {
+            yield return null;
+        }
+        Debug.Log($"<color=green><b>Connected to: {sphinx.mic.Name}</b></color>");
+        uiManager.micConnected = true;
+        uiManager.UpdateMicIndicator(new Color(0, 1, 0, 1));
+    }
+
+    private void UpdateSpeechUI(string str)
+    {
+        StartCoroutine(ProcessVoiceCommand(str));
+    }
+
+    private IEnumerator ProcessVoiceCommand(string cmd)
+    {
+        if (cmd.Contains(" "))
+            cmd = cmd.Substring(0, cmd.IndexOf(" "));
+
+        Debug.Log($"Voice Command: {cmd.ToUpper()}");
+        Debug.Log(gameStatus);
+        cmd = cmd.ToLower();
+
+        switch (gameStatus)
+        {
+            case GameStatus.Start:
+                // idk
+                break;
+            case GameStatus.Waiting:
+                if (cmd == "ready")
+                {
+                    SendReady();
+                }
+                break;
+            case GameStatus.Playing:
+                if (cmd == "reload")
+                {
+                    // reload code
+                }
+                else if (cmd == "pause")
+                {
+                    PauseGame();
+                    uiManager.UpdateMicIndicator(new Color(0, 1, 0, 1));
+                }
+                break;
+            case GameStatus.Paused:
+                if (cmd == "resume")
+                {
+                    ResumeGame();
+                }
+                else if (cmd == "exit")
+                {
+                    ReloadGame();
+                }
+                break;
+            default:
+                // wtf
+                break;
+        }
+
+        yield return new WaitForSecondsRealtime(1);
+    }
     #endregion
 
     #region Network callbacks
@@ -203,18 +321,25 @@ public class GameManager : MonoBehaviour
         Debug.Log("Disconnected from server");
     }
 
-    public async void SendStart()
+    public async void SendReady()
     {
-        Message start = new Message
+        uiManager.readyButton.interactable = false;
+        Ready ready = new Ready
         {
-            type = "start"
+            id = playerName
         };
-        await connection.Send(start);
+        await connection.Send(ready);
     }
 
     private void StartReceived()
     {
-        pendingActions.Enqueue(() => StartGame());
+        pendingActions.Enqueue(() =>
+        {
+            if (gameStatus == GameStatus.Waiting) //game just started
+                StartCoroutine(TransitionFromLevel());
+            else
+                StartLevel();
+        });
     }
 
     private void RemoteStateUpdateReceived(RemoteState state)
@@ -239,31 +364,37 @@ public class GameManager : MonoBehaviour
         });
     }
 
-    private void InitializeMessageReceived(Initialize init)
+    private void PlayerListReceived(PlayerList list)
     {
         pendingActions.Enqueue(() => {
-            uiManager.UpdatePlayerList(init.playerList);
+            uiManager.UpdatePlayerList(list.playerList);
 
-            for (int i = allPlayers.Count; i < init.playerList.Count; i++)
+            for (int i = 0; i < list.playerList.Count; i++)
             {
-                var name = init.playerList[i];
-                var parent = playersParent.Find(allPlayers.Count.ToString());
+                var name = list.playerList[i];
+                if (allPlayers.ContainsKey(name))
+                    continue;
+
+                var parent = vehicle.GetPlayerPads()[i];
+                Debug.Log($"New player joined: {name}");
+                var newPlayer = Instantiate(player, parent);
+                newPlayer.name = name;
+                var newPlayerController = newPlayer.GetComponent<PlayerController>();
                 if (name == playerName)
                 {
-                    mainPlayer.transform.SetParent(parent, false);
-                    allPlayers.Add(playerName, mainPlayer);
+                    newPlayerController.mainPlayer = true;
+                    mainPlayer = newPlayerController;
+                    inputManager.SetMainPlayer(mainPlayer);
                 }
-                else
-                {
-                    Debug.Log($"New player joined: {name}");
-                    var newPlayer = Instantiate(player, parent);
-                    newPlayer.name = name;
-                    allPlayers.Add(name, newPlayer);
-                }
+                allPlayers.Add(name, newPlayerController);
                 uiManager.AddPlayer(name);
             }
         });
-        pendingActions.Enqueue(() => enemyManager.Initialize(init.enemyPositions));
+    }
+
+    private void EnemyLocationsReceived(EnemyStates states)
+    {
+        pendingActions.Enqueue(() => enemyManager.Initialize(states.enemies, levels[currentLevel].transform, levels[currentLevel].playerPads));
     }
 
     private void LeaveMessageReceived(Leave leave)
@@ -300,12 +431,15 @@ public class GameManager : MonoBehaviour
 
     public async void FixedUpdate()
     {
-        if (GameStarted)
+        if (gameStatus == GameStatus.Playing)
         {
-            uiManager.UpdateAmmo(inputManager.weaponController.GetCurrentAmmo());
+            uiManager.UpdateAmmo(inputManager.GetCurrentAmmo());
             gameState.rotation = allPlayers[playerName].transform.eulerAngles.coordinates();
             await connection.Send(gameState);
             gameState.shooting = 0;
+
+            if (enemyManager.GetEnemyCount() == 0)
+                EndLevel();
         }
     }
 
@@ -322,67 +456,11 @@ public class GameManager : MonoBehaviour
             inputManager.UpdateCalibration();
         }
 
-        if (GameStarted)
+        if (gameStatus == GameStatus.Playing)
         {
             inputManager.UpdateInput();
         }
     }
-
-    #region Speech
-    private void UpdateSpeechUI(string str)
-    {
-        StartCoroutine(ProcessVoiceCommand(str));
-    }
-
-    private IEnumerator ProcessVoiceCommand(string cmd)
-    {
-        if (cmd.Contains(" "))
-            cmd = cmd.Substring(0, cmd.IndexOf(" "));
-
-        Debug.Log($"Voice Command: {cmd.ToUpper()}");
-        Debug.Log(gameStatus);
-        cmd = cmd.ToLower();
-
-        switch (gameStatus)
-        {
-            case GameStatus.Start:
-                // idk
-                break;
-            case GameStatus.Waiting:
-                if (cmd == "play")
-                {
-                    SendStart();
-                }
-                break;
-            case GameStatus.Playing:
-                if (cmd == "reload")
-                {
-                    // reload code
-                }
-                else if (cmd == "pause")
-                {
-                    PauseGame();
-                    uiManager.UpdateMicIndicator(new Color(0, 1, 0, 1));
-                }
-                break;
-            case GameStatus.Paused:
-                if (cmd == "resume")
-                {
-                    ResumeGame();
-                }
-                else if (cmd == "exit")
-                {
-                    ReloadGame();
-                }
-                break;
-            default:
-                // wtf
-                break;
-        }
-
-        yield return new WaitForSecondsRealtime(1);
-    }
-    #endregion
 
     public async void OnApplicationQuit()
     {

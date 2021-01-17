@@ -7,8 +7,6 @@ using UnityEngine;
 // This data is updated as enemies are killed
 public class EnemyManager : MonoBehaviour
 {
-    public GameObject target;
-
     public GameObject enemy;
     public float dieDelay;
 
@@ -28,20 +26,22 @@ public class EnemyManager : MonoBehaviour
         }
     }
 
-    public void Initialize(Dictionary<string, string> positions)
+    public void Initialize(Dictionary<string, EnemyState> positions, Transform levelOffset, List<Transform> playerPads)
     {
-        if (enemies.Count == 0) //check if already initialized
+        transform.position = levelOffset.position;
+        transform.rotation = levelOffset.rotation;
+        foreach (KeyValuePair<string, EnemyState> pair in positions)
         {
-            foreach (KeyValuePair<string, string> position in positions)
-            {
-                string[] xz = position.Value.Split(',');
-                var spawnedEnemy = Instantiate(enemy, new Vector3(float.Parse(xz[0]), 0, float.Parse(xz[1])), Quaternion.identity, transform);
-                var spawnedEnemyController = spawnedEnemy.GetComponent<EnemyController>();
-                spawnedEnemyController.SetTarget(target.transform);
-                spawnedEnemyController.SetGameManager(gameManager);
-                spawnedEnemy.name = position.Key;
-                enemies.Add(spawnedEnemyController);
-            }
+            EnemyState state = pair.Value;
+            string[] xz = state.initialPosition.Split(',');
+            var spawnedEnemy = Instantiate(enemy);
+            spawnedEnemy.transform.SetParent(transform);
+            spawnedEnemy.transform.localPosition = new Vector3(float.Parse(xz[0]), 0, float.Parse(xz[1]));
+            var spawnedEnemyController = spawnedEnemy.GetComponent<EnemyController>();
+            spawnedEnemyController.SetProperties(playerPads[state.target], state.running == 1, state.health);
+            spawnedEnemyController.SetGameManager(gameManager);
+            spawnedEnemy.name = pair.Key;
+            enemies.Add(spawnedEnemyController);
         }
     }
 
@@ -51,5 +51,10 @@ public class EnemyManager : MonoBehaviour
         var enemyController = enemy.GetComponent<EnemyController>();
         enemies.Remove(enemyController);
         StartCoroutine(enemyController.Die());
+    }
+
+    public int GetEnemyCount()
+    {
+        return enemies.Count;
     }
 }

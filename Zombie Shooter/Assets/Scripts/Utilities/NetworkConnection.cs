@@ -14,7 +14,8 @@ public class NetworkConnection
     public UnityEvent Closed = new UnityEvent();
     public UnityEvent StartReceived = new UnityEvent();
     public UnityEvent<Ping> PongReceived = new UnityEvent<Ping>();
-    public UnityEvent<Initialize> InitializeMessageReceived = new UnityEvent<Initialize>();
+    public UnityEvent<PlayerList> PlayerListReceived = new UnityEvent<PlayerList>();
+    public UnityEvent<EnemyStates> EnemyLocationsReceived = new UnityEvent<EnemyStates>();
     public UnityEvent<Leave> LeaveMessageReceived = new UnityEvent<Leave>();
     public UnityEvent<EnemyKilled> EnemyKilledMessageReceived = new UnityEvent<EnemyKilled>();
     public UnityEvent<RemoteState> RemoteStateUpdateReceived = new UnityEvent<RemoteState>();
@@ -31,8 +32,8 @@ public class NetworkConnection
     // Connect to server and initialize async events
     public NetworkConnection()
     {
-        //client = new WebSocket("ws://localhost:3000");
-        client = new WebSocket("wss://zombie-shooter-server.herokuapp.com/");
+        client = new WebSocket("ws://localhost:3000");
+        //client = new WebSocket("wss://zombie-shooter-server.herokuapp.com/");
 
         client.OnOpen += () =>
         {
@@ -93,8 +94,11 @@ public class NetworkConnection
             case "enemyKilled":
                 EnemyKilledMessageReceived.Invoke(JsonConvert.DeserializeObject<EnemyKilled>(data, settings));
                 break;
-            case "initialize":
-                InitializeMessageReceived.Invoke(JsonConvert.DeserializeObject<Initialize>(data, settings));
+            case "playerList":
+                PlayerListReceived.Invoke(JsonConvert.DeserializeObject<PlayerList>(data, settings));
+                break;
+            case "enemyStates":
+                EnemyLocationsReceived.Invoke(JsonConvert.DeserializeObject<EnemyStates>(data, settings));
                 break;
             case "leave":
                 LeaveMessageReceived.Invoke(JsonConvert.DeserializeObject<Leave>(data, settings));

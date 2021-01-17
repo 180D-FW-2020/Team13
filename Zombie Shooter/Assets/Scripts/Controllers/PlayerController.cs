@@ -8,23 +8,40 @@ using UnityEngine.UI;
 // PlayerController controls autoshooting of the weapon
 public class PlayerController : MonoBehaviour
 {
+    public bool mainPlayer;
     public InputManager inputManager;
+    public Transform playerCamera;
+    public WeaponController weaponController;
+    public float movementSpeed;
 
-    public bool autoShoot;
-    public float shootInterval;
+    private bool walking = false;
 
-    public void StartGame()
+    public Transform GetPlayerCameraPosition()
     {
-        if (autoShoot)
-            StartCoroutine(AutoShoot());
+        return playerCamera;
     }
 
-    private IEnumerator AutoShoot()
+    public int GetCurrentAmmo()
     {
-        while (true)
+        return weaponController.GetCurrentAmmo();
+    }
+
+    public IEnumerator WalkToPad(Transform pad)
+    {
+        walking = true;
+        transform.rotation = Quaternion.LookRotation(new Vector3(pad.position.x, transform.position.y, pad.position.z)); //look at pad
+        while (transform.position != pad.position)
         {
-            inputManager.ShootIfStopped();
-            yield return new WaitForSeconds(shootInterval);
+            transform.position = Vector3.MoveTowards(transform.position, pad.position, Time.deltaTime * movementSpeed);
+            yield return transform.position;
         }
+        transform.SetParent(pad); //set parent
+        transform.localRotation = Quaternion.identity; //face forward
+        walking = false;
+    }
+
+    public bool IsWalking()
+    {
+        return walking;
     }
 }

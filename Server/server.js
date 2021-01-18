@@ -96,14 +96,16 @@ function processMessage(socket, message) {
             break;
         case "enemyShot":
             console.log("Enemy " + data.enemyId + " shot by " + name);
-            enemies[data.enemyId].decrementHealth(data.damage);
-            connectedClients[name].registerShot();
-            if (enemies[data.enemyId].health <= 0) {
-                console.log("Enemy " + data.enemyId + " killed by " + name);
-                broadcast(JSON.stringify({type: "enemyKilled", enemyId: data.enemyId, id: name}));
-                delete enemies[data.enemyId];
+            if (data.enemyId in enemies) {
+                connectedClients[name].registerShot();
+                enemies[data.enemyId].decrementHealth(data.damage);
+                if (enemies[data.enemyId].health <= 0) {
+                    console.log("Enemy " + data.enemyId + " killed by " + name);
+                    broadcast(JSON.stringify({type: "enemyKilled", enemyId: data.enemyId, id: name}));
+                    delete enemies[data.enemyId];
+                }
+                broadcast(JSON.stringify(connectedClients[name]));
             }
-            broadcast(JSON.stringify(connectedClients[name]));
             break;
         case "state":
             connectedClients[name].updatePlayerState(data);

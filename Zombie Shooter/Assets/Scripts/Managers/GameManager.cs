@@ -5,7 +5,6 @@ using System.Linq;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
-using TMPro.EditorUtilities;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -93,22 +92,35 @@ public class GameManager : MonoBehaviour
         Debug.Log("Move to level");
         uiManager.StartGame();
         gameStatus = GameStatus.Moving;
+        uiManager.SetScreensActive(gameStatus);
         List<Transform> waypoints = levels[currentLevel].GetWaypoints();
         vehicle.SetWaypoints(waypoints);
-        SendEnemyPositionRequest();
+        if (currentLevel < levels.Count)
+            SendEnemyPositionRequest();
         while (!vehicle.IsStopped())
             yield return null;
-        StartCoroutine(TransitionToLevel());
+
+        if (currentLevel == levels.Count - 1)
+            EndGame();
+        else
+            StartCoroutine(TransitionToLevel());
     }
 
     public IEnumerator TransitionToLevel()
     {
         Debug.Log("Transition to level");
         gameStatus = GameStatus.Transitioning;
+        uiManager.SetScreensActive(gameStatus);
+
         yield return null;
-        Transform pad = levels[currentLevel].playerPads[0];
-        StartCoroutine(mainPlayer.WalkToPad(pad));
-        while (mainPlayer.IsWalking())
+
+        for (int i = 0; i < allPlayers.Count; i++)
+        {
+            Transform pad = levels[currentLevel].playerPads[i];
+            string key = allPlayers.Keys.ElementAt(i);
+            StartCoroutine(allPlayers[key].WalkToPad(pad));
+        }
+        while (!allPlayers.All(p => !p.Value.IsWalking()))
         {
             yield return null;
         }
@@ -118,7 +130,7 @@ public class GameManager : MonoBehaviour
             mainCamera.eulerAngles = Vector3.MoveTowards(mainCamera.eulerAngles, mainPlayer.playerCamera.eulerAngles, Time.deltaTime * cameraMovementSpeed);
             yield return mainCamera;
         }
-        mainCamera.parent = mainPlayer.playerCamera;
+        mainCamera.SetParent(mainPlayer.playerCamera, true);
         SendReady();
         inputManager.ResetRotation();
     }
@@ -128,12 +140,14 @@ public class GameManager : MonoBehaviour
         Debug.Log("Start level");
         inputManager.EnableShooting(true);
         gameStatus = GameStatus.Playing;
+        uiManager.SetScreensActive(gameStatus);
         enemyManager.StartGame();
     }
     public IEnumerator TransitionFromLevel()
     {
         Debug.Log("Transition from level");
         gameStatus = GameStatus.Transitioning;
+        uiManager.SetScreensActive(gameStatus);
 
         while (mainCamera.position != vehicle.vehicleCamera.position)
         {
@@ -141,6 +155,7 @@ public class GameManager : MonoBehaviour
             mainCamera.eulerAngles = Vector3.MoveTowards(mainCamera.eulerAngles, vehicle.vehicleCamera.eulerAngles, Time.deltaTime * cameraMovementSpeed);
             yield return mainCamera;
         }
+        mainCamera.SetParent(vehicle.vehicleCamera, true);
 
         for (int i = 0; i < allPlayers.Count; i++)
         {
@@ -152,7 +167,6 @@ public class GameManager : MonoBehaviour
         {
             yield return null;
         }
-        mainCamera.parent = vehicle.vehicleCamera;
         StartCoroutine(MoveToLevel());
     }
 
@@ -182,14 +196,14 @@ public class GameManager : MonoBehaviour
     public void PauseGame()
     {
         gameStatus = GameStatus.Paused;
-        uiManager.SetScreensActive(GameStatus.Paused);
+        uiManager.SetScreensActive(gameStatus);
         inputManager.EnableShooting(false);
     }
 
     public void ResumeGame()
     {
         gameStatus = GameStatus.Playing;
-        uiManager.SetScreensActive(GameStatus.Playing);
+        uiManager.SetScreensActive(gameStatus);
         inputManager.EnableShooting(true);
     }
 
@@ -199,6 +213,15 @@ public class GameManager : MonoBehaviour
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
         Time.timeScale = 1;
     }
+
+    public void EndGame()
+    {
+        gameStatus = GameStatus.Ended;
+        uiManager.SetScreensActive(gameStatus);
+        inputManager.EnableShooting(false);
+        Debug.Log("End Game");
+    }
+
     public async void KillEnemy(GameObject enemy)
     {
         EnemyKilled shotEnemy = new EnemyKilled

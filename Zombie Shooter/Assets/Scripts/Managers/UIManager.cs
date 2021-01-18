@@ -16,7 +16,8 @@ public enum GameStatus
     Moving = 4,
     Transitioning = 5,
     Paused = 6,
-    Calibrating = 7
+    Ended = 7,
+    Calibrating = 8
 }
 
 // UIManager coordinates the changing of screens and UI element initialization
@@ -28,6 +29,9 @@ public class UIManager : MonoBehaviour
     public GameObject startScreen;
     public Button startButton;
     public InputField playerName;
+
+    [Header("End UI")]
+    public GameObject endScreen;
 
     [Header("Calibration UI")]
     public GameObject calibrationScreen;
@@ -71,6 +75,7 @@ public class UIManager : MonoBehaviour
     public void SetScreensActive(GameStatus gameStatus)
     {
         startScreen.SetActive(IsStatus(gameStatus, GameStatus.Start));
+        endScreen.SetActive(IsStatus(gameStatus, GameStatus.Ended));
         connectingScreen.SetActive(IsStatus(gameStatus, GameStatus.Connecting));
         inGameScreen.SetActive(IsStatus(gameStatus, GameStatus.Playing, GameStatus.Moving, GameStatus.Transitioning));
         reticle.SetActive(IsStatus(gameStatus, GameStatus.Playing));

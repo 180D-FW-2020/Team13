@@ -93,10 +93,13 @@ public class GameManager : MonoBehaviour
         uiManager.StartGame();
         gameStatus = GameStatus.Moving;
         uiManager.SetScreensActive(gameStatus);
+
+        if (currentLevel < levels.Count - 1) {
+            SendEnemyPositionRequest();
+        }
+        Debug.Log($"Moving to Level {currentLevel} of {levels.Count}");
         List<Transform> waypoints = levels[currentLevel].GetWaypoints();
         vehicle.SetWaypoints(waypoints);
-        if (currentLevel < levels.Count)
-            SendEnemyPositionRequest();
         while (!vehicle.IsStopped())
             yield return null;
 

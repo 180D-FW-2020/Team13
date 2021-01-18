@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public enum EnemyState
+public enum EnemyStatus
 {
     None = 0,
     Idle = 1,
@@ -23,13 +23,15 @@ public class EnemyController : MonoBehaviour
     public float dieDelay;
 
     private Transform target;
+    private bool running;
+    private int health;
     private GameManager gameManager;
 
-    private EnemyState state;
+    private EnemyStatus state;
 
     private void Start()
     {
-        state = EnemyState.Idle;
+        state = EnemyStatus.Idle;
     }
 
     public void StartGame()
@@ -51,12 +53,14 @@ public class EnemyController : MonoBehaviour
     {
         yield return new WaitForSeconds(secondsIdleUntilWalk);
         animator.SetTrigger(Constants.TRIGGER_MOVE);
-        state = EnemyState.Moving;
+        state = EnemyStatus.Moving;
     }
     
-    public void SetTarget(Transform targetTransform)
+    public void SetProperties(Transform targetTransform, bool running, int health)
     {
         target = targetTransform;
+        this.running = running;
+        this.health = health;
     }
 
     public void SetGameManager(GameManager manager)
@@ -66,10 +70,10 @@ public class EnemyController : MonoBehaviour
 
     public IEnumerator Attack()
     {
-        state = EnemyState.Attacking;
+        state = EnemyStatus.Attacking;
         animator.SetTrigger(Constants.TRIGGER_ATTACK);
         var interval = new WaitForSeconds(attackInterval);
-        while (state != EnemyState.Dead)
+        while (state != EnemyStatus.Dead)
         {
             yield return interval;
             gameManager.AttackPlayer();
@@ -78,7 +82,7 @@ public class EnemyController : MonoBehaviour
 
     public void Kill(Transform killElement)
     {
-        if (state != EnemyState.Dead)
+        if (state != EnemyStatus.Dead)
         {
             Transform parent = killElement.parent;
             WeaponController weaponController;
@@ -99,9 +103,9 @@ public class EnemyController : MonoBehaviour
 
     public IEnumerator Die()
     {
-        if (state == EnemyState.Dead)
+        if (state == EnemyStatus.Dead)
             yield break;
-        state = EnemyState.Dead;
+        state = EnemyStatus.Dead;
         animator.SetTrigger(Constants.TRIGGER_FALLDOWN);
         yield return new WaitForSeconds(dieDelay);
         Destroy(gameObject);

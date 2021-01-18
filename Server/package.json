@@ -10,7 +10,7 @@
   "license": "ISC",
   "dependencies": {
     "express": "^4.17.1",
-    "socket.io": "2.3.0",
+    "uWebSockets.js": "uNetworking/uWebSockets.js#v18.14.0",
     "ws": "^7.4.2"
   },
   "engines": {

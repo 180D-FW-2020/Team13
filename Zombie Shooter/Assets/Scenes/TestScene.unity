@@ -1394,7 +1394,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   inputManager: {fileID: 1988368590}
-  autoShoot: 1
+  playerWeaponObject: {fileID: 0}
+  playerCamera: {fileID: 0}
   shootInterval: 1
 --- !u!4 &736461857
 Transform:
@@ -4365,10 +4366,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 20f7293ba7160004ab5032cfd8d56e70, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  levels: []
+  vehicle: {fileID: 0}
+  cameraTransitionTime: 0
+  mainCamera: {fileID: 0}
   player: {fileID: 4284596150926379969, guid: ff2ba6fa864fef84cb94c3b85ed94c95, type: 3}
-  mainPlayer: {fileID: 736461855}
-  playersParent: {fileID: 725508276}
-  playerWeaponObject: {fileID: 1041269402}
+  mainPlayer: {fileID: 0}
   pingInterval: 2
   maxBufferSize: 0
 --- !u!4 &1988368587
@@ -4404,7 +4407,7 @@ MonoBehaviour:
   calibrationText: {fileID: 980029627}
   connectingScreen: {fileID: 461145405}
   waitingScreen: {fileID: 2116661330}
-  playButton: {fileID: 1102313443}
+  readyButton: {fileID: 1102313443}
   playerListText: {fileID: 2003857517}
   inGameScreen: {fileID: 631917014}
   currentAmmo: {fileID: 383388761}

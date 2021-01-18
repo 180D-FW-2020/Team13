@@ -20,13 +20,13 @@ public static class Constants
 
 
 
-[Serializable]
+
 public class Message
 {
     public string type;
 }
 
-[Serializable]
+
 public class Ping
 {
     public string type = "ping";
@@ -34,7 +34,7 @@ public class Ping
 }
 
 //sent from client to server
-[Serializable]
+
 public class GameState
 {
     public string type = "state";
@@ -44,7 +44,7 @@ public class GameState
 }
 
 //sent from server to client
-[Serializable]
+
 public class RemoteState
 {
     public string type = "remoteState";
@@ -56,22 +56,52 @@ public class RemoteState
     public int shooting;
 }
 
-[Serializable]
+
 public class Register
 {
     public string type = "register";
     public string id;
 }
 
-[Serializable]
-public class Initialize
+
+public class Ready
 {
-    public string type = "initialize";
-    public List<string> playerList;
-    public Dictionary<string, string> enemyPositions;
+    public string type = "ready";
+    public string id;
 }
 
-[Serializable]
+
+
+public class PlayerList
+{
+    public string type = "playerList";
+    public List<string> playerList;
+}
+
+
+public class EnemyStates
+{
+    public string type = "enemyStates";
+    public Dictionary<string, EnemyState> enemies;
+}
+
+public class EnemyState
+{
+    public string type = "enemyState";
+    public string enemyId;
+    public string initialPosition;
+    public int health;
+    public int target;
+    public int running;
+}
+
+
+public class EnemiesRequest
+{
+    public string type = "requestEnemies";
+}
+
+
 public class Leave
 {
     public string type = "leave";
@@ -79,15 +109,16 @@ public class Leave
     public List<string> playerList;
 }
 
-[Serializable]
+
 public class EnemyKilled
 {
     public string type = "enemyShot";
     public string id;
     public string enemyId;
+    public int damage;
 }
 
-[Serializable]
+
 public class EnemyAttack
 {
     public string type = "enemyAttack";

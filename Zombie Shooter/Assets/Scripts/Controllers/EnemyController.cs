@@ -22,6 +22,7 @@ public class EnemyController : MonoBehaviour
     public float attackInterval;
     public float dieDelay;
 
+    private int enemyId;
     private Transform target;
     private bool running;
     private int health;
@@ -36,7 +37,7 @@ public class EnemyController : MonoBehaviour
 
     public void StartGame()
     {
-        //StartCoroutine(WaitForMove());
+        StartCoroutine(WaitForMove());
     }
 
     public void FixedUpdate()
@@ -45,19 +46,20 @@ public class EnemyController : MonoBehaviour
         Quaternion rotation = Quaternion.LookRotation(dir);
         transform.rotation = Quaternion.Euler(0, rotation.eulerAngles.y, 0);
 
-        //if (state == EnemyState.Moving && Vector2.Distance(target.position.xz(), transform.position.xz()) < attackDistance)
-        //    StartCoroutine(Attack());
+        if (state == EnemyStatus.Moving && Vector2.Distance(target.position.xz(), transform.position.xz()) < attackDistance)
+            StartCoroutine(Attack());
     }
 
     public IEnumerator WaitForMove()
     {
         yield return new WaitForSeconds(secondsIdleUntilWalk);
-        animator.SetTrigger(Constants.TRIGGER_MOVE);
+        animator.SetTrigger(running ? Constants.TRIGGER_RUN : Constants.TRIGGER_WALK);
         state = EnemyStatus.Moving;
     }
-    
-    public void SetProperties(Transform targetTransform, bool running, int health)
+
+    public void SetProperties(int id, Transform targetTransform, bool running, int health)
     {
+        enemyId = id;
         target = targetTransform;
         this.running = running;
         this.health = health;
@@ -80,24 +82,12 @@ public class EnemyController : MonoBehaviour
         }
     }
 
-    public void Kill(Transform killElement)
+    public void RegisterHit(int damage)
     {
         if (state != EnemyStatus.Dead)
         {
-            Transform parent = killElement.parent;
-            WeaponController weaponController;
-            while (parent != null)
-            {
-                if ((weaponController = parent.GetComponent<WeaponController>()) != null)
-                {
-                    if (weaponController.playerWeapon)
-                    {
-                        gameManager.KillEnemy(gameObject);
-                        break;
-                    }
-                }
-                parent = parent.parent;
-            }
+            bool killed = health - damage <= 0;
+            gameManager.RegisterShot(gameObject, damage, killed);
         }
     }
 

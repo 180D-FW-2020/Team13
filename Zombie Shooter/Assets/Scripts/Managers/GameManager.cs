@@ -225,15 +225,16 @@ public class GameManager : MonoBehaviour
         Debug.Log("End Game");
     }
 
-    public async void KillEnemy(GameObject enemy)
+    public async void RegisterShot(GameObject enemy, int damage, bool killed)
     {
         EnemyKilled shotEnemy = new EnemyKilled
         {
             enemyId = enemy.name,
             id = playerName,
-            damage = 100
+            damage = damage
         };
-        enemyManager.KillEnemy(enemy.name);
+        if (killed)
+            enemyManager.KillEnemy(enemy.name);
         await connection.Send(shotEnemy);
     }
 

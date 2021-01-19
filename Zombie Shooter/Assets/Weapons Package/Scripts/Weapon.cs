@@ -615,7 +615,8 @@ public class Weapon : MonoBehaviour
 				}
 				
 				// Damage
-				hit.collider.gameObject.SendMessageUpwards("Kill", transform, SendMessageOptions.DontRequireReceiver);
+				if (playerWeapon)
+					hit.collider.gameObject.SendMessageUpwards("RegisterShot", damage, SendMessageOptions.DontRequireReceiver);
 				
 				if (shooterAIEnabled)
 				{
@@ -954,7 +955,8 @@ public class Weapon : MonoBehaviour
 				}
 
 				// Damage
-				hit.collider.gameObject.SendMessageUpwards("Kill", transform, SendMessageOptions.DontRequireReceiver);
+				if (playerWeapon)
+					hit.collider.gameObject.SendMessageUpwards("RegisterShot", beamPower, SendMessageOptions.DontRequireReceiver);
 
 				// Shooter AI support
 				if (shooterAIEnabled)

@@ -7,7 +7,8 @@ using UnityEngine;
 public static class Constants
 {
     //Animator triggers
-    public const string TRIGGER_MOVE = "TriggerMove";
+    public const string TRIGGER_RUN = "TriggerRun";
+    public const string TRIGGER_WALK = "TriggerWalk";
     public const string TRIGGER_ATTACK = "TriggerAttack";
     public const string TRIGGER_FALLDOWN = "TriggerFallingDown";
 

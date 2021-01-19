@@ -128,7 +128,7 @@ public class Projectile : MonoBehaviour
 		// Apply damage to the hit object if damageType is set to Direct
 		if (damageType == DamageType.Direct)
 		{
-			col.collider.gameObject.SendMessageUpwards("Kill", transform, SendMessageOptions.DontRequireReceiver);
+			col.collider.gameObject.SendMessageUpwards("RegisterShot", damage, SendMessageOptions.DontRequireReceiver);
 
 			//call the ApplyDamage() function on the enenmy CharacterSetup script
 			if (col.collider.gameObject.layer == LayerMask.NameToLayer("Limb"))

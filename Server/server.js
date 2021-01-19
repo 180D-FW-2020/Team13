@@ -97,9 +97,8 @@ function processMessage(socket, message) {
         case "enemyShot":
             console.log("Enemy " + data.enemyId + " shot by " + name);
             if (data.enemyId in enemies) {
-                connectedClients[name].registerShot();
-                enemies[data.enemyId].decrementHealth(data.damage);
-                if (enemies[data.enemyId].health <= 0) {
+                const killed = connectedClients[name].registerShot(enemies[data.enemyId], data.damage);
+                if (killed) {
                     console.log("Enemy " + data.enemyId + " killed by " + name);
                     broadcast(JSON.stringify({type: "enemyKilled", enemyId: data.enemyId, id: name}));
                     delete enemies[data.enemyId];

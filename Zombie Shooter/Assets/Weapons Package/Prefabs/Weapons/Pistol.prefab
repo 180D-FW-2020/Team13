@@ -217,36 +217,41 @@ MonoBehaviour:
   shellSpitTorqueY: 5
   shellTorqueRandom: 1
   shellSpitPosition: {fileID: 457564}
-  makeMuzzleEffects: 0
+  makeMuzzleEffects: 1
   muzzleEffects:
   - {fileID: 100002, guid: e840492206edf364baccc15150e2cc63, type: 3}
   muzzleEffectsPosition: {fileID: 457572}
-  makeHitEffects: 0
+  makeHitEffects: 1
   hitEffects:
   - {fileID: 100002, guid: 0c631565793959f47a2464ec266aca7c, type: 3}
-  makeBulletHoles: 0
-  bhSystem: 1
-  bulletHolePoolNames: []
+  makeBulletHoles: 1
+  bhSystem: 0
+  bulletHolePoolNames:
+  - Default
   defaultBulletHolePoolNames: []
   bulletHoleGroups:
-  - tag: Ground
-    material: {fileID: 2100000, guid: 1256ac8cd12934c47af6ecb00d1841d4, type: 2}
-    physicMaterial: {fileID: 0}
-    bulletHole: {fileID: 0}
-  - tag: Ground
+  - tag: Enemy
     material: {fileID: 2100000, guid: 1256ac8cd12934c47af6ecb00d1841d4, type: 2}
     physicMaterial: {fileID: 0}
     bulletHole: {fileID: 0}
   - tag: Everything
-    material: {fileID: 2100000, guid: 3546fbe3a0fdf6c4d86667d245c6b96c, type: 2}
+    material: {fileID: 0}
     physicMaterial: {fileID: 0}
     bulletHole: {fileID: 0}
   - tag: Everything
-    material: {fileID: 2100000, guid: 66a6975fe81c6c34dba7c28a523ee98b, type: 2}
+    material: {fileID: 0}
     physicMaterial: {fileID: 0}
     bulletHole: {fileID: 0}
   - tag: Everything
-    material: {fileID: 2100000, guid: 813c919e713514d4ca5720d3d6c3ebfc, type: 2}
+    material: {fileID: 0}
+    physicMaterial: {fileID: 0}
+    bulletHole: {fileID: 0}
+  - tag: Everything
+    material: {fileID: 0}
+    physicMaterial: {fileID: 0}
+    bulletHole: {fileID: 0}
+  - tag: Everything
+    material: {fileID: 0}
     physicMaterial: {fileID: 0}
     bulletHole: {fileID: 0}
   defaultBulletHoles:

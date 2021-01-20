@@ -23,6 +23,7 @@ public enum DamageType
 
 public class Projectile : MonoBehaviour
 {
+	public bool playerProjectile = false;
 	public ProjectileType projectileType = ProjectileType.Standard;		// The type of projectile - Standard is a straight forward moving projectile, Seeker type seeks GameObjects with a specified tag
 	public DamageType damageType = DamageType.Direct;					// The damage type - Direct applys damage directly from the projectile, Explosion lets an instantiated explosion handle damage
 	public float damage = 100.0f;										// The amount of damage to be applied (only for Direct damage type)
@@ -128,7 +129,8 @@ public class Projectile : MonoBehaviour
 		// Apply damage to the hit object if damageType is set to Direct
 		if (damageType == DamageType.Direct)
 		{
-			col.collider.gameObject.SendMessageUpwards("RegisterShot", damage, SendMessageOptions.DontRequireReceiver);
+			if (playerProjectile)
+				col.collider.GetComponent<EnemyController>()?.RegisterHit((int)damage);
 
 			//call the ApplyDamage() function on the enenmy CharacterSetup script
 			if (col.collider.gameObject.layer == LayerMask.NameToLayer("Limb"))
@@ -153,7 +155,8 @@ public class Projectile : MonoBehaviour
 		// Instantiate the explosion
 		if (explosion != null)
 		{
-			Instantiate(explosion, position, Quaternion.identity, transform.parent);
+			var newExplosion = Instantiate(explosion, position, Quaternion.identity, transform.parent);
+			newExplosion.GetComponent<Explosion>().playerExplosion = playerProjectile;
 		}
 
 		// Cluster bombs
@@ -163,7 +166,8 @@ public class Projectile : MonoBehaviour
 			{
 				for (int i = 0; i <= clusterBombNum; i++)
 				{
-					Instantiate(clusterBomb, transform.position, transform.rotation, transform.parent);
+					var bomb = Instantiate(clusterBomb, transform.position, transform.rotation, transform.parent);
+					bomb.GetComponent<BombFragment>().playerBomb = playerProjectile;
 				}
 			}
 		}

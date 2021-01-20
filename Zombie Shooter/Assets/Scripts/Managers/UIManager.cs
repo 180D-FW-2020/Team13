@@ -47,7 +47,6 @@ public class UIManager : MonoBehaviour
 
     [Header("In Game UI")]
     public GameObject inGameScreen;
-    public GameObject reticle;
     public Text currentAmmo;
     public GameObject scoreCard;
     public Text latencyText;
@@ -78,7 +77,6 @@ public class UIManager : MonoBehaviour
         endScreen.SetActive(IsStatus(gameStatus, GameStatus.Ended));
         connectingScreen.SetActive(IsStatus(gameStatus, GameStatus.Connecting));
         inGameScreen.SetActive(IsStatus(gameStatus, GameStatus.Playing, GameStatus.Moving, GameStatus.Transitioning));
-        reticle.SetActive(IsStatus(gameStatus, GameStatus.Playing));
         waitingScreen.SetActive(IsStatus(gameStatus, GameStatus.Waiting));
         pauseScreen.SetActive(IsStatus(gameStatus, GameStatus.Paused));
         calibrationScreen.SetActive(IsStatus(gameStatus, GameStatus.Calibrating));

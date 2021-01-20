@@ -332,7 +332,7 @@ MonoBehaviour:
   muzzleEffects:
   - {fileID: 100002, guid: e840492206edf364baccc15150e2cc63, type: 3}
   muzzleEffectsPosition: {fileID: 489290}
-  makeHitEffects: 0
+  makeHitEffects: 1
   hitEffects:
   - {fileID: 100002, guid: 0c631565793959f47a2464ec266aca7c, type: 3}
   makeBulletHoles: 0

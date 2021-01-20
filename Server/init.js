@@ -10,5 +10,12 @@ const server = express()
 
 const wss = new Server({server});
 
+wss.broadcast = function(data, sender) {
+  wss.clients.forEach(function(client) {
+    if (client !== sender) {
+      client.send(data)
+    }
+  })
+}
 
 module.exports = wss;

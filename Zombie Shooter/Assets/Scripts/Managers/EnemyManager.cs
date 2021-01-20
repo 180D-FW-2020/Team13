@@ -1,4 +1,5 @@
-﻿using System;
+﻿using OpenCvSharp;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -11,7 +12,7 @@ public class EnemyManager : MonoBehaviour
     public float dieDelay;
 
     private GameManager gameManager;
-    private List<EnemyController> enemies = new List<EnemyController>();
+    private Dictionary<string, EnemyController> enemies = new Dictionary<string, EnemyController>();
 
     public void Awake()
     {
@@ -20,9 +21,9 @@ public class EnemyManager : MonoBehaviour
     
     public void StartGame()
     {
-        foreach (EnemyController enemyController in enemies)
+        foreach (string enemyId in enemies.Keys)
         {
-            enemyController.StartGame();
+            enemies[enemyId].StartGame();
         }
     }
 
@@ -41,16 +42,22 @@ public class EnemyManager : MonoBehaviour
             spawnedEnemyController.SetProperties(playerPads[state.target], state.running == 1, state.health);
             spawnedEnemyController.SetGameManager(gameManager);
             spawnedEnemy.name = pair.Key;
-            enemies.Add(spawnedEnemyController);
+            enemies.Add(pair.Key, spawnedEnemyController);
         }
     }
 
     public void KillEnemy(string enemyId)
     {
-        var enemy = transform.Find(enemyId);
-        var enemyController = enemy.GetComponent<EnemyController>();
-        enemies.Remove(enemyController);
-        StartCoroutine(enemyController.Die());
+        if (enemies.ContainsKey(enemyId)) {
+            StartCoroutine(enemies[enemyId].Die());
+            enemies.Remove(enemyId);
+        }
+    }
+
+    public void ShootEnemy(string enemyId, int damage)
+    {
+        if (enemies.ContainsKey(enemyId))
+            enemies[enemyId].RegisterHit(damage);
     }
 
     public int GetEnemyCount()

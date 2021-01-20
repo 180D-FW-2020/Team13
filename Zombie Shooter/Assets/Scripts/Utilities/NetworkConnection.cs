@@ -18,6 +18,7 @@ public class NetworkConnection
     public UnityEvent<EnemyStates> EnemyLocationsReceived = new UnityEvent<EnemyStates>();
     public UnityEvent<Leave> LeaveMessageReceived = new UnityEvent<Leave>();
     public UnityEvent<EnemyKilled> EnemyKilledMessageReceived = new UnityEvent<EnemyKilled>();
+    public UnityEvent<EnemyKilled> EnemyShotMessageReceived = new UnityEvent<EnemyKilled>();
     public UnityEvent<RemoteState> RemoteStateUpdateReceived = new UnityEvent<RemoteState>();
     private WebSocket client;
 
@@ -93,6 +94,9 @@ public class NetworkConnection
                 break;
             case "enemyKilled":
                 EnemyKilledMessageReceived.Invoke(JsonConvert.DeserializeObject<EnemyKilled>(data, settings));
+                break;
+            case "enemyShot":
+                EnemyShotMessageReceived.Invoke(JsonConvert.DeserializeObject<EnemyKilled>(data, settings));
                 break;
             case "playerList":
                 PlayerListReceived.Invoke(JsonConvert.DeserializeObject<PlayerList>(data, settings));

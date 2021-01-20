@@ -1,8 +1,10 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Runtime.CompilerServices;
 
 public class BombFragment : MonoBehaviour
 {
+	public bool playerBomb = false;
 	public float speed = 5.0f;					// The speed at which this bomb fragment is propelled away from the initial explosion
 	public GameObject explosion;				// The explosion prefab to be instantiated when this bomb fragment hits something
 
@@ -34,7 +36,8 @@ public class BombFragment : MonoBehaviour
 		// Instantiate the explosion
 		if (explosion != null)
 		{
-			Instantiate(explosion, position, Quaternion.identity, transform.parent);
+			var newExplosion = Instantiate(explosion, position, Quaternion.identity, transform.parent);
+			newExplosion.GetComponent<Explosion>().playerExplosion = playerBomb;
 		}
 
 		// Destroy this projectile

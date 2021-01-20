@@ -20,16 +20,8 @@ class Client {
         this.kills += 1;
     }
 
-    registerShot(enemy, damage) {
+    registerShot() {
         this.score += hitScore;
-        enemy.decrementHealth(damage);
-        if (enemy.health <= 0) {
-            this.registerKill();
-            return true;
-        }
-        else {
-            return false;
-        }
     }
 
     decrementHealth() {

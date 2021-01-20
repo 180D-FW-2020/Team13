@@ -613,12 +613,12 @@ public class Weapon : MonoBehaviour
 					damage *= heat * powerMultiplier;
 					heat = 0.0f;
 				}
-				
+
 				// Damage
 				if (playerWeapon)
-					hit.collider.gameObject.SendMessageUpwards("RegisterShot", damage, SendMessageOptions.DontRequireReceiver);
-				
-				if (shooterAIEnabled)
+                    hit.collider.GetComponent<EnemyController>()?.RegisterHit((int)damage);
+
+                if (shooterAIEnabled)
 				{
 					hit.transform.SendMessageUpwards("Damage", damage / 100, SendMessageOptions.DontRequireReceiver);
 				}
@@ -775,7 +775,7 @@ public class Weapon : MonoBehaviour
 				// Add force to the object that was hit
 				if (hit.rigidbody)
 				{
-					hit.rigidbody.AddForce(ray.direction * power * forceMultiplier);
+					//hit.rigidbody.AddForce(ray.direction * power * forceMultiplier);
 				}
 			}
 		}
@@ -835,6 +835,7 @@ public class Weapon : MonoBehaviour
 			if (projectile != null)
 			{
 				GameObject proj = Instantiate(projectile, projectileSpawnSpot.position, projectileSpawnSpot.rotation, transform) as GameObject;
+				proj.GetComponent<Projectile>().playerProjectile = playerWeapon;
 
 				// Warmup heat
 				if (warmup)
@@ -956,7 +957,7 @@ public class Weapon : MonoBehaviour
 
 				// Damage
 				if (playerWeapon)
-					hit.collider.gameObject.SendMessageUpwards("RegisterShot", beamPower, SendMessageOptions.DontRequireReceiver);
+					hit.collider.GetComponent<EnemyController>()?.RegisterHit((int)beamPower);
 
 				// Shooter AI support
 				if (shooterAIEnabled)

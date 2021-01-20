@@ -11,6 +11,7 @@ using System.Collections.Generic;
 
 public class Explosion : MonoBehaviour
 {
+	public bool playerExplosion = false;
 	public bool shooterAISupport = false;		// Enable compatibility with Shooter AI by Gateway Games
 	public bool bloodyMessSupport = false;		// Enable compatibility with Bloody Mess by Heavy Diesel Softworks
 	public int weaponType = 0;					// Bloody Mess property
@@ -39,8 +40,10 @@ public class Explosion : MonoBehaviour
 				float damageAmount = damage * (1 / Vector3.Distance(transform.position, col.transform.position));
 
 				// The Easy Weapons health system
-				col.GetComponent<Collider>().gameObject.SendMessageUpwards("RegisterShot", damageAmount, SendMessageOptions.DontRequireReceiver);
-
+				if (playerExplosion) {
+					Debug.Log(col.gameObject.name);
+					col.GetComponent<EnemyController>()?.RegisterHit((int)damageAmount);
+				}
 				// The Shooter AI health system
 				if (shooterAISupport)
 				{

@@ -22,7 +22,6 @@ public class EnemyController : MonoBehaviour
     public float attackInterval;
     public float dieDelay;
 
-    private int enemyId;
     private Transform target;
     private bool running;
     private int health;
@@ -57,9 +56,8 @@ public class EnemyController : MonoBehaviour
         state = EnemyStatus.Moving;
     }
 
-    public void SetProperties(int id, Transform targetTransform, bool running, int health)
+    public void SetProperties(Transform targetTransform, bool running, int health)
     {
-        enemyId = id;
         target = targetTransform;
         this.running = running;
         this.health = health;
@@ -86,7 +84,9 @@ public class EnemyController : MonoBehaviour
     {
         if (state != EnemyStatus.Dead)
         {
-            bool killed = health - damage <= 0;
+            health -= damage;
+            Debug.Log("Shot, " + health);
+            bool killed = health <= 0;
             gameManager.RegisterShot(gameObject, damage, killed);
         }
     }

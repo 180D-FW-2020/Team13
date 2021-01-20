@@ -1,7 +1,6 @@
 'use strict';
 
 const wss = require('./init.js');
-const WebSocket = require('ws');
 const Client = require('./client.js');
 const Enemy = require('./enemy.js');
 
@@ -27,14 +26,6 @@ function initEnemies() {
     console.log('Enemies initialized to: ' + JSON.stringify(enemies));
 }
 
-function broadcast(data) {
-    wss.clients.forEach(function each(client) {
-        if (client.readyState === WebSocket.OPEN) {
-            client.send(data);
-        }
-    });
-}
-
 function processMessage(socket, message) {
     const data = JSON.parse(message);
     const name = data.id;
@@ -49,7 +40,7 @@ function processMessage(socket, message) {
             if (readyCount == Object.keys(connectedClients).length) {
                 console.log('Game started');
                 readyCount = 0;
-                broadcast(JSON.stringify({type: "start"}));
+                wss.broadcast(JSON.stringify({type: "start"}), null);
             }
             break;
         case "register":
@@ -66,7 +57,7 @@ function processMessage(socket, message) {
                 type: "playerList",
                 playerList: Object.keys(connectedClients)
             }
-            broadcast(JSON.stringify(playerList));
+            wss.broadcast(JSON.stringify(playerList), null);
             break;
         case "requestEnemies":
             if (Object.keys(enemies).length == 0) {
@@ -87,28 +78,33 @@ function processMessage(socket, message) {
                 id: name,
                 playerList: Object.keys(connectedClients)
             }
-            broadcast(JSON.stringify(leave));
+            wss.broadcast(JSON.stringify(leave), null);
             break;
         case "enemyAttack":
             console.log("Enemy attacking " + name);
             connectedClients[name].decrementHealth();
-            broadcast(JSON.stringify(connectedClients[name]));
+            wss.broadcast(JSON.stringify(connectedClients[name]), socket);
             break;
         case "enemyShot":
             console.log("Enemy " + data.enemyId + " shot by " + name);
             if (data.enemyId in enemies) {
-                const killed = connectedClients[name].registerShot(enemies[data.enemyId], data.damage);
-                if (killed) {
+                connectedClients[name].registerShot();
+                enemies[data.enemyId].decrementHealth(data.damage);
+
+                if (enemies[data.enemyId].health <= 0) {
+                    connectedClients[name].registerKill();
                     console.log("Enemy " + data.enemyId + " killed by " + name);
-                    broadcast(JSON.stringify({type: "enemyKilled", enemyId: data.enemyId, id: name}));
+                    wss.broadcast(JSON.stringify({type: "enemyKilled", enemyId: data.enemyId, id: name}), socket);
                     delete enemies[data.enemyId];
                 }
-                broadcast(JSON.stringify(connectedClients[name]));
+                else {
+                    wss.broadcast(JSON.stringify({type: "enemyShot", enemyId: data.enemyId, damage: data.damage}), socket);
+                }
             }
             break;
         case "state":
             connectedClients[name].updatePlayerState(data);
-            broadcast(JSON.stringify(connectedClients[name]));
+            wss.broadcast(JSON.stringify(connectedClients[name]), null);
             break;
     }
 }

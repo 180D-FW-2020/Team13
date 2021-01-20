@@ -57,6 +57,7 @@ public class GameManager : MonoBehaviour
         connection.EnemyLocationsReceived.AddListener(EnemyLocationsReceived);
         connection.LeaveMessageReceived.AddListener(LeaveMessageReceived);
         connection.EnemyKilledMessageReceived.AddListener(EnemyKilledMessageReceived);
+        connection.EnemyShotMessageReceived.AddListener(EnemyShotMessageReceived);
         connection.RemoteStateUpdateReceived.AddListener(RemoteStateUpdateReceived);
         connection.StartReceived.AddListener(StartReceived);
         connection.PongReceived.AddListener(PongReceived);
@@ -119,7 +120,7 @@ public class GameManager : MonoBehaviour
 
         for (int i = 0; i < allPlayers.Count; i++)
         {
-            Transform pad = levels[currentLevel].playerPads[i];
+            Transform pad = levels[currentLevel].GetPlayerPads()[i];
             string key = allPlayers.Keys.ElementAt(i);
             StartCoroutine(allPlayers[key].WalkToPad(pad));
         }
@@ -127,7 +128,7 @@ public class GameManager : MonoBehaviour
         {
             yield return null;
         }
-        while (mainCamera.position != mainPlayer.playerCamera.position)
+        while (mainCamera.position != mainPlayer.playerCamera.position || mainCamera.eulerAngles != mainPlayer.playerCamera.eulerAngles)
         {
             mainCamera.position = Vector3.MoveTowards(mainCamera.position, mainPlayer.playerCamera.position, Time.deltaTime * cameraMovementSpeed);
             mainCamera.eulerAngles = Vector3.MoveTowards(mainCamera.eulerAngles, mainPlayer.playerCamera.eulerAngles, Time.deltaTime * cameraMovementSpeed);
@@ -135,13 +136,13 @@ public class GameManager : MonoBehaviour
         }
         mainCamera.SetParent(mainPlayer.playerCamera, true);
         SendReady();
-        inputManager.ResetRotation();
+        mainPlayer.ResetRotation();
     }
 
     public void StartLevel()
     {
         Debug.Log("Start level");
-        inputManager.EnableShooting(true);
+        mainPlayer.EnableShooting(true);
         gameStatus = GameStatus.Playing;
         uiManager.SetScreensActive(gameStatus);
         enemyManager.StartGame();
@@ -152,7 +153,7 @@ public class GameManager : MonoBehaviour
         gameStatus = GameStatus.Transitioning;
         uiManager.SetScreensActive(gameStatus);
 
-        while (mainCamera.position != vehicle.vehicleCamera.position)
+        while (mainCamera.position != vehicle.vehicleCamera.position || mainCamera.eulerAngles != vehicle.vehicleCamera.eulerAngles)
         {
             mainCamera.position = Vector3.MoveTowards(mainCamera.position, vehicle.vehicleCamera.position, Time.deltaTime * cameraMovementSpeed);
             mainCamera.eulerAngles = Vector3.MoveTowards(mainCamera.eulerAngles, vehicle.vehicleCamera.eulerAngles, Time.deltaTime * cameraMovementSpeed);
@@ -175,7 +176,7 @@ public class GameManager : MonoBehaviour
 
     public void EndLevel()
     {
-        inputManager.EnableShooting(false);
+        mainPlayer.EnableShooting(false);
         currentLevel++;
         Debug.Log("End level");
         StartCoroutine(TransitionFromLevel());
@@ -200,14 +201,14 @@ public class GameManager : MonoBehaviour
     {
         gameStatus = GameStatus.Paused;
         uiManager.SetScreensActive(gameStatus);
-        inputManager.EnableShooting(false);
+        mainPlayer.EnableShooting(false);
     }
 
     public void ResumeGame()
     {
         gameStatus = GameStatus.Playing;
         uiManager.SetScreensActive(gameStatus);
-        inputManager.EnableShooting(true);
+        mainPlayer.EnableShooting(true);
     }
 
     public void ReloadGame()
@@ -221,7 +222,7 @@ public class GameManager : MonoBehaviour
     {
         gameStatus = GameStatus.Ended;
         uiManager.SetScreensActive(gameStatus);
-        inputManager.EnableShooting(false);
+        mainPlayer.EnableShooting(false);
         Debug.Log("End Game");
     }
 
@@ -380,9 +381,8 @@ public class GameManager : MonoBehaviour
             {
                 if (state.shooting != (int)GestureType.None)
                 {
-                    WeaponController weaponController = allPlayers[state.id].GetComponentInChildren<WeaponController>();
-                    weaponController.SwitchWeapon((GestureType)state.shooting);
-                    weaponController.Shoot();
+                    allPlayers[state.id].SwitchWeapon((GestureType)state.shooting);
+                    allPlayers[state.id].Shoot();
                 }
 
                 Vector3 rotation = new Vector3(state.rotation[0], state.rotation[1], state.rotation[2]);
@@ -407,11 +407,11 @@ public class GameManager : MonoBehaviour
                 var newPlayer = Instantiate(player, parent);
                 newPlayer.name = name;
                 var newPlayerController = newPlayer.GetComponent<PlayerController>();
+                newPlayerController.SetInputManager(inputManager);
                 if (name == playerName)
                 {
                     newPlayerController.mainPlayer = true;
                     mainPlayer = newPlayerController;
-                    inputManager.SetMainPlayer(mainPlayer);
                 }
                 allPlayers.Add(name, newPlayerController);
                 uiManager.AddPlayer(name);
@@ -421,7 +421,7 @@ public class GameManager : MonoBehaviour
 
     private void EnemyLocationsReceived(EnemyStates states)
     {
-        pendingActions.Enqueue(() => enemyManager.Initialize(states.enemies, levels[currentLevel].transform, levels[currentLevel].playerPads));
+        pendingActions.Enqueue(() => enemyManager.Initialize(states.enemies, levels[currentLevel].transform, levels[currentLevel].GetPlayerPads()));
     }
 
     private void LeaveMessageReceived(Leave leave)
@@ -444,6 +444,13 @@ public class GameManager : MonoBehaviour
         });
     }
 
+    private void EnemyShotMessageReceived(EnemyKilled enemyShot)
+    {
+        pendingActions.Enqueue(() =>
+        {
+            enemyManager.ShootEnemy(enemyShot.enemyId, enemyShot.damage);
+        });
+    }
     public void PongReceived(Ping pong)
     {
         long now = DateTime.Now.Ticks;
@@ -460,7 +467,7 @@ public class GameManager : MonoBehaviour
     {
         if (gameStatus == GameStatus.Playing)
         {
-            uiManager.UpdateAmmo(inputManager.GetCurrentAmmo());
+            uiManager.UpdateAmmo(mainPlayer.GetCurrentAmmo());
             gameState.rotation = allPlayers[playerName].transform.eulerAngles.coordinates();
             await connection.Send(gameState);
             gameState.shooting = 0;
@@ -485,7 +492,7 @@ public class GameManager : MonoBehaviour
 
         if (gameStatus == GameStatus.Playing)
         {
-            inputManager.UpdateInput();
+            mainPlayer.UpdateInput();
         }
     }
 

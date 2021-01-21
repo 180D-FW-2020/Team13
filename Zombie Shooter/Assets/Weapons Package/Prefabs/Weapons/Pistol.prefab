@@ -163,7 +163,7 @@ MonoBehaviour:
   shooterAIEnabled: 0
   bloodyMessEnabled: 0
   weaponType: 0
-  auto: 1
+  auto: 0
   playerWeapon: 1
   weaponModel: {fileID: 157566}
   raycastStartSpot: {fileID: 457570}
@@ -187,7 +187,7 @@ MonoBehaviour:
   beamColor: {r: 1, g: 0, b: 0, a: 1}
   startBeamWidth: 0.5
   endBeamWidth: 1
-  power: 45
+  power: 20
   forceMultiplier: 10
   beamPower: 1
   range: 9999
@@ -199,8 +199,8 @@ MonoBehaviour:
   showCurrentAmmo: 0
   reloadAutomatically: 1
   accuracy: 70
-  accuracyDropPerShot: 5
-  accuracyRecoverRate: 3.5
+  accuracyDropPerShot: 20
+  accuracyRecoverRate: 7
   burstRate: 3
   burstPause: 0
   recoil: 1
@@ -224,16 +224,11 @@ MonoBehaviour:
   makeHitEffects: 1
   hitEffects:
   - {fileID: 100002, guid: 0c631565793959f47a2464ec266aca7c, type: 3}
-  makeBulletHoles: 1
+  makeBulletHoles: 0
   bhSystem: 0
-  bulletHolePoolNames:
-  - Default
+  bulletHolePoolNames: []
   defaultBulletHolePoolNames: []
   bulletHoleGroups:
-  - tag: Enemy
-    material: {fileID: 2100000, guid: 1256ac8cd12934c47af6ecb00d1841d4, type: 2}
-    physicMaterial: {fileID: 0}
-    bulletHole: {fileID: 0}
   - tag: Everything
     material: {fileID: 0}
     physicMaterial: {fileID: 0}

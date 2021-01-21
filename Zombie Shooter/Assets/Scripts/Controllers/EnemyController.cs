@@ -41,10 +41,6 @@ public class EnemyController : MonoBehaviour
 
     public void FixedUpdate()
     {
-        Vector3 dir = target.position - transform.position;
-        Quaternion rotation = Quaternion.LookRotation(dir);
-        transform.rotation = Quaternion.Euler(0, rotation.eulerAngles.y, 0);
-
         if (state == EnemyStatus.Moving && Vector2.Distance(target.position.xz(), transform.position.xz()) < attackDistance)
             StartCoroutine(Attack());
     }
@@ -61,6 +57,10 @@ public class EnemyController : MonoBehaviour
         target = targetTransform;
         this.running = running;
         this.health = health;
+
+        Vector3 dir = target.position - transform.position;
+        Quaternion rotation = Quaternion.LookRotation(dir);
+        transform.rotation = Quaternion.Euler(0, rotation.eulerAngles.y, 0);
     }
 
     public void SetGameManager(GameManager manager)

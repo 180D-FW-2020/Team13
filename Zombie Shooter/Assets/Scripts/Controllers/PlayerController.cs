@@ -17,6 +17,8 @@ public class PlayerController : MonoBehaviour
 {
     public bool mainPlayer;
     public float movementSpeed;
+    public bool autoShoot;
+    public float autoShootVelocityThreshold;
 
     [Header("Camera")]
     public Transform playerCamera;
@@ -37,6 +39,7 @@ public class PlayerController : MonoBehaviour
     private GestureType currentWeaponType = GestureType.None;
 
     private bool walking;
+    private bool shooting;
     private bool aiming;
 
     private Vector3 previousRotation;
@@ -45,13 +48,11 @@ public class PlayerController : MonoBehaviour
     private bool shootingEnabled;
     private InputManager inputManager;
 
-    private Rigidbody rb;
-
     public void Start()
     {
-        rb = GetComponent<Rigidbody>();
         currentWeapon = new WeaponData();
         SwitchWeapon(GestureType.L);
+        StartCoroutine(AimAndShoot());
     }
 
     public void SetInputManager(InputManager manager)
@@ -75,8 +76,7 @@ public class PlayerController : MonoBehaviour
             previousRotation = transform.eulerAngles;
 
             //shoot
-            if (Input.GetKeyDown(KeyCode.A))
-                StartCoroutine(AimAndShoot());
+            shooting = ShootingTrigger();
         }
     }
 
@@ -88,6 +88,7 @@ public class PlayerController : MonoBehaviour
     public void EnableShooting(bool enabled)
     {
         shootingEnabled = enabled;
+        shooting = enabled ? shooting : false;
         currentWeapon.weapon.showCrosshair = enabled;
     }
     
@@ -122,41 +123,51 @@ public class PlayerController : MonoBehaviour
 
     public IEnumerator AimAndShoot()
     {
-        if (!aiming) {
-            while (currentWeapon.weapon.transform.localPosition != aimOffset)
-            {
-                currentWeapon.weapon.transform.localPosition = Vector3.MoveTowards(currentWeapon.weapon.transform.localPosition, aimOffset, Time.deltaTime * currentWeapon.aimSpeed);
-                yield return new WaitForEndOfFrame();
-            }
-            aiming = true;
-        }
-
-        while (Input.GetKey(KeyCode.A))
+        while (true)
         {
-            Shoot();
-            yield return new WaitForSeconds(1/currentWeapon.weapon.rateOfFire);
-        }
-
-        if (aiming)
-        {
-            while (currentWeapon.weapon.transform.localPosition != weaponOffset)
+            if (shooting && !aiming)
             {
-                currentWeapon.weapon.transform.localPosition = Vector3.MoveTowards(currentWeapon.weapon.transform.localPosition, weaponOffset, Time.deltaTime * currentWeapon.aimSpeed);
-                yield return new WaitForEndOfFrame();
+                while (currentWeapon.weapon.transform.localPosition != aimOffset)
+                {
+                    currentWeapon.weapon.transform.localPosition = Vector3.MoveTowards(currentWeapon.weapon.transform.localPosition, aimOffset, Time.deltaTime * currentWeapon.aimSpeed);
+                    yield return currentWeapon.weapon.transform.localPosition;
+                }
+                aiming = true;
             }
-            aiming = false;
+
+            else if (shooting && aiming)
+            {
+                Shoot();
+                yield return new WaitForSeconds(1 / currentWeapon.weapon.rateOfFire);
+            }
+
+            else if (!shooting && aiming)
+            {
+                while (currentWeapon.weapon.transform.localPosition != weaponOffset)
+                {
+                    currentWeapon.weapon.transform.localPosition = Vector3.MoveTowards(currentWeapon.weapon.transform.localPosition, weaponOffset, Time.deltaTime * currentWeapon.aimSpeed);
+                    yield return currentWeapon.weapon.transform.localPosition;
+                }
+                aiming = false;
+            }
+
+            else
+            {
+                yield return null;
+            }
         }
     }
 
 
     public void Shoot()
     {
-        if (shootingEnabled && aiming)
+        if (shootingEnabled)
             currentWeapon.weapon.RemoteFire();
     }
 
     private void SwitchWeapon(WeaponData weaponData)
     {
+        shooting = false;
         if (currentWeapon.weapon)
             Destroy(currentWeapon.weapon.gameObject);
         var newGun = Instantiate(weaponData.weapon.gameObject, weaponOffset, Quaternion.identity);
@@ -171,7 +182,7 @@ public class PlayerController : MonoBehaviour
         transform.rotation = Quaternion.LookRotation(new Vector3(pad.position.x, transform.position.y, pad.position.z)); //look at pad
         while (transform.position != pad.position)
         {
-            rb.MovePosition(transform.position + (pad.position - transform.position) * Time.deltaTime * movementSpeed);
+            transform.position = Vector3.MoveTowards(transform.position, pad.position, Time.deltaTime * movementSpeed);
             yield return transform.position;
         }
         transform.SetParent(pad); //set parent
@@ -184,5 +195,10 @@ public class PlayerController : MonoBehaviour
         return walking;
     }
 
-
+    private bool ShootingTrigger()
+    {
+        if (autoShoot)
+            return velocity < autoShootVelocityThreshold;
+        return Input.GetKey(KeyCode.A);
+    }
 }

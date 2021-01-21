@@ -131,7 +131,7 @@ public class GameManager : MonoBehaviour
         while (mainCamera.position != mainPlayer.playerCamera.position || mainCamera.eulerAngles != mainPlayer.playerCamera.eulerAngles)
         {
             mainCamera.position = Vector3.MoveTowards(mainCamera.position, mainPlayer.playerCamera.position, Time.deltaTime * cameraMovementSpeed);
-            mainCamera.eulerAngles = Vector3.MoveTowards(mainCamera.eulerAngles, mainPlayer.playerCamera.eulerAngles, Time.deltaTime * cameraMovementSpeed);
+            mainCamera.rotation = Quaternion.RotateTowards(mainCamera.rotation, mainPlayer.playerCamera.rotation, Time.deltaTime * cameraMovementSpeed);
             yield return mainCamera;
         }
         mainCamera.SetParent(mainPlayer.playerCamera, true);
@@ -156,7 +156,7 @@ public class GameManager : MonoBehaviour
         while (mainCamera.position != vehicle.vehicleCamera.position || mainCamera.eulerAngles != vehicle.vehicleCamera.eulerAngles)
         {
             mainCamera.position = Vector3.MoveTowards(mainCamera.position, vehicle.vehicleCamera.position, Time.deltaTime * cameraMovementSpeed);
-            mainCamera.eulerAngles = Vector3.MoveTowards(mainCamera.eulerAngles, vehicle.vehicleCamera.eulerAngles, Time.deltaTime * cameraMovementSpeed);
+            mainCamera.rotation = Quaternion.RotateTowards(mainCamera.rotation, vehicle.vehicleCamera.rotation, Time.deltaTime * cameraMovementSpeed);
             yield return mainCamera;
         }
         mainCamera.SetParent(vehicle.vehicleCamera, true);

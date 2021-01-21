@@ -237,9 +237,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   mainPlayer: 0
   movementSpeed: 10
+  autoShoot: 0
+  autoShootVelocityThreshold: 5
   playerCamera: {fileID: 6214518373487200755}
   cameraSensitivity: 10
-  aimingSensitivity: 3
+  aimingSensitivity: 1
   xLimit: 180
   yLimit: 135
   leftWeapon:

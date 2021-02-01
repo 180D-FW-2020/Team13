@@ -240,10 +240,35 @@ ms@2.1.1:
   resolved "https://registry.yarnpkg.com/ms/-/ms-2.1.1.tgz#30a5864eb3ebb0a66f2ebe6d727af06a09d86e0a"
   integrity sha512-tgp+dl5cGk28utYktBsrFqA7HKgrhgPsg6Z/EfhWI4gl1Hwq8B/GmY/0oXZ6nF8hDVesS/FpnYaD/kOWhYQvyg==
 
+msgpackr-extract@^1.0.3:
+  version "1.0.3"
+  resolved "https://registry.yarnpkg.com/msgpackr-extract/-/msgpackr-extract-1.0.3.tgz#08f12b545db47f704760e5eef994ad5d4bfafd73"
+  integrity sha512-PKvGH5NklS64NAvOIDLKaLv8rRh+4Mxn/4Z4n8JSMd2lA7HZ6E/uNtLLWErnBuMnBGgAnniZ8XceZhYCthdcJA==
+  dependencies:
+    nan "^2.14.2"
+    node-gyp-build "^4.2.3"
+
+msgpackr@^1.1.2:
+  version "1.1.2"
+  resolved "https://registry.yarnpkg.com/msgpackr/-/msgpackr-1.1.2.tgz#cde3a986db74ef2c51fb564278de1b129f1e3aec"
+  integrity sha512-y5xSJOAyHJQXAYUWfEwkx0HfZZ9CPGLYRv1teTto+9FpgWasOoQ0jPtAvJ4WRHS5gQg4wGsQbFbm4YX49zKqgA==
+  optionalDependencies:
+    msgpackr-extract "^1.0.3"
+
+nan@^2.14.2:
+  version "2.14.2"
+  resolved "https://registry.yarnpkg.com/nan/-/nan-2.14.2.tgz#f5376400695168f4cc694ac9393d0c9585eeea19"
+  integrity sha512-M2ufzIiINKCuDfBSAUr1vWQ+vuVcA9kqx8JJUsbQi6yf1uGRyb7HfpdfUr5qLXf3B/t8dPvcjhKMmlfnP47EzQ==
+
 negotiator@0.6.2:
   version "0.6.2"
   resolved "https://registry.yarnpkg.com/negotiator/-/negotiator-0.6.2.tgz#feacf7ccf525a77ae9634436a64883ffeca346fb"
   integrity sha512-hZXc7K2e+PgeI1eDBe/10Ard4ekbfrrqG8Ep+8Jmf4JID2bNg7NvCPOZN+kfF574pFQI7mum2AUqDidoKqcTOw==
+
+node-gyp-build@^4.2.3:
+  version "4.2.3"
+  resolved "https://registry.yarnpkg.com/node-gyp-build/-/node-gyp-build-4.2.3.tgz#ce6277f853835f718829efb47db20f3e4d9c4739"
+  integrity sha512-MN6ZpzmfNCRM+3t57PTJHgHyw/h4OWnZ6mR8P5j/uZtqQr46RRuDE/P+g3n0YR/AiYXeWixZZzaip77gdICfRg==
 
 on-finished@~2.3.0:
   version "2.3.0"
@@ -351,10 +376,6 @@ type-is@~1.6.17, type-is@~1.6.18:
   dependencies:
     media-typer "0.3.0"
     mime-types "~2.1.24"
-
-uWebSockets.js@uNetworking/uWebSockets.js#v18.14.0:
-  version "18.14.0"
-  resolved "https://codeload.github.com/uNetworking/uWebSockets.js/tar.gz/b4bc740f46f1508c0f342b999db4d1f9dc80deab"
 
 unpipe@1.0.0, unpipe@~1.0.0:
   version "1.0.0"

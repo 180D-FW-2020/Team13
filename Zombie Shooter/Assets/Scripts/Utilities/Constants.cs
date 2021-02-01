@@ -78,14 +78,16 @@ public class Ready
 public class ReplayEvents
 {
     public string type = "replay";
-    public List<ReplayEvent> events;
+    public Dictionary<string, EnemyState> enemies;
+    public Dictionary<string, Dictionary<int, ReplayEvent>> events;
 }
 
 [MessagePackObject(keyAsPropertyName: true)]
 public class ReplayEvent
 {
-    public string id;
-    public Dictionary<int, RemoteState> states;
+    public string type = "remoteState";
+    public RemoteState state;
+    public EnemyKilled enemyKilled;
 }
 
 [MessagePackObject(keyAsPropertyName: true)]

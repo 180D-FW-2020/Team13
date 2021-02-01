@@ -1,20 +1,11 @@
 {
-  "name": "server",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "run": "node script.js"
-  },
-  "author": "",
-  "license": "ISC",
   "dependencies": {
     "express": "^4.17.1",
     "msgpackr": "^1.1.2",
-    "uWebSockets.js": "uNetworking/uWebSockets.js#v18.14.0",
     "ws": "^7.4.2"
   },
-  "engines": {
-    "node": "12.x"
-  }
+  "name": "Server",
+  "version": "1.0.0",
+  "main": "server.js",
+  "license": "MIT"
 }

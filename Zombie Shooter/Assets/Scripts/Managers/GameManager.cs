@@ -150,17 +150,40 @@ public class GameManager : MonoBehaviour
         enemyManager.StartGame();
     }
 
-    public IEnumerator FinalKillCam()
+    public IEnumerator FinalKillCam(ReplayEvents killCamEvents)
     {
         mainPlayer.EnableShooting(false);
         gameStatus = GameStatus.KillCam;
         uiManager.SetScreensActive(gameStatus);
 
-        ReplayEvents killCamEvents;
+        Dictionary<int, ReplayEvent> events;
+        enemyManager.Initialize(killCamEvents.enemies, levels[currentLevel].transform, levels[currentLevel].GetPlayerPads(), true);
+        foreach (KeyValuePair<string, Dictionary<int, ReplayEvent>> playerEvent in killCamEvents.events)
+        {
+            events = playerEvent.Value;
 
-        mainCamera.position = killCamEvents.id;
-        mainCamera.rotation = Quaternion.RotateTowards(mainCamera.rotation, mainPlayer.playerCamera.rotation, Time.deltaTime * cameraMovementSpeed);
-        mainCamera.SetParent(mainPlayer.playerCamera, true);
+            //set camera
+            mainCamera.position = allPlayers[playerEvent.Key].playerCamera.position;
+            mainCamera.rotation = allPlayers[playerEvent.Key].playerCamera.rotation;
+            mainCamera.SetParent(allPlayers[playerEvent.Key].playerCamera, true);
+
+            int startTime = events.First().Key;
+            foreach (KeyValuePair<int, ReplayEvent> pair in events)
+            {
+                startTime += (int)(Time.deltaTime * 1000);
+                if (startTime >= pair.Key)
+                {
+                    startTime = pair.Key;
+                    if (pair.Value.type == "remoteState")
+                        RemoteStateUpdateReceived(pair.Value.state, true);
+                    else if (pair.Value.type == "enemyKilled")
+                        EnemyKilledMessageReceived(pair.Value.enemyKilled);
+                }
+                yield return startTime;
+            }
+        }
+
+        
 
 
 
@@ -395,14 +418,14 @@ public class GameManager : MonoBehaviour
         });
     }
 
-    private void RemoteStateUpdateReceived(RemoteState state)
+    private void RemoteStateUpdateReceived(RemoteState state, bool killCam = false)
     {
         pendingActions.Enqueue(() =>
         {
             uiManager.UpdateScore(state.id, state.score);
             uiManager.UpdateHealth(state.id, state.health);
 
-            if (state.id != playerName)
+            if (state.id != playerName || killCam)
             {
                 if (state.shooting != (int)GestureType.None)
                 {

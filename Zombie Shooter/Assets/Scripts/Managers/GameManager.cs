@@ -21,6 +21,7 @@ public class GameManager : MonoBehaviour
     public VehicleController vehicle;
     public float cameraMovementSpeed;
 
+    public float killCamDuration;
     public Transform mainCamera;
     public GameObject player;
 
@@ -58,6 +59,7 @@ public class GameManager : MonoBehaviour
         connection.LeaveMessageReceived.AddListener(LeaveMessageReceived);
         connection.EnemyKilledMessageReceived.AddListener(EnemyKilledMessageReceived);
         connection.EnemyShotMessageReceived.AddListener(EnemyShotMessageReceived);
+        connection.KillCamEventsReceived.AddListener(KillCamEventsReceived);
         connection.RemoteStateUpdateReceived.AddListener(RemoteStateUpdateReceived);
         connection.StartReceived.AddListener(StartReceived);
         connection.PongReceived.AddListener(PongReceived);
@@ -147,6 +149,26 @@ public class GameManager : MonoBehaviour
         uiManager.SetScreensActive(gameStatus);
         enemyManager.StartGame();
     }
+
+    public IEnumerator FinalKillCam()
+    {
+        mainPlayer.EnableShooting(false);
+        gameStatus = GameStatus.KillCam;
+        uiManager.SetScreensActive(gameStatus);
+
+        ReplayEvents killCamEvents;
+
+        mainCamera.position = killCamEvents.id;
+        mainCamera.rotation = Quaternion.RotateTowards(mainCamera.rotation, mainPlayer.playerCamera.rotation, Time.deltaTime * cameraMovementSpeed);
+        mainCamera.SetParent(mainPlayer.playerCamera, true);
+
+
+
+
+        yield return null;
+    }
+
+
     public IEnumerator TransitionFromLevel()
     {
         Debug.Log("Transition from level");
@@ -228,11 +250,14 @@ public class GameManager : MonoBehaviour
 
     public async void RegisterShot(GameObject enemy, int damage, bool killed)
     {
-        EnemyKilled shotEnemy = new EnemyKilled
+        if (gameStatus == GameStatus.KillCam)
+            return;
+        EnemyShot shotEnemy = new EnemyShot
         {
             enemyId = enemy.name,
             id = playerName,
-            damage = damage
+            damage = damage,
+            enemyPosition = enemy.transform.position.xz().coordinates()
         };
         if (killed)
             enemyManager.KillEnemy(enemy.name);
@@ -391,6 +416,11 @@ public class GameManager : MonoBehaviour
         });
     }
 
+    private void KillCamEventsReceived(ReplayEvents replayEvents)
+    {
+
+    }
+
     private void PlayerListReceived(PlayerList list)
     {
         pendingActions.Enqueue(() => {
@@ -444,7 +474,7 @@ public class GameManager : MonoBehaviour
         });
     }
 
-    private void EnemyShotMessageReceived(EnemyKilled enemyShot)
+    private void EnemyShotMessageReceived(EnemyShot enemyShot)
     {
         pendingActions.Enqueue(() =>
         {

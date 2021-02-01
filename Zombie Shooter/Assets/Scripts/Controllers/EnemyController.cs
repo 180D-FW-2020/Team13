@@ -22,6 +22,8 @@ public class EnemyController : MonoBehaviour
     public float attackInterval;
     public float dieDelay;
 
+    private bool killCamReplay;
+
     private Transform target;
     private bool running;
     private int health;
@@ -52,8 +54,11 @@ public class EnemyController : MonoBehaviour
         state = EnemyStatus.Moving;
     }
 
-    public void SetProperties(Transform targetTransform, bool running, int health)
+    public void SetProperties(Transform targetTransform, bool running, int health, bool killCamReplay)
     {
+        this.killCamReplay = killCamReplay;
+        if (killCamReplay)
+            secondsIdleUntilWalk = 0;
         target = targetTransform;
         this.running = running;
         this.health = health;
@@ -61,6 +66,7 @@ public class EnemyController : MonoBehaviour
         Vector3 dir = target.position - transform.position;
         Quaternion rotation = Quaternion.LookRotation(dir);
         transform.rotation = Quaternion.Euler(0, rotation.eulerAngles.y, 0);
+        transform.position += transform.eulerAngles.normalized * (running ? Constants.RUN_SPEED : Constants.WALK_SPEED);
     }
 
     public void SetGameManager(GameManager manager)

@@ -31,4 +31,8 @@ public static class Vector3Extensions
     {
         return new List<float>() { vector.x, vector.y, vector.z };
     }
+    public static List<float> coordinates(this Vector2 vector)
+    {
+        return new List<float>() { vector.x, vector.y };
+    }
 }

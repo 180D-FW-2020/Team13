@@ -4,9 +4,15 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Events;
-using Newtonsoft.Json;
+using MessagePack;
+using MessagePack.Resolvers;
+using System.Dynamic;
+using System.Reflection;
+using System.Linq;
 
 using NativeWebSocket;
+using System.Runtime.CompilerServices;
+using Newtonsoft.Json;
 
 public class NetworkConnection
 {
@@ -18,17 +24,12 @@ public class NetworkConnection
     public UnityEvent<EnemyStates> EnemyLocationsReceived = new UnityEvent<EnemyStates>();
     public UnityEvent<Leave> LeaveMessageReceived = new UnityEvent<Leave>();
     public UnityEvent<EnemyKilled> EnemyKilledMessageReceived = new UnityEvent<EnemyKilled>();
-    public UnityEvent<EnemyKilled> EnemyShotMessageReceived = new UnityEvent<EnemyKilled>();
+    public UnityEvent<EnemyShot> EnemyShotMessageReceived = new UnityEvent<EnemyShot>();
     public UnityEvent<RemoteState> RemoteStateUpdateReceived = new UnityEvent<RemoteState>();
+    public UnityEvent<ReplayEvents> KillCamEventsReceived = new UnityEvent<ReplayEvents>();
     private WebSocket client;
 
-    private Queue<string> messageQueue = new Queue<string>();
-
-    private JsonSerializerSettings settings = new JsonSerializerSettings()
-    {
-        TypeNameHandling = TypeNameHandling.All
-    };
-
+    private Queue<byte[]> messageQueue = new Queue<byte[]>();
 
     // Connect to server and initialize async events
     public NetworkConnection()
@@ -38,11 +39,11 @@ public class NetworkConnection
 
         client.OnOpen += () =>
         {
-            messageQueue.Enqueue("OPEN");
+            messageQueue.Enqueue(Encoding.UTF8.GetBytes("OPEN"));
         };
         client.OnClose += (e) =>
         {
-            messageQueue.Enqueue("CLOSE");
+            messageQueue.Enqueue(Encoding.UTF8.GetBytes("CLOSE"));
         };
         client.OnError += (e) =>
         {
@@ -53,7 +54,7 @@ public class NetworkConnection
         client.OnMessage += (e) =>
         {
             string message = Encoding.UTF8.GetString(e);
-            messageQueue.Enqueue(message);
+            messageQueue.Enqueue(e);
         };
 
     }
@@ -67,54 +68,63 @@ public class NetworkConnection
         client.DispatchMessageQueue();
     }
 
-    public void ProcessMessage(string data)
+    public void ProcessMessage(byte[] data)
     {
-        if (data == "OPEN")
+        var s = Encoding.UTF8.GetString(data);
+        if (s == "OPEN")
         {
             Opened.Invoke();
             return;
         }
-        else if (data == "CLOSE")
+        else if (s == "CLOSE")
         {
             Closed.Invoke();
             return;
         }
 
-        Message message = JsonConvert.DeserializeObject<Message>(data, settings);
-        switch(message.type)
+        dynamic message = Unpack<dynamic>(data);
+        switch(message["type"])
         {
             case "ping":
-                PongReceived.Invoke(JsonConvert.DeserializeObject<Ping>(data, settings));
+                PongReceived.Invoke(Unpack<Ping>(data));
                 break;
             case "start":
                 StartReceived.Invoke();
                 break;
             case "remoteState":
-                RemoteStateUpdateReceived.Invoke(JsonConvert.DeserializeObject<RemoteState>(data, settings));
+                RemoteStateUpdateReceived.Invoke(Unpack<RemoteState>(data));
                 break;
             case "enemyKilled":
-                EnemyKilledMessageReceived.Invoke(JsonConvert.DeserializeObject<EnemyKilled>(data, settings));
+                EnemyKilledMessageReceived.Invoke(Unpack<EnemyKilled>(data));
                 break;
             case "enemyShot":
-                EnemyShotMessageReceived.Invoke(JsonConvert.DeserializeObject<EnemyKilled>(data, settings));
+                EnemyShotMessageReceived.Invoke(Unpack<EnemyShot>(data));
                 break;
             case "playerList":
-                PlayerListReceived.Invoke(JsonConvert.DeserializeObject<PlayerList>(data, settings));
+                PlayerListReceived.Invoke(Unpack<PlayerList>(data));
                 break;
             case "enemyStates":
-                EnemyLocationsReceived.Invoke(JsonConvert.DeserializeObject<EnemyStates>(data, settings));
+                EnemyLocationsReceived.Invoke(Unpack<EnemyStates>(data));
+                break;
+            case "replay":
+                KillCamEventsReceived.Invoke(Unpack<ReplayEvents>(data));
                 break;
             case "leave":
-                LeaveMessageReceived.Invoke(JsonConvert.DeserializeObject<Leave>(data, settings));
+                LeaveMessageReceived.Invoke(Unpack<Leave>(data));
                 break;
         }
+    }
+
+    public T Unpack<T>(byte[] data)
+    {
+        return MessagePackSerializer.Deserialize<T>(data, ContractlessStandardResolver.Options);
     }
 
     public async Task Send<T>(T message)
     {
         if (client.State == WebSocketState.Open)
         {
-            await client.SendText(JsonConvert.SerializeObject(message));
+            await client.Send(MessagePackSerializer.Serialize(message, ContractlessStandardResolver.Options));
         }
     }
 

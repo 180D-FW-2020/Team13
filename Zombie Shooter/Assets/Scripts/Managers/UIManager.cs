@@ -15,9 +15,10 @@ public enum GameStatus
     Playing = 3,
     Moving = 4,
     Transitioning = 5,
-    Paused = 6,
-    Ended = 7,
-    Calibrating = 8
+    KillCam = 6,
+    Paused = 7,
+    Ended = 8,
+    Calibrating = 9
 }
 
 // UIManager coordinates the changing of screens and UI element initialization
@@ -53,6 +54,9 @@ public class UIManager : MonoBehaviour
     private OrderedDictionary playerScores = new OrderedDictionary();
     private OrderedDictionary playerHealthBars = new OrderedDictionary();
 
+    [Header("Killcam UI")]
+    public GameObject killcamScreen;
+
     [Header("Pause Menu UI")]
     public GameObject pauseScreen;
     public Button resumeButton;
@@ -77,6 +81,7 @@ public class UIManager : MonoBehaviour
         endScreen.SetActive(IsStatus(gameStatus, GameStatus.Ended));
         connectingScreen.SetActive(IsStatus(gameStatus, GameStatus.Connecting));
         inGameScreen.SetActive(IsStatus(gameStatus, GameStatus.Playing, GameStatus.Moving, GameStatus.Transitioning));
+        killcamScreen.SetActive(IsStatus(gameStatus, GameStatus.KillCam));
         waitingScreen.SetActive(IsStatus(gameStatus, GameStatus.Waiting));
         pauseScreen.SetActive(IsStatus(gameStatus, GameStatus.Paused));
         calibrationScreen.SetActive(IsStatus(gameStatus, GameStatus.Calibrating));

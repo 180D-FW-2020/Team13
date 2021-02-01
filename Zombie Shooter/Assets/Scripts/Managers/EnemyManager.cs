@@ -27,19 +27,18 @@ public class EnemyManager : MonoBehaviour
         }
     }
 
-    public void Initialize(Dictionary<string, EnemyState> positions, Transform levelOffset, List<Transform> playerPads)
+    public void Initialize(Dictionary<string, EnemyState> positions, Transform levelOffset, List<Transform> playerPads, bool killCamReplay = false)
     {
         transform.position = levelOffset.position;
         transform.rotation = levelOffset.rotation;
         foreach (KeyValuePair<string, EnemyState> pair in positions)
         {
             EnemyState state = pair.Value;
-            string[] xz = state.initialPosition.Split(',');
             var spawnedEnemy = Instantiate(enemy);
             spawnedEnemy.transform.SetParent(transform);
-            spawnedEnemy.transform.localPosition = new Vector3(float.Parse(xz[0]), 0, float.Parse(xz[1]));
+            spawnedEnemy.transform.localPosition = new Vector3(state.initialPosition[0], 0, state.initialPosition[1]);
             var spawnedEnemyController = spawnedEnemy.GetComponent<EnemyController>();
-            spawnedEnemyController.SetProperties(playerPads[state.target], state.running == 1, state.health);
+            spawnedEnemyController.SetProperties(playerPads[state.target], state.running == 1, state.health, killCamReplay);
             spawnedEnemyController.SetGameManager(gameManager);
             spawnedEnemy.name = pair.Key;
             enemies.Add(pair.Key, spawnedEnemyController);

@@ -5,6 +5,9 @@ const { unpack, pack } = require('msgpackr');
 const wss = require('./init.js');
 const Client = require('./client.js');
 const Enemy = require('./enemy.js');
+const e = require('express');
+const { kill } = require('process');
+// const {storeMessage} = require('./storage.js');
 
 var numEnemies = 5;
 var readyCount = 0;
@@ -13,7 +16,9 @@ var connectedClients = {};
 var enemies = {};
 var deadEnemies = {};
 
-var finalShotPlayerId = "";
+var events = {};
+var len = 0;
+var maxLen = 50;
 
 wss.on('connection', socket => {
     console.log("Client connected");
@@ -25,6 +30,9 @@ wss.on('connection', socket => {
 
 function initEnemies() {
     let key = "";
+    deadEnemies = {};
+    events = {};
+    len = 0;
     for (let i = 0; i < numEnemies; i++) {
         key = i.toString();
         const pos = [((Math.floor(Math.random() * 11)-5)) * 4, (Math.floor(Math.random() * 6) * 4)];
@@ -33,11 +41,77 @@ function initEnemies() {
     console.log('Enemies initialized to: ' + JSON.stringify(enemies));
 }
 
-function sendReplayEvents() {
-    // const event;
-    // let sendEvents = [];
-    // if (event.id == finalShotPlayerId)
-    //     sendEvents.push(event);
+function getReplayEvents() {
+    let sendEvents = {};
+    let playerEvents = {};
+    let sendEnemies = {};
+    let killTimes = {};
+    for (const [key, value] of Object.entries(events)) {
+        if (value.type == "enemyKilled") {
+            sendEnemies[value.enemyKilled.enemyId] = deadEnemies[value.enemyKilled.enemyId]
+            killTimes[key] = value.enemyKilled.enemyId + ":" + value.enemyKilled.id;
+        }
+    }
+
+    let switchPlayerTime;
+    let killEventNum = 0;
+    let keys = Object.keys(events);
+    let ts = Array.from(Object.keys(killTimes), t => Number(t));
+    if (ts.length == 1)
+        switchPlayerTime = Number(keys[keys.length-1]);
+    else
+        switchPlayerTime = (ts[killEventNum] + ts[killEventNum + 1]) / 2;
+
+    let currentKillEvent = killTimes[ts[killEventNum]];
+    for (const [key, value] of Object.entries(events)) {
+        if (value.type == "remoteState") {
+            if (key >= switchPlayerTime) {
+                sendEvents[currentKillEvent] = playerEvents;
+                playerEvents = {}
+                killEventNum++;
+                if (killEventNum == ts.length - 1)
+                    switchPlayerTime = Number(keys[keys.length-1]);
+                else
+                    switchPlayerTime = (ts[killEventNum] + ts[killEventNum + 1]) / 2;
+                currentKillEvent = killTimes[ts[killEventNum]];
+            }
+            if (currentKillEvent.substring(2, currentKillEvent.length) == value.remoteState.id) {
+                playerEvents[key] = value;
+            }
+        }
+        else
+            playerEvents[key] = value;
+    }
+
+    sendEvents[currentKillEvent] = playerEvents;
+
+    const replayEvents = {
+        type: "replay",
+        enemies: sendEnemies,
+        events: sendEvents,
+        killTimes: killTimes,
+    };
+    console.log(JSON.stringify(replayEvents));
+    return replayEvents;
+}
+
+function storeReplayEvent(stateEvent, data) {
+    const event = {
+        type : (stateEvent ? "remoteState" : "enemyKilled")
+    }
+
+    if (stateEvent)
+        event.remoteState = {...data};
+    else 
+        event.enemyKilled = {...data};
+
+    if (len >= maxLen) {
+        delete events[Object.keys(events)[0]]
+    }
+    else {
+        len++;
+    }
+    events[Date.now()] = event;
 }
 
 function processMessage(socket, message) {
@@ -54,6 +128,7 @@ function processMessage(socket, message) {
             if (readyCount == Object.keys(connectedClients).length) {
                 console.log('Game started');
                 readyCount = 0;
+                events = {};
                 wss.broadcast(pack({type: "start"}), null);
             }
             break;
@@ -95,9 +170,12 @@ function processMessage(socket, message) {
             wss.broadcast(pack(leave), null);
             break;
         case "enemyAttack":
-            console.log("Enemy attacking " + name);
-            connectedClients[name].decrementHealth();
-            wss.broadcast(pack(connectedClients[name]), socket);
+            if (data.enemyId in enemies) {
+                console.log("Enemy " + data.enemyId + " attacking " + name);
+                enemies[data.enemyId].startAttacking(Date.now());
+                connectedClients[name].decrementHealth();
+                wss.broadcast(pack(connectedClients[name]), socket);
+            }
             break;
         case "enemyShot":
             console.log("Enemy " + data.enemyId + " shot by " + name);
@@ -106,23 +184,24 @@ function processMessage(socket, message) {
                 enemies[data.enemyId].decrementHealth(data.damage);
 
                 if (enemies[data.enemyId].health <= 0) {
-                    finalShotPlayerId = name;
                     connectedClients[name].registerKill();
                     console.log("Enemy " + data.enemyId + " killed by " + name);
                     deadEnemies[data.enemyId] = enemies[data.enemyId];
                     delete enemies[data.enemyId];
 
-                    deadEnemies[data.enemyId].initialPosition = data.enemyPosition;
+                    deadEnemies[data.enemyId].position = data.enemyPosition;
                     const enemyKilled = {
                         type: "enemyKilled", 
                         enemyId: data.enemyId, 
                         id: name
                     }
                     wss.broadcast(pack(enemyKilled), socket);
-
+                    
+                    storeReplayEvent(false, enemyKilled);
                     if (Object.keys(enemies).length == 0) {
                         //killcam
-                        sendReplayEvents();
+                        events = getReplayEvents();
+                        wss.broadcast(pack(events), null);
                     }
                 }
                 else {
@@ -132,6 +211,7 @@ function processMessage(socket, message) {
             break;
         case "state":
             connectedClients[name].updatePlayerState(data);
+            storeReplayEvent(true, connectedClients[name]);
             wss.broadcast(pack(connectedClients[name]), null);
             break;
     }

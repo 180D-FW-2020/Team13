@@ -1,6 +1,6 @@
 ﻿using OpenCvSharp;
 using System;
-using System.Collections;
+using System.Linq;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -27,7 +27,7 @@ public class EnemyManager : MonoBehaviour
         }
     }
 
-    public void Initialize(Dictionary<string, EnemyState> positions, Transform levelOffset, List<Transform> playerPads, bool killCamReplay = false)
+    public void Initialize(Dictionary<string, EnemyState> positions, Transform levelOffset, List<Transform> playerPads, bool killCamReplay = false, Dictionary<long, string> killTimes = null, long initialTime = 0)
     {
         transform.position = levelOffset.position;
         transform.rotation = levelOffset.rotation;
@@ -36,9 +36,14 @@ public class EnemyManager : MonoBehaviour
             EnemyState state = pair.Value;
             var spawnedEnemy = Instantiate(enemy);
             spawnedEnemy.transform.SetParent(transform);
-            spawnedEnemy.transform.localPosition = new Vector3(state.initialPosition[0], 0, state.initialPosition[1]);
+            spawnedEnemy.transform.localPosition = new Vector3(state.position[0], 0, state.position[1]);
             var spawnedEnemyController = spawnedEnemy.GetComponent<EnemyController>();
-            spawnedEnemyController.SetProperties(playerPads[state.target], state.running == 1, state.health, killCamReplay);
+            long killTime = 0L;
+            if (killCamReplay)
+            {
+                killTime = killTimes.First(x => x.Value.Contains($"{pair.Key}:")).Key;
+            }
+            spawnedEnemyController.SetProperties(playerPads[state.target], state.running == 1, state.health, killCamReplay, (killTime - Mathf.Max(initialTime, positions[pair.Key].attacking)) / 1000f);
             spawnedEnemyController.SetGameManager(gameManager);
             spawnedEnemy.name = pair.Key;
             enemies.Add(pair.Key, spawnedEnemyController);

@@ -2,12 +2,14 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.Networking;
 using UnityEngine.UI;
 
 [Serializable]
 public class WeaponData
 {
+    public string name;
     public Weapon weapon;
     public float aimSpeed;
 }
@@ -36,7 +38,7 @@ public class PlayerController : MonoBehaviour
     public Vector3 aimOffset;
 
     private WeaponData currentWeapon;
-    private GestureType currentWeaponType = GestureType.None;
+    private GestureType currentWeaponType;
 
     private bool walking;
     private bool shooting;
@@ -99,7 +101,7 @@ public class PlayerController : MonoBehaviour
 
     public void SwitchWeapon(GestureType type)
     {
-        if (currentWeaponType == type)
+        if (currentWeaponType == type || type == GestureType.None)
             return;
 
         switch (type)
@@ -161,8 +163,7 @@ public class PlayerController : MonoBehaviour
 
     public void Shoot()
     {
-        if (shootingEnabled)
-            currentWeapon.weapon.RemoteFire();
+        currentWeapon.weapon.RemoteFire();
     }
 
     private void SwitchWeapon(WeaponData weaponData)
@@ -200,5 +201,17 @@ public class PlayerController : MonoBehaviour
         if (autoShoot)
             return velocity < autoShootVelocityThreshold;
         return Input.GetKey(KeyCode.A);
+    }
+
+    public void SetShooting(bool isShooting)
+    {
+        shooting = isShooting;
+    }
+
+    public int GetShooting()
+    {
+        if (!shooting)
+            return 0;
+        return (int)currentWeaponType;
     }
 }

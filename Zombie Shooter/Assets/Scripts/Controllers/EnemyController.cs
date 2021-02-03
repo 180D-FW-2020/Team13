@@ -17,7 +17,6 @@ public enum EnemyStatus
 public class EnemyController : MonoBehaviour
 {
     public Animator animator;
-    public float secondsIdleUntilWalk;
     public float attackDistance;
     public float attackInterval;
     public float dieDelay;
@@ -38,23 +37,20 @@ public class EnemyController : MonoBehaviour
 
     public void StartGame()
     {
-        StartCoroutine(WaitForMove());
-    }
-
-    public void FixedUpdate()
-    {
-        if (state == EnemyStatus.Moving && Vector2.Distance(target.position.xz(), transform.position.xz()) < attackDistance)
-            StartCoroutine(Attack());
-    }
-
-    public IEnumerator WaitForMove()
-    {
-        yield return new WaitForSeconds(secondsIdleUntilWalk);
         animator.SetTrigger(running ? Constants.TRIGGER_RUN : Constants.TRIGGER_WALK);
         state = EnemyStatus.Moving;
     }
 
-    public void SetProperties(Transform targetTransform, bool running, int health, bool killCamReplay, float killTime)
+    public void FixedUpdate()
+    {
+        Vector3 dir = target.position - transform.position;
+        Quaternion rotation = Quaternion.LookRotation(dir);
+        transform.rotation = Quaternion.Euler(0, rotation.eulerAngles.y, 0);
+        if (state == EnemyStatus.Moving && Vector2.Distance(target.position.xz(), transform.position.xz()) < attackDistance)
+            StartCoroutine(Attack());
+    }
+
+    public void SetProperties(Transform targetTransform, bool running, int health, bool killCamReplay, float? killTime)
     {
         this.killCamReplay = killCamReplay;
         target = targetTransform;
@@ -67,8 +63,7 @@ public class EnemyController : MonoBehaviour
 
         if (killCamReplay)
         {
-            secondsIdleUntilWalk = 0;
-            transform.position += transform.eulerAngles.normalized * (running ? Constants.RUN_SPEED : Constants.WALK_SPEED) * killTime;
+            transform.position += transform.forward * (running ? Constants.RUN_SPEED : Constants.WALK_SPEED) * (float)killTime;
         }
     }
 

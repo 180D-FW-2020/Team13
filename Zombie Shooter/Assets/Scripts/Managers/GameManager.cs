@@ -1,8 +1,10 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http.Headers;
+using System.Net.Sockets;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
 using UnityEngine;
@@ -153,42 +155,57 @@ public class GameManager : MonoBehaviour
     public IEnumerator FinalKillCam(ReplayEvents killCamEvents)
     {
         mainPlayer.EnableShooting(false);
+        yield return new WaitForSeconds(3);
         gameStatus = GameStatus.KillCam;
+        Time.timeScale = 0.5f;
         uiManager.SetScreensActive(gameStatus);
 
-        Dictionary<int, ReplayEvent> events;
-        enemyManager.Initialize(killCamEvents.enemies, levels[currentLevel].transform, levels[currentLevel].GetPlayerPads(), true);
-        foreach (KeyValuePair<string, Dictionary<int, ReplayEvent>> playerEvent in killCamEvents.events)
+        //init enemies
+        Dictionary<long, string> enemyDeathDelay = killCamEvents.killTimes.ToDictionary(item => long.Parse(item.Key), item => item.Value);
+        long initialTime = long.Parse(killCamEvents.events.First().Value.First().Key);
+        enemyManager.Initialize(killCamEvents.enemies, levels[currentLevel].transform, levels[currentLevel].GetPlayerPads(), true, enemyDeathDelay, initialTime);
+        enemyManager.StartGame();
+        yield return enemyManager;
+
+        Dictionary<string, ReplayEvent> events;
+        long timestamp;
+        foreach (KeyValuePair<string, Dictionary<string, ReplayEvent>> playerEvent in killCamEvents.events)
         {
+            var split = playerEvent.Key.Split(':');
+            string enemyId = split[0];
+            string id = split[1];
             events = playerEvent.Value;
 
-            //set camera
-            mainCamera.position = allPlayers[playerEvent.Key].playerCamera.position;
-            mainCamera.rotation = allPlayers[playerEvent.Key].playerCamera.rotation;
-            mainCamera.SetParent(allPlayers[playerEvent.Key].playerCamera, true);
+            Debug.Log($"Replaying enemy {enemyId} kill event by player {id}");
 
-            int startTime = events.First().Key;
-            foreach (KeyValuePair<int, ReplayEvent> pair in events)
+            //set camera
+            mainCamera.position = allPlayers[id].playerCamera.position;
+            mainCamera.rotation = allPlayers[id].playerCamera.rotation;
+            mainCamera.SetParent(allPlayers[id].playerCamera, true);
+
+            long prevTime = long.Parse(events.Keys.First());
+            foreach (string ts in events.Keys)
             {
-                startTime += (int)(Time.deltaTime * 1000);
-                if (startTime >= pair.Key)
-                {
-                    startTime = pair.Key;
-                    if (pair.Value.type == "remoteState")
-                        RemoteStateUpdateReceived(pair.Value.state, true);
-                    else if (pair.Value.type == "enemyKilled")
-                        EnemyKilledMessageReceived(pair.Value.enemyKilled);
-                }
-                yield return startTime;
+                timestamp = long.Parse(ts);
+                yield return new WaitForSeconds((timestamp - prevTime) / 1000f);
+                prevTime = timestamp;
+                ReplayEvent e = events[ts];
+                if (e.type == "remoteState")
+                    RemoteStateUpdateReceived(e.remoteState);
+                else if (e.type == "enemyKilled")
+                    EnemyKilledMessageReceived(e.enemyKilled);
             }
+
+            allPlayers[id].SetShooting(false);
         }
 
-        
+        Debug.Log("Finished");
 
-
-
+        Time.timeScale = 1f;
 
         yield return null;
+        currentLevel++;
+        StartCoroutine(TransitionFromLevel());
     }
 
 
@@ -222,9 +239,7 @@ public class GameManager : MonoBehaviour
     public void EndLevel()
     {
         mainPlayer.EnableShooting(false);
-        currentLevel++;
         Debug.Log("End level");
-        StartCoroutine(TransitionFromLevel());
     }
 
     public async void Connect()
@@ -280,7 +295,7 @@ public class GameManager : MonoBehaviour
             enemyId = enemy.name,
             id = playerName,
             damage = damage,
-            enemyPosition = enemy.transform.position.xz().coordinates()
+            enemyPosition = enemy.transform.localPosition.xz().coordinates()
         };
         if (killed)
             enemyManager.KillEnemy(enemy.name);
@@ -300,11 +315,6 @@ public class GameManager : MonoBehaviour
     {
         EnemiesRequest request = new EnemiesRequest();
         await connection.Send(request);
-    }
-
-    public void Shoot(int weapon)
-    {
-        gameState.shooting = weapon;
     }
 
     #endregion
@@ -418,19 +428,26 @@ public class GameManager : MonoBehaviour
         });
     }
 
-    private void RemoteStateUpdateReceived(RemoteState state, bool killCam = false)
+    private void RemoteStateUpdateReceived(RemoteState state)
     {
         pendingActions.Enqueue(() =>
         {
-            uiManager.UpdateScore(state.id, state.score);
-            uiManager.UpdateHealth(state.id, state.health);
+            if (gameStatus != GameStatus.KillCam)
+            {
+                uiManager.UpdateScore(state.id, state.score);
+                uiManager.UpdateHealth(state.id, state.health);
+            }
 
-            if (state.id != playerName || killCam)
+            if (state.id != playerName || gameStatus == GameStatus.KillCam)
             {
                 if (state.shooting != (int)GestureType.None)
                 {
                     allPlayers[state.id].SwitchWeapon((GestureType)state.shooting);
-                    allPlayers[state.id].Shoot();
+                    allPlayers[state.id].SetShooting(true);
+                }
+                else
+                {
+                    allPlayers[state.id].SetShooting(false);
                 }
 
                 Vector3 rotation = new Vector3(state.rotation[0], state.rotation[1], state.rotation[2]);
@@ -441,7 +458,7 @@ public class GameManager : MonoBehaviour
 
     private void KillCamEventsReceived(ReplayEvents replayEvents)
     {
-
+        StartCoroutine(FinalKillCam(replayEvents));
     }
 
     private void PlayerListReceived(PlayerList list)
@@ -522,8 +539,8 @@ public class GameManager : MonoBehaviour
         {
             uiManager.UpdateAmmo(mainPlayer.GetCurrentAmmo());
             gameState.rotation = allPlayers[playerName].transform.eulerAngles.coordinates();
+            gameState.shooting = mainPlayer.GetShooting();
             await connection.Send(gameState);
-            gameState.shooting = 0;
 
             if (enemyManager.GetEnemyCount() == 0)
                 EndLevel();

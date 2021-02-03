@@ -1691,6 +1691,7 @@ MonoBehaviour:
   currentAmmo: {fileID: 1328830516}
   scoreCard: {fileID: 7572660672433185773, guid: 4cf1f6e9af662294ba3227068c02616b, type: 3}
   latencyText: {fileID: 689619131}
+  killcamScreen: {fileID: 239914276}
   pauseScreen: {fileID: 1737023191}
   resumeButton: {fileID: 1349103390}
   exitButton: {fileID: 298804193}

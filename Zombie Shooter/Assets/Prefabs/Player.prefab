@@ -245,15 +245,19 @@ MonoBehaviour:
   xLimit: 180
   yLimit: 135
   leftWeapon:
+    name: M4
     weapon: {fileID: 11403024, guid: c656de207260bf54883c10f990df79db, type: 3}
     aimSpeed: 5
   rightWeapon:
+    name: Pistol
     weapon: {fileID: 11457572, guid: 8a96a3013cf891b4bbc4bebfab850b5b, type: 3}
     aimSpeed: 10
   upWeapon:
+    name: Rail Gun
     weapon: {fileID: 11469638, guid: 9ca60f9da26f4ab47844c355b992a179, type: 3}
     aimSpeed: 1
   downWeapon:
+    name: Shotgun
     weapon: {fileID: 11489288, guid: 705cb262fd0457348b5fe13bd23e8756, type: 3}
     aimSpeed: 2
   weaponOffset: {x: 0.23, y: 3.6, z: 0.9}

@@ -199,7 +199,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   animator: {fileID: 6546417693553793137}
-  secondsIdleUntilWalk: 1
+  secondsIdleUntilWalk: 0
   attackDistance: 5
   attackInterval: 0.5
   dieDelay: 2

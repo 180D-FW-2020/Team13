@@ -79,14 +79,15 @@ public class ReplayEvents
 {
     public string type = "replay";
     public Dictionary<string, EnemyState> enemies;
-    public Dictionary<string, Dictionary<int, ReplayEvent>> events;
+    public Dictionary<string, string> killTimes;
+    public Dictionary<string, Dictionary<string, ReplayEvent>> events;
 }
 
 [MessagePackObject(keyAsPropertyName: true)]
 public class ReplayEvent
 {
     public string type = "remoteState";
-    public RemoteState state;
+    public RemoteState remoteState;
     public EnemyKilled enemyKilled;
 }
 
@@ -109,10 +110,11 @@ public class EnemyState
 {
     public string type = "enemyState";
     public int enemyId;
-    public List<float> initialPosition;
+    public List<float> position;
     public int health;
     public int target;
     public int running;
+    public long attacking;
 }
 
 [MessagePackObject(keyAsPropertyName: true)]

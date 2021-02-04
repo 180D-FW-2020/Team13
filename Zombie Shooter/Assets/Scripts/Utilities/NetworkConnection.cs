@@ -34,8 +34,8 @@ public class NetworkConnection
     // Connect to server and initialize async events
     public NetworkConnection()
     {
-        client = new WebSocket("ws://localhost:3000");
-        //client = new WebSocket("wss://zombie-shooter-server.herokuapp.com/");
+        //client = new WebSocket("ws://localhost:3000");
+        client = new WebSocket("wss://zombie-shooter-server.herokuapp.com/");
 
         client.OnOpen += () =>
         {

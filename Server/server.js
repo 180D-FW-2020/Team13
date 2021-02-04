@@ -18,7 +18,7 @@ var deadEnemies = {};
 
 var events = {};
 var len = 0;
-var maxLen = 50;
+var maxLen = 200;
 
 wss.on('connection', socket => {
     console.log("Client connected");

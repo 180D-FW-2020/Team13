@@ -85,7 +85,7 @@ public class NetworkConnection
         }
 
         dynamic message = Unpack<dynamic>(data);
-        switch(message["type"])
+        switch((string)message.type)
         {
             case "ping":
                 PongReceived.Invoke(Unpack<Ping>(data));

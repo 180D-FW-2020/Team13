@@ -4,8 +4,6 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Events;
-using MessagePack;
-using MessagePack.Resolvers;
 using System.Dynamic;
 using System.Reflection;
 using System.Linq;
@@ -29,7 +27,12 @@ public class NetworkConnection
     public UnityEvent<ReplayEvents> KillCamEventsReceived = new UnityEvent<ReplayEvents>();
     private WebSocket client;
 
-    private Queue<byte[]> messageQueue = new Queue<byte[]>();
+    private Queue<string> messageQueue = new Queue<string>();
+
+    private JsonSerializerSettings settings = new JsonSerializerSettings()
+    {
+        TypeNameHandling = TypeNameHandling.All
+    };
 
     // Connect to server and initialize async events
     public NetworkConnection()
@@ -39,11 +42,11 @@ public class NetworkConnection
 
         client.OnOpen += () =>
         {
-            messageQueue.Enqueue(Encoding.UTF8.GetBytes("OPEN"));
+            messageQueue.Enqueue("OPEN");
         };
         client.OnClose += (e) =>
         {
-            messageQueue.Enqueue(Encoding.UTF8.GetBytes("CLOSE"));
+            messageQueue.Enqueue("CLOSE");
         };
         client.OnError += (e) =>
         {
@@ -54,7 +57,7 @@ public class NetworkConnection
         client.OnMessage += (e) =>
         {
             string message = Encoding.UTF8.GetString(e);
-            messageQueue.Enqueue(e);
+            messageQueue.Enqueue(message);
         };
 
     }
@@ -68,15 +71,14 @@ public class NetworkConnection
         client.DispatchMessageQueue();
     }
 
-    public void ProcessMessage(byte[] data)
+    public void ProcessMessage(string data)
     {
-        var s = Encoding.UTF8.GetString(data);
-        if (s == "OPEN")
+        if (data == "OPEN")
         {
             Opened.Invoke();
             return;
         }
-        else if (s == "CLOSE")
+        else if (data == "CLOSE")
         {
             Closed.Invoke();
             return;
@@ -115,16 +117,16 @@ public class NetworkConnection
         }
     }
 
-    public T Unpack<T>(byte[] data)
+    public T Unpack<T>(string data)
     {
-        return MessagePackSerializer.Deserialize<T>(data, ContractlessStandardResolver.Options);
+        return JsonConvert.DeserializeObject<T>(data, settings);
     }
 
     public async Task Send<T>(T message)
     {
         if (client.State == WebSocketState.Open)
         {
-            await client.Send(MessagePackSerializer.Serialize(message, ContractlessStandardResolver.Options));
+            await client.SendText(JsonConvert.SerializeObject(message));
         }
     }
 

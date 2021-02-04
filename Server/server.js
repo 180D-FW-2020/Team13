@@ -1,6 +1,6 @@
 'use strict';
 
-const { unpack, pack } = require('msgpackr');
+// const { unpack, pack } = require('msgpackr');
 
 const wss = require('./init.js');
 const Client = require('./client.js');
@@ -115,7 +115,7 @@ function storeReplayEvent(stateEvent, data) {
 }
 
 function processMessage(socket, message) {
-    const data = unpack(message);
+    const data = JSON.parse(message);
     const name = data.id;
 
     switch (data.type) {
@@ -129,7 +129,7 @@ function processMessage(socket, message) {
                 console.log('Game started');
                 readyCount = 0;
                 events = {};
-                wss.broadcast(pack({type: "start"}), null);
+                wss.broadcast(JSON.stringify({type: "start"}), null);
             }
             break;
         case "register":
@@ -146,7 +146,7 @@ function processMessage(socket, message) {
                 type: "playerList",
                 playerList: Object.keys(connectedClients)
             }
-            wss.broadcast(pack(playerList), null);
+            wss.broadcast(JSON.stringify(playerList), null);
             break;
         case "requestEnemies":
             if (Object.keys(enemies).length == 0) {
@@ -156,7 +156,7 @@ function processMessage(socket, message) {
                 type: "enemyStates",
                 enemies: enemies
             }
-            socket.send(pack(states));
+            socket.send(JSON.stringify(states));
             break;
         case "leave":
             console.log("Removing " + name);
@@ -167,14 +167,14 @@ function processMessage(socket, message) {
                 id: name,
                 playerList: Object.keys(connectedClients)
             }
-            wss.broadcast(pack(leave), null);
+            wss.broadcast(JSON.stringify(leave), null);
             break;
         case "enemyAttack":
             if (data.enemyId in enemies) {
                 console.log("Enemy " + data.enemyId + " attacking " + name);
                 enemies[data.enemyId].startAttacking(Date.now());
                 connectedClients[name].decrementHealth();
-                wss.broadcast(pack(connectedClients[name]), socket);
+                wss.broadcast(JSON.stringify(connectedClients[name]), socket);
             }
             break;
         case "enemyShot":
@@ -195,24 +195,24 @@ function processMessage(socket, message) {
                         enemyId: data.enemyId, 
                         id: name
                     }
-                    wss.broadcast(pack(enemyKilled), socket);
+                    wss.broadcast(JSON.stringify(enemyKilled), socket);
                     
                     storeReplayEvent(false, enemyKilled);
                     if (Object.keys(enemies).length == 0) {
                         //killcam
                         events = getReplayEvents();
-                        wss.broadcast(pack(events), null);
+                        wss.broadcast(JSON.stringify(events), null);
                     }
                 }
                 else {
-                    wss.broadcast(pack({type: "enemyShot", enemyId: data.enemyId, damage: data.damage}), socket);
+                    wss.broadcast(JSON.stringify({type: "enemyShot", enemyId: data.enemyId, damage: data.damage}), socket);
                 }
             }
             break;
         case "state":
             connectedClients[name].updatePlayerState(data);
             storeReplayEvent(true, connectedClients[name]);
-            wss.broadcast(pack(connectedClients[name]), null);
+            wss.broadcast(JSON.stringify(connectedClients[name]), null);
             break;
     }
 }

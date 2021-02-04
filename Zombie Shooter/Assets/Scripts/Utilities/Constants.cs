@@ -2,7 +2,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using MessagePack;
 
 public static class Constants
 {
@@ -30,7 +29,7 @@ public class Message
     public string type;
 }
 
-[MessagePackObject(keyAsPropertyName: true)]
+////[MessagePackObject(keyAsPropertyName: true)]
 public class Ping
 {
     public string type = "ping";
@@ -38,7 +37,7 @@ public class Ping
 }
 
 //sent from client to server
-[MessagePackObject(keyAsPropertyName: true)]
+//[MessagePackObject(keyAsPropertyName: true)]
 public class GameState
 {
     public string type = "state";
@@ -48,7 +47,7 @@ public class GameState
 }
 
 //sent from server to client
-[MessagePackObject(keyAsPropertyName: true)]
+//[MessagePackObject(keyAsPropertyName: true)]
 public class RemoteState
 {
     public string type = "remoteState";
@@ -60,21 +59,21 @@ public class RemoteState
     public int shooting;
 }
 
-[MessagePackObject(keyAsPropertyName: true)]
+//[MessagePackObject(keyAsPropertyName: true)]
 public class Register
 {
     public string type = "register";
     public string id;
 }
 
-[MessagePackObject(keyAsPropertyName: true)]
+//[MessagePackObject(keyAsPropertyName: true)]
 public class Ready
 {
     public string type = "ready";
     public string id;
 }
 
-[MessagePackObject(keyAsPropertyName: true)]
+//[MessagePackObject(keyAsPropertyName: true)]
 public class ReplayEvents
 {
     public string type = "replay";
@@ -83,7 +82,7 @@ public class ReplayEvents
     public Dictionary<string, Dictionary<string, ReplayEvent>> events;
 }
 
-[MessagePackObject(keyAsPropertyName: true)]
+//[MessagePackObject(keyAsPropertyName: true)]
 public class ReplayEvent
 {
     public string type = "remoteState";
@@ -91,21 +90,21 @@ public class ReplayEvent
     public EnemyKilled enemyKilled;
 }
 
-[MessagePackObject(keyAsPropertyName: true)]
+//[MessagePackObject(keyAsPropertyName: true)]
 public class PlayerList
 {
     public string type = "playerList";
     public List<string> playerList;
 }
 
-[MessagePackObject(keyAsPropertyName: true)]
+//[MessagePackObject(keyAsPropertyName: true)]
 public class EnemyStates
 {
     public string type = "enemyStates";
     public Dictionary<string, EnemyState> enemies;
 }
 
-[MessagePackObject(keyAsPropertyName: true)]
+//[MessagePackObject(keyAsPropertyName: true)]
 public class EnemyState
 {
     public string type = "enemyState";
@@ -117,13 +116,13 @@ public class EnemyState
     public long attacking;
 }
 
-[MessagePackObject(keyAsPropertyName: true)]
+//[MessagePackObject(keyAsPropertyName: true)]
 public class EnemiesRequest
 {
     public string type = "requestEnemies";
 }
 
-[MessagePackObject(keyAsPropertyName: true)]
+//[MessagePackObject(keyAsPropertyName: true)]
 public class Leave
 {
     public string type = "leave";
@@ -131,7 +130,7 @@ public class Leave
     public List<string> playerList;
 }
 
-[MessagePackObject(keyAsPropertyName: true)]
+//[MessagePackObject(keyAsPropertyName: true)]
 public class EnemyKilled
 {
     public string type = "enemyKilled";
@@ -139,7 +138,7 @@ public class EnemyKilled
     public string enemyId;
 }
 
-[MessagePackObject(keyAsPropertyName: true)]
+//[MessagePackObject(keyAsPropertyName: true)]
 public class EnemyShot
 {
     public string type = "enemyShot";
@@ -149,7 +148,7 @@ public class EnemyShot
     public List<float> enemyPosition;
 }
 
-[MessagePackObject(keyAsPropertyName: true)]
+//[MessagePackObject(keyAsPropertyName: true)]
 public class EnemyAttack
 {
     public string type = "enemyAttack";

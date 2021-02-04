@@ -45,15 +45,26 @@ public class VehicleController : MonoBehaviour
 
     public void Update()
     {
+        const float turnSpeed = 1.0f;
+        const float turnDist = 10.0f;
+
         if (!stopped)
         {
-            transform.position = Vector3.MoveTowards(transform.position, waypoints[currentWaypoint].position, speed * Time.deltaTime);
+            var wp = waypoints[currentWaypoint];
 
-            if (transform.position == waypoints[currentWaypoint].position)
+            transform.position = Vector3.MoveTowards(transform.position, wp.position, speed * Time.deltaTime);
+            if (Vector3.Distance(transform.position, wp.position) > turnDist)
+                transform.rotation = Quaternion.LookRotation(Vector3.RotateTowards(transform.forward, wp.position - transform.position, turnSpeed/2 * Time.deltaTime, 0.0f));
+            else
+                transform.rotation = Quaternion.LookRotation(Vector3.RotateTowards(transform.forward, wp.forward, turnSpeed * Time.deltaTime, 0.0f));
+
+            if (transform.position == wp.position)
             {
                 currentWaypoint++;
-                if (currentWaypoint == waypoints.Count)
+                if (currentWaypoint == waypoints.Count) {
                     stopped = true;
+                    Debug.Log(waypoints.Count);
+                }
             }
         }
     }

@@ -156,6 +156,8 @@ public class GameManager : MonoBehaviour
     {
         mainPlayer.EnableShooting(false);
         yield return new WaitForSeconds(3);
+        while (enemyManager.GetEnemyCount() > 0)
+            yield return null;
         gameStatus = GameStatus.KillCam;
         Time.timeScale = 0.5f;
         uiManager.SetScreensActive(gameStatus);

@@ -199,11 +199,10 @@ public class GameManager : MonoBehaviour
             allPlayers[id].SetShooting(false);
         }
 
-        Debug.Log("Finished");
 
         Time.timeScale = 1f;
+        yield return new WaitForSeconds(3);
 
-        yield return null;
         currentLevel++;
         StartCoroutine(TransitionFromLevel());
     }

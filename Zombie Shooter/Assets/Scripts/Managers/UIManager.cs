@@ -153,7 +153,7 @@ public class UIManager : MonoBehaviour
         else
         {
             RectTransform prev = ((Text)playerScores[playerScores.Count - 1]).rectTransform;
-            rectTransform.anchoredPosition = new Vector3(prev.anchoredPosition.x - prev.rect.width - padding, -padding, 0);
+            rectTransform.anchoredPosition = new Vector3(((playerScores.Count - 1) * -80f) - prev.rect.width - padding, -padding, 0);
         }
         Text scoreText = newPlayerCard.GetComponentsInChildren<Text>().Where(text => text.gameObject.name == "Score").FirstOrDefault();
         Slider healthBar = newPlayerCard.GetComponentsInChildren<Slider>().FirstOrDefault();

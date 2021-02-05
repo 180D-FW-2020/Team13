@@ -6,7 +6,6 @@ using System.Linq;
 using System.Net.Http.Headers;
 using System.Net.Sockets;
 using System.Threading.Tasks;
-using System.Xml.Serialization;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -156,8 +155,8 @@ public class GameManager : MonoBehaviour
     {
         mainPlayer.EnableShooting(false);
         yield return new WaitForSeconds(3);
-        while (enemyManager.GetEnemyCount() > 0)
-            yield return null;
+        enemyManager.KillAllEnemies();
+
         gameStatus = GameStatus.KillCam;
         Time.timeScale = 0.5f;
         uiManager.SetScreensActive(gameStatus);
@@ -224,11 +223,12 @@ public class GameManager : MonoBehaviour
         }
         mainCamera.SetParent(vehicle.vehicleCamera, true);
 
-        for (int i = 0; i < allPlayers.Count; i++)
+        int i = 0;
+        foreach (string key in allPlayers.Keys)
         {
             Transform pad = vehicle.playerPads[i];
-            string key = allPlayers.Keys.ElementAt(i);
             StartCoroutine(allPlayers[key].WalkToPad(pad));
+            i++;
         }
         while (!allPlayers.All(p => !p.Value.IsWalking()))
         {
@@ -241,6 +241,7 @@ public class GameManager : MonoBehaviour
     {
         mainPlayer.EnableShooting(false);
         Debug.Log("End level");
+        gameStatus = GameStatus.Transitioning;
     }
 
     public async void Connect()
@@ -299,7 +300,10 @@ public class GameManager : MonoBehaviour
             enemyPosition = enemy.transform.localPosition.xz().coordinates()
         };
         if (killed)
+        {
             enemyManager.KillEnemy(enemy.name);
+            Debug.Log($"Enemy {enemy.name} killed by {playerName}");
+        }
         await connection.Send(shotEnemy);
     }
 
@@ -544,7 +548,9 @@ public class GameManager : MonoBehaviour
             await connection.Send(gameState);
 
             if (enemyManager.GetEnemyCount() == 0)
+            {
                 EndLevel();
+            }
         }
     }
 

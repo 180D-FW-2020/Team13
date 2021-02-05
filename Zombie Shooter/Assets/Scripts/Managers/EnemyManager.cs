@@ -58,6 +58,15 @@ public class EnemyManager : MonoBehaviour
         }
     }
 
+    public void KillAllEnemies()
+    {
+        foreach (string enemyId in enemies.Keys)
+        {
+            Debug.Log($"Enemy {enemyId} still alive");
+            KillEnemy(enemyId);
+        }
+    }
+
     public void ShootEnemy(string enemyId, int damage)
     {
         if (enemies.ContainsKey(enemyId))

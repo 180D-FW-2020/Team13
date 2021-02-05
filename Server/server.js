@@ -53,6 +53,8 @@ function getReplayEvents() {
         }
     }
 
+    console.log("KILLCAM");
+
     let switchPlayerTime;
     let killEventNum = 0;
     let keys = Object.keys(events);
@@ -66,6 +68,7 @@ function getReplayEvents() {
     for (const [key, value] of Object.entries(events)) {
         if (value.type == "remoteState") {
             if (key >= switchPlayerTime) {
+                console.log("Recorded events for " + currentKillEvent);
                 sendEvents[currentKillEvent] = playerEvents;
                 playerEvents = {}
                 killEventNum++;
@@ -73,7 +76,7 @@ function getReplayEvents() {
                     switchPlayerTime = Number(keys[keys.length-1]);
                 else
                     switchPlayerTime = (ts[killEventNum] + ts[killEventNum + 1]) / 2;
-                currentKillEvent = killTimes[ts[killEventNum]];
+                currentKillEvent = killTimes[ts[Math.min(killEventNum, ts.length - 1)]];
             }
             if (currentKillEvent.substring(2, currentKillEvent.length) == value.remoteState.id) {
                 playerEvents[key] = value;
@@ -83,6 +86,7 @@ function getReplayEvents() {
             playerEvents[key] = value;
     }
 
+    console.log("Recorded events for " + currentKillEvent);
     sendEvents[currentKillEvent] = playerEvents;
 
     const replayEvents = {
@@ -91,7 +95,7 @@ function getReplayEvents() {
         events: sendEvents,
         killTimes: killTimes,
     };
-    console.log(JSON.stringify(replayEvents));
+    
     return replayEvents;
 }
 
@@ -199,10 +203,10 @@ function processMessage(socket, message) {
                     
                     storeReplayEvent(false, enemyKilled);
                     if (Object.keys(enemies).length == 0) {
-                        //killcam
                         events = getReplayEvents();
                         wss.broadcast(JSON.stringify(events), null);
                     }
+
                 }
                 else {
                     wss.broadcast(JSON.stringify({type: "enemyShot", enemyId: data.enemyId, damage: data.damage}), socket);

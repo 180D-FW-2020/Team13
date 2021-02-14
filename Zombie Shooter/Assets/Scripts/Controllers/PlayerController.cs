@@ -17,10 +17,7 @@ public class WeaponData
 // PlayerController controls autoshooting of the weapon
 public class PlayerController : MonoBehaviour
 {
-    public bool mainPlayer;
     public float movementSpeed;
-    public bool autoShoot;
-    public float autoShootVelocityThreshold;
 
     [Header("Camera")]
     public Transform playerCamera;
@@ -40,6 +37,7 @@ public class PlayerController : MonoBehaviour
     private WeaponData currentWeapon;
     private GestureType currentWeaponType;
 
+    private bool mainPlayer;
     private bool walking;
     private bool shooting;
     private bool aiming;
@@ -50,16 +48,13 @@ public class PlayerController : MonoBehaviour
     private bool shootingEnabled;
     private InputManager inputManager;
 
-    public void Start()
+    public void Initialize(bool main, InputManager manager)
     {
+        inputManager = manager;
+        mainPlayer = main;
         currentWeapon = new WeaponData();
         SwitchWeapon(GestureType.L);
         StartCoroutine(AimAndShoot());
-    }
-
-    public void SetInputManager(InputManager manager)
-    {
-        inputManager = manager;
     }
 
     public void UpdateInput()
@@ -78,7 +73,7 @@ public class PlayerController : MonoBehaviour
             previousRotation = transform.eulerAngles;
 
             //shoot
-            shooting = ShootingTrigger();
+            shooting = inputManager.ShootingTrigger();
         }
     }
 
@@ -120,6 +115,7 @@ public class PlayerController : MonoBehaviour
                 break;
         }
         currentWeaponType = type;
+        currentWeapon.weapon.playerWeapon = mainPlayer;
         currentWeapon.weapon.showCrosshair = shootingEnabled;
     }
 
@@ -194,13 +190,6 @@ public class PlayerController : MonoBehaviour
     public bool IsWalking()
     {
         return walking;
-    }
-
-    private bool ShootingTrigger()
-    {
-        if (autoShoot)
-            return velocity < autoShootVelocityThreshold;
-        return Input.GetKey(KeyCode.A);
     }
 
     public void SetShooting(bool isShooting)

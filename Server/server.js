@@ -53,7 +53,7 @@ function getReplayEvents() {
         }
     }
 
-    console.log("KILLCAM");
+    console.log("KILLCAM: " + JSON.stringify(killTimes));
 
     let switchPlayerTime;
     let killEventNum = 0;
@@ -209,7 +209,7 @@ function processMessage(socket, message) {
 
                 }
                 else {
-                    wss.broadcast(JSON.stringify({type: "enemyShot", enemyId: data.enemyId, damage: data.damage}), socket);
+                    wss.broadcast(message, socket);
                 }
             }
             break;

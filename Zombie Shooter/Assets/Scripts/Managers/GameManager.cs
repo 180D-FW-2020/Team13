@@ -292,6 +292,7 @@ public class GameManager : MonoBehaviour
     {
         if (gameStatus == GameStatus.KillCam)
             return;
+
         EnemyShot shotEnemy = new EnemyShot
         {
             enemyId = enemy.name,
@@ -482,12 +483,9 @@ public class GameManager : MonoBehaviour
                 var newPlayer = Instantiate(player, parent);
                 newPlayer.name = name;
                 var newPlayerController = newPlayer.GetComponent<PlayerController>();
-                newPlayerController.SetInputManager(inputManager);
-                if (name == playerName)
-                {
-                    newPlayerController.mainPlayer = true;
-                    mainPlayer = newPlayerController;
-                }
+                bool main = name == playerName;
+                if (main) mainPlayer = newPlayerController;
+                newPlayerController.Initialize(main, inputManager);
                 allPlayers.Add(name, newPlayerController);
                 uiManager.AddPlayer(name);
             }
@@ -523,7 +521,7 @@ public class GameManager : MonoBehaviour
     {
         pendingActions.Enqueue(() =>
         {
-            enemyManager.ShootEnemy(enemyShot.enemyId, enemyShot.damage);
+            enemyManager.ShootEnemy(false, enemyShot.enemyId, enemyShot.damage);
         });
     }
     public void PongReceived(Ping pong)

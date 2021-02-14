@@ -67,6 +67,11 @@ public class InputManager : MonoBehaviour
             ftInput.AnalyzeFrame();
     }
 
+    public bool ShootingTrigger()
+    {
+        return Input.GetKey(KeyCode.A);
+    }
+
     public Vector2 GetAimInput()
     {
         if (aimInputType == AimInputType.CV)

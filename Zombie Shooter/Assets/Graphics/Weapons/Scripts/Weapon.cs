@@ -616,7 +616,7 @@ public class Weapon : MonoBehaviour
 
 				// Damage
 				if (playerWeapon)
-                    hit.collider.GetComponent<EnemyController>()?.RegisterHit((int)damage);
+                    hit.collider.GetComponent<EnemyController>()?.RegisterHit((int)damage, true);
 
                 if (shooterAIEnabled)
 				{
@@ -959,7 +959,7 @@ public class Weapon : MonoBehaviour
 				if (playerWeapon)
 				{
 					Debug.Log(beamPower);
-					hit.collider.GetComponent<EnemyController>()?.RegisterHit((int)beamPower);
+					hit.collider.GetComponent<EnemyController>()?.RegisterHit((int)beamPower, true);
 				}
 
 				// Shooter AI support

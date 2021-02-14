@@ -67,10 +67,10 @@ public class EnemyManager : MonoBehaviour
         }
     }
 
-    public void ShootEnemy(string enemyId, int damage)
+    public void ShootEnemy(bool mainPlayer, string enemyId, int damage)
     {
         if (enemies.ContainsKey(enemyId))
-            enemies[enemyId].RegisterHit(damage);
+            enemies[enemyId].RegisterHit(damage, mainPlayer);
     }
 
     public int GetEnemyCount()

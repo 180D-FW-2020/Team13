@@ -84,14 +84,15 @@ public class EnemyController : MonoBehaviour
         }
     }
 
-    public void RegisterHit(int damage)
+    public void RegisterHit(int damage, bool mainPlayer)
     {
         if (state != EnemyStatus.Dead)
         {
             health -= damage;
             //Debug.Log("Shot, " + health);
             bool killed = health <= 0;
-            gameManager.RegisterShot(gameObject, damage, killed);
+            if (mainPlayer)
+                gameManager.RegisterShot(gameObject, damage, killed);
         }
     }
 

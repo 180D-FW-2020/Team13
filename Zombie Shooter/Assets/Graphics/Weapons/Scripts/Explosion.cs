@@ -42,7 +42,7 @@ public class Explosion : MonoBehaviour
 				// The Easy Weapons health system
 				if (playerExplosion) {
 					Debug.Log(col.gameObject.name);
-					col.GetComponent<EnemyController>()?.RegisterHit((int)damageAmount);
+					col.GetComponent<EnemyController>()?.RegisterHit((int)damageAmount, true);
 				}
 				// The Shooter AI health system
 				if (shooterAISupport)

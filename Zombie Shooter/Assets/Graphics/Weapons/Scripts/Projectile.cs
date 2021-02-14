@@ -130,7 +130,7 @@ public class Projectile : MonoBehaviour
 		if (damageType == DamageType.Direct)
 		{
 			if (playerProjectile)
-				col.collider.GetComponent<EnemyController>()?.RegisterHit((int)damage);
+				col.collider.GetComponent<EnemyController>()?.RegisterHit((int)damage, true);
 
 			//call the ApplyDamage() function on the enenmy CharacterSetup script
 			if (col.collider.gameObject.layer == LayerMask.NameToLayer("Limb"))

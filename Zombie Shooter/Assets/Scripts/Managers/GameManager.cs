@@ -66,14 +66,28 @@ public class GameManager : MonoBehaviour
         connection.PongReceived.AddListener(PongReceived);
         connection.Opened.AddListener(ConnectionOpened);
 
+        // menu button listeners
+        uiManager.mainStartButton.onClick.AddListener(applySettings);
+        uiManager.controlsButton.onClick.AddListener(uiManager.ShowControls);
+        uiManager.settingsButton.onClick.AddListener(uiManager.ShowSettings);
         uiManager.startButton.onClick.AddListener(Connect);
+        uiManager.backButton.onClick.AddListener(uiManager.ShowMainMenu);
+        uiManager.backButton_C.onClick.AddListener(uiManager.ShowMainMenu);
+        uiManager.backButton_S.onClick.AddListener(uiManager.ShowMainMenu);
         uiManager.readyButton.onClick.AddListener(SendReady);
         uiManager.resumeButton.onClick.AddListener(ResumeGame);
         uiManager.exitButton.onClick.AddListener(ReloadGame);
-        uiManager.ShowStart();
+
+        uiManager.ShowMainMenu();
 
         StartCoroutine(InitMicrophone());
         StartCoroutine(MeasureLatency());
+    }
+
+    public void applySettings()
+    {
+        inputManager.InitInputs();
+        uiManager.ShowStart();
     }
 
     private IEnumerator MeasureLatency()

@@ -22,12 +22,13 @@ public enum WeaponSelectInputType
 // triggering the corresponding game events. 
 public class InputManager : MonoBehaviour
 {
-    public float reticleStopVelocityThreshold;
-    
     [Header("Controls/UI Options")]
+    public float reticleStopVelocityThreshold;
     private AimInputType aimInputType;
     private WeaponSelectInputType weaponSelectInputType;
     public Text controlsText;
+    private bool autoShoot;
+    public Text autoshootText;
     public Text webcamText;
     public Toggle webcamToggle;
 
@@ -57,7 +58,6 @@ public class InputManager : MonoBehaviour
     {
         SetDefaultControls();
         UpdateControlsText();
-        Debug.Log(webcamToggle.isOn);
     }
 
     public void SetDefaultControls()
@@ -86,6 +86,17 @@ public class InputManager : MonoBehaviour
         string aimText = "Aiming: " + aimInputType;
         string weaponText = "Weapons: " + weaponSelectInputType;
         controlsText.text =  aimText + ", " + weaponText;
+    }
+
+    public bool autoshootOn()
+    {
+        return autoShoot;
+    }
+
+    public void UpdateAutoshoot(bool val)
+    {
+        autoShoot = val;
+        autoshootText.text = "Autoshoot: " + ((autoShoot) ? "ON" : "OFF");
     }
 
     public void UpdateWebcamText(bool val)
@@ -117,7 +128,10 @@ public class InputManager : MonoBehaviour
         else if (aimInputType == AimInputType.Finger) {
             ftInput = new FingerTracking(enablePreview, webcamPreview, calibrationPreview);
         }
-        Debug.Log("Aiming: " + aimInputType + ", Weapons: " + weaponSelectInputType);
+        Debug.Log("Selected Controls: " + aimInputType + ((autoShoot) ? " (Autoshoot)" : "") + 
+                    ", " + weaponSelectInputType + 
+                    ((aimInputType == AimInputType.CV) ? (", Webcam " + ((enablePreview) ? "On" : "Off")) : "") 
+        );
     }
 
     public void UpdateCalibration()

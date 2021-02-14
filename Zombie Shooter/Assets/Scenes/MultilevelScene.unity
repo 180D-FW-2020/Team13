@@ -3893,7 +3893,6 @@ GameObject:
   - component: {fileID: 677302515}
   - component: {fileID: 677302514}
   - component: {fileID: 677302513}
-  - component: {fileID: 677302519}
   m_Layer: 0
   m_Name: GameManager
   m_TagString: Untagged
@@ -3931,6 +3930,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   reticleStopVelocityThreshold: 5
   controlsText: {fileID: 8208130}
+  autoshootText: {fileID: 1752389121}
   webcamText: {fileID: 458973405}
   webcamToggle: {fileID: 1488221991}
   webcamPreview: {fileID: 930376515}
@@ -4037,45 +4037,6 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &677302519
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 677302512}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 143ef3df5734894429c8971e3d9967fa, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  mainPlayer: 0
-  movementSpeed: 0
-  autoShootVelocityThreshold: 0
-  autoshootText: {fileID: 1752389121}
-  playerCamera: {fileID: 0}
-  cameraSensitivity: 0
-  aimingSensitivity: 0
-  xLimit: 0
-  yLimit: 0
-  leftWeapon:
-    name: 
-    weapon: {fileID: 0}
-    aimSpeed: 0
-  rightWeapon:
-    name: 
-    weapon: {fileID: 0}
-    aimSpeed: 0
-  upWeapon:
-    name: 
-    weapon: {fileID: 0}
-    aimSpeed: 0
-  downWeapon:
-    name: 
-    weapon: {fileID: 0}
-    aimSpeed: 0
-  weaponOffset: {x: 0, y: 0, z: 0}
-  aimOffset: {x: 0, y: 0, z: 0}
 --- !u!1 &689619129
 GameObject:
   m_ObjectHideFlags: 0
@@ -4423,8 +4384,8 @@ MonoBehaviour:
   onValueChanged:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 677302519}
-        m_TargetAssemblyTypeName: PlayerController, Assembly-CSharp
+      - m_Target: {fileID: 677302514}
+        m_TargetAssemblyTypeName: InputManager, Assembly-CSharp
         m_MethodName: UpdateAutoshoot
         m_Mode: 0
         m_Arguments:
@@ -11186,7 +11147,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: 'Autoshoot: OFF'
+  m_Text: 
 --- !u!222 &1752389122
 CanvasRenderer:
   m_ObjectHideFlags: 0

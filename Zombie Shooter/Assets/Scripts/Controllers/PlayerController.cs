@@ -19,11 +19,9 @@ public class PlayerController : MonoBehaviour
 {
     public bool mainPlayer;
     public float movementSpeed;
-    private bool autoShoot;
+    // private bool autoShoot;
     public float autoShootVelocityThreshold;
-
-    [Header("Settings")]
-    public Text autoshootText;
+    // public Text autoshootText;
 
     [Header("Camera")]
     public Transform playerCamera;
@@ -58,7 +56,6 @@ public class PlayerController : MonoBehaviour
         currentWeapon = new WeaponData();
         SwitchWeapon(GestureType.L);
         StartCoroutine(AimAndShoot());
-        UpdateAutoshoot(false);
     }
 
     public void SetInputManager(InputManager manager)
@@ -86,11 +83,12 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-    public void UpdateAutoshoot(bool val)
-    {
-        autoShoot = val;
-        autoshootText.text = "Autoshoot: " + ((autoShoot) ? "ON" : "OFF");
-    }
+    // public void UpdateAutoshoot(bool val)
+    // {
+    //     autoShoot = val;
+    //     autoshootText.text = "Autoshoot: " + ((autoShoot) ? "ON" : "OFF");
+    //     Debug.Log(autoShoot);
+    // }
 
     public void ResetRotation()
     {
@@ -208,7 +206,7 @@ public class PlayerController : MonoBehaviour
 
     private bool ShootingTrigger()
     {
-        if (autoShoot)
+        if (inputManager.autoshootOn())
             return velocity < autoShootVelocityThreshold;
         return Input.GetKey(KeyCode.A);
     }

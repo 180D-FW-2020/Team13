@@ -93,13 +93,13 @@ public class InputManager : MonoBehaviour
         return autoShoot;
     }
 
-    public void UpdateAutoshoot(bool val)
+    public void UpdateAutoshoot(bool val) // mapped to dropdown menu in Unity Editor
     {
         autoShoot = val;
         autoshootText.text = "Autoshoot: " + ((autoShoot) ? "ON" : "OFF");
     }
 
-    public void UpdateWebcamText(bool val)
+    public void UpdateWebcamText(bool val) // mapped to dropdown menu in Unity Editor
     {
         if (aimInputType == AimInputType.CV) {
             webcamToggle.isOn = val;

@@ -19,9 +19,7 @@ public class PlayerController : MonoBehaviour
 {
     public bool mainPlayer;
     public float movementSpeed;
-    // private bool autoShoot;
     public float autoShootVelocityThreshold;
-    // public Text autoshootText;
 
     [Header("Camera")]
     public Transform playerCamera;
@@ -82,13 +80,6 @@ public class PlayerController : MonoBehaviour
             shooting = ShootingTrigger();
         }
     }
-
-    // public void UpdateAutoshoot(bool val)
-    // {
-    //     autoShoot = val;
-    //     autoshootText.text = "Autoshoot: " + ((autoShoot) ? "ON" : "OFF");
-    //     Debug.Log(autoShoot);
-    // }
 
     public void ResetRotation()
     {

@@ -9,16 +9,19 @@ using System;
 
 public enum GameStatus
 {
-    Start = 0,
-    Connecting = 1,
-    Waiting = 2,
-    Playing = 3,
-    Moving = 4,
-    Transitioning = 5,
-    KillCam = 6,
-    Paused = 7,
-    Ended = 8,
-    Calibrating = 9
+    MainMenu = 0,
+    ControlsMenu = 1,
+    SettingsMenu = 2,
+    Start = 3,
+    Connecting = 4,
+    Waiting = 5,
+    Playing = 6,
+    Moving = 7,
+    Transitioning = 8,
+    KillCam = 9,
+    Paused = 10,
+    Ended = 11,
+    Calibrating = 12,
 }
 
 // UIManager coordinates the changing of screens and UI element initialization
@@ -26,9 +29,20 @@ public enum GameStatus
 // in-game elements can be dynamically updated (i.e. player list and scores)
 public class UIManager : MonoBehaviour
 {
+    [Header("Main Menu UI")]
+    public GameObject mainMenuScreen;
+    public GameObject controlsScreen;
+    public GameObject settingsScreen;
+    public Button mainStartButton;
+    public Button controlsButton;
+    public Button settingsButton;
+    public Button backButton_C;
+    public Button backButton_S;
+
     [Header("Start UI")]
     public GameObject startScreen;
     public Button startButton;
+    public Button backButton;
     public InputField playerName;
 
     [Header("End UI")]
@@ -71,12 +85,15 @@ public class UIManager : MonoBehaviour
     private void Start()
     {
         playerName.characterLimit = Constants.MAX_NAME_LENGTH;
-        SetScreensActive(GameStatus.Start);
+        SetScreensActive(GameStatus.MainMenu);
     }
 
     // Set the correct UI screen active based on current game state
     public void SetScreensActive(GameStatus gameStatus)
     {
+        mainMenuScreen.SetActive(IsStatus(gameStatus, GameStatus.MainMenu));
+        controlsScreen.SetActive(IsStatus(gameStatus, GameStatus.ControlsMenu));
+        settingsScreen.SetActive(IsStatus(gameStatus, GameStatus.SettingsMenu));
         startScreen.SetActive(IsStatus(gameStatus, GameStatus.Start));
         endScreen.SetActive(IsStatus(gameStatus, GameStatus.Ended));
         connectingScreen.SetActive(IsStatus(gameStatus, GameStatus.Connecting));
@@ -92,10 +109,26 @@ public class UIManager : MonoBehaviour
         return states.Contains(state);
     }
 
+    public void ShowMainMenu()
+    {
+        SetScreensActive(GameStatus.MainMenu);
+    }
+
+    public void ShowControls()
+    {
+        SetScreensActive(GameStatus.ControlsMenu);
+    }
+
+    public void ShowSettings()
+    {
+        SetScreensActive(GameStatus.SettingsMenu);
+    }
+
     public void ShowStart()
     {
         SetScreensActive(GameStatus.Start);
     }
+
     public void EnterWaitingRoom()
     {
         SetScreensActive(GameStatus.Waiting);

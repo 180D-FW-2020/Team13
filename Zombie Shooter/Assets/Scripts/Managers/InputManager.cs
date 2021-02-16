@@ -7,29 +7,35 @@ using UnityEngine.UI;
 
 public enum AimInputType
 {
-    Mouse = 1,
-    CV = 2,
-    Finger = 3
+    Mouse = 0,
+    CV = 1,
+    Finger = 2
 }
 
 public enum WeaponSelectInputType
 {
-    IMU = 1,
-    ArrowKeys = 2,
+    ArrowKeys = 0,
+    IMU = 1
 }
 
 // InputManager is responsible for receiving both Computer Vision and IMU inputs, and 
 // triggering the corresponding game events. 
 public class InputManager : MonoBehaviour
 {
-    public AimInputType aimInputType;
-    public WeaponSelectInputType weaponSelectInputType;
+    [Header("Controls/UI Options")]
     public float reticleStopVelocityThreshold;
+    private AimInputType aimInputType;
+    private WeaponSelectInputType weaponSelectInputType;
+    public Text controlsText;
+    private bool autoShoot;
+    public Text autoshootText;
+    public Text webcamText;
+    public Toggle webcamToggle;
 
     [Header("Computer Vision Options")]
     public RawImage webcamPreview;
     public RawImage calibrationPreview;
-    public bool enablePreview;
+    private bool enablePreview;
     public float[] greenLowerHSV = new float[3];
     public float[] greenUpperHSV = new float[3];
 
@@ -50,6 +56,70 @@ public class InputManager : MonoBehaviour
 
     public void Start()
     {
+        SetDefaultControls();
+        UpdateControlsText();
+    }
+
+    public void SetDefaultControls()
+    {
+        aimInputType = AimInputType.Mouse;
+        weaponSelectInputType = WeaponSelectInputType.ArrowKeys;
+        enablePreview = false;
+    }
+
+    public void UpdateAimingControls(int val) // mapped to dropdown menu in Unity Editor
+    {
+        aimInputType = (val == 0) ? AimInputType.Mouse : AimInputType.CV;
+        UpdateControlsText();
+        UpdatePreviewInteractable();
+        UpdateWebcamText(false);
+    }
+
+    public void UpdateWeaponControls(int val) // mapped to dropdown menu in Unity Editor
+    {
+        weaponSelectInputType = (val == 0) ? WeaponSelectInputType.ArrowKeys : WeaponSelectInputType.IMU;
+        UpdateControlsText();
+    }
+
+    public void UpdateControlsText()
+    {
+        string aimText = "Aiming: " + aimInputType;
+        string weaponText = "Weapons: " + weaponSelectInputType;
+        controlsText.text =  aimText + ", " + weaponText;
+    }
+
+    public bool autoshootOn()
+    {
+        return autoShoot;
+    }
+
+    public void UpdateAutoshoot(bool val) // mapped to dropdown menu in Unity Editor
+    {
+        autoShoot = val;
+        autoshootText.text = "Autoshoot: " + ((autoShoot) ? "ON" : "OFF");
+    }
+
+    public void UpdateWebcamText(bool val) // mapped to dropdown menu in Unity Editor
+    {
+        if (aimInputType == AimInputType.CV) {
+            webcamToggle.isOn = val;
+            webcamText.text = "Webcam Preview: " + ((webcamToggle.isOn) ? "ON" : "OFF");
+        } else {
+            webcamToggle.isOn = false;
+            webcamText.text = "";
+        }
+        enablePreview = webcamToggle.isOn;
+    }
+
+    public void UpdatePreviewInteractable()
+    {
+        bool isCV = (aimInputType == AimInputType.CV);
+        if (!isCV) webcamToggle.isOn = false;
+        webcamToggle.interactable = isCV;
+    }
+
+    public void InitInputs()
+    {
         webcamPreview.enabled = enablePreview && (aimInputType != AimInputType.Mouse);
         if (weaponSelectInputType == WeaponSelectInputType.IMU)
             rpiInput = new RaspberryPiInput(ipAddress, port);
@@ -58,6 +128,10 @@ public class InputManager : MonoBehaviour
         else if (aimInputType == AimInputType.Finger) {
             ftInput = new FingerTracking(enablePreview, webcamPreview, calibrationPreview);
         }
+        Debug.Log("Selected Controls: " + aimInputType + ((autoShoot) ? " (Autoshoot)" : "") + 
+                    ", " + weaponSelectInputType + 
+                    ((aimInputType == AimInputType.CV) ? (", Webcam " + ((enablePreview) ? "On" : "Off")) : "") 
+        );
     }
 
     public void UpdateCalibration()

@@ -422,7 +422,8 @@ if __name__== "__main__":
         elif abs(kalmanY)<90:
             shoot = 0
             break
-    
+    #shoot = 1 means shooting
+    #shoot = 0 means stop shooting
             
                 
         if directionChecked <= 0:

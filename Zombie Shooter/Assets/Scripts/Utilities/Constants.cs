@@ -152,5 +152,6 @@ public class EnemyShot
 public class EnemyAttack
 {
     public string type = "enemyAttack";
+    public string enemyId;
     public string id;
 }

@@ -174,8 +174,8 @@ function processMessage(socket, message) {
             wss.broadcast(JSON.stringify(leave), null);
             break;
         case "enemyAttack":
-            console.log("Enemy " + data.enemyId + " attacking " + name);
             if (data.enemyId in enemies) {
+                console.log("Enemy " + data.enemyId + " attacking " + name);
                 enemies[data.enemyId].startAttacking(Date.now());
                 connectedClients[name].decrementHealth();
                 wss.broadcast(JSON.stringify(connectedClients[name]), socket);

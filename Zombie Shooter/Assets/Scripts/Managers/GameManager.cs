@@ -322,10 +322,11 @@ public class GameManager : MonoBehaviour
         await connection.Send(shotEnemy);
     }
 
-    public async void AttackPlayer()
+    public async void AttackPlayer(string enemyId)
     {
         EnemyAttack attack = new EnemyAttack
         {
+            enemyId = enemyId,
             id = playerName
         };
         await connection.Send(attack);

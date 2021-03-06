@@ -80,7 +80,7 @@ public class EnemyController : MonoBehaviour
         while (state != EnemyStatus.Dead)
         {
             yield return interval;
-            gameManager.AttackPlayer();
+            gameManager.AttackPlayer(gameObject.name);
         }
     }
 

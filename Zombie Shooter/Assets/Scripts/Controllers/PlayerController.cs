@@ -18,6 +18,7 @@ public class WeaponData
 public class PlayerController : MonoBehaviour
 {
     public float movementSpeed;
+    public bool killed = false;
 
     [Header("Camera")]
     public Transform playerCamera;
@@ -48,6 +49,8 @@ public class PlayerController : MonoBehaviour
     private bool shootingEnabled;
     private InputManager inputManager;
 
+    private GestureType gesture;
+
     public void Initialize(bool main, InputManager manager)
     {
         inputManager = manager;
@@ -61,8 +64,14 @@ public class PlayerController : MonoBehaviour
     {
         if (shootingEnabled)
         {
-            //switch weapon
-            SwitchWeapon(inputManager.GetGesture());
+            //switch weapon and shoot
+            gesture = inputManager.GetGesture();
+            if (gesture == GestureType.X)
+                shooting = true;
+            else if (gesture == GestureType.O)
+                shooting = false;
+            else
+                SwitchWeapon(gesture);
 
             //aim 
             rotation += inputManager.GetAimInput() * (aiming ? aimingSensitivity : cameraSensitivity);
@@ -72,8 +81,6 @@ public class PlayerController : MonoBehaviour
             velocity = (transform.eulerAngles - previousRotation).sqrMagnitude / Time.deltaTime;
             previousRotation = transform.eulerAngles;
 
-            //shoot
-            shooting = inputManager.ShootingTrigger();
         }
     }
 
@@ -84,6 +91,8 @@ public class PlayerController : MonoBehaviour
 
     public void EnableShooting(bool enabled)
     {
+        if (killed)
+            enabled = false;
         shootingEnabled = enabled;
         shooting = enabled ? shooting : false;
         currentWeapon.weapon.showCrosshair = enabled;

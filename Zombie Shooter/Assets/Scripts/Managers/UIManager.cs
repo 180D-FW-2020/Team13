@@ -65,6 +65,7 @@ public class UIManager : MonoBehaviour
     public Text currentAmmo;
     public GameObject scoreCard;
     public Text latencyText;
+    public Text killedText;
     private OrderedDictionary playerScores = new OrderedDictionary();
     private OrderedDictionary playerHealthBars = new OrderedDictionary();
 
@@ -172,7 +173,13 @@ public class UIManager : MonoBehaviour
     {
         if (!playerHealthBars.Contains(playerName)) return;
         Slider healthBar = (Slider)playerHealthBars[playerName];
+        Debug.Log(value / 100f);
         healthBar.value = value / 100f;
+    }
+
+    public void ShowMainPlayerKilledText()
+    {
+        killedText.gameObject.SetActive(true);
     }
 
     // dynamically add new score card

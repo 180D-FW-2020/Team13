@@ -623,14 +623,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 143ef3df5734894429c8971e3d9967fa, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  mainPlayer: 0
   movementSpeed: 10
-  autoShoot: 0
-  autoShootVelocityThreshold: 5
+  killed: 0
   playerCamera: {fileID: 6214518373487200755}
   cameraSensitivity: 10
   aimingSensitivity: 1
-  xLimit: 180
+  xLimit: 250
   yLimit: 135
   leftWeapon:
     name: M4

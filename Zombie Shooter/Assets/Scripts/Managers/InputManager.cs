@@ -127,11 +127,6 @@ public class InputManager : MonoBehaviour
             ftInput.AnalyzeFrame();
     }
 
-    public bool ShootingTrigger()
-    {
-        return Input.GetKey(KeyCode.A);
-    }
-
     public Vector2 GetAimInput()
     {
         if (aimInputType == AimInputType.CV)
@@ -155,6 +150,10 @@ public class InputManager : MonoBehaviour
                 gestureType = GestureType.U;
             else if (Input.GetKeyDown("down"))
                 gestureType = GestureType.D;
+            else if (Input.GetKeyDown(KeyCode.A))
+                gestureType = GestureType.X;
+            else if (Input.GetKeyUp(KeyCode.A))
+                gestureType = GestureType.O;
         }
         else
         {

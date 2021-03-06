@@ -456,6 +456,12 @@ public class GameManager : MonoBehaviour
             {
                 uiManager.UpdateScore(state.id, state.score);
                 uiManager.UpdateHealth(state.id, state.health);
+                if (state.health <= 0)
+                {
+                    allPlayers[state.id].killed = true;
+                    if (state.id == mainPlayer.name)
+                        uiManager.ShowMainPlayerKilledText();
+                }
             }
 
             if (state.id != playerName || gameStatus == GameStatus.KillCam)

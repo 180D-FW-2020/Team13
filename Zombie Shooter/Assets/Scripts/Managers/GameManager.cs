@@ -459,7 +459,7 @@ public class GameManager : MonoBehaviour
                 uiManager.UpdateHealth(state.id, state.health);
                 if (state.health <= 0)
                 {
-                    allPlayers[state.id].killed = true;
+                    allPlayers[state.id].SetKilled();
                     if (state.id == mainPlayer.name)
                         uiManager.ShowMainPlayerKilledText();
                 }

@@ -628,8 +628,8 @@ MonoBehaviour:
   playerCamera: {fileID: 6214518373487200755}
   cameraSensitivity: 10
   aimingSensitivity: 1
-  xLimit: 250
-  yLimit: 135
+  xLimit: 135
+  yLimit: 210
   leftWeapon:
     name: M4
     weapon: {fileID: 11403024, guid: c656de207260bf54883c10f990df79db, type: 3}

@@ -66,7 +66,7 @@ public class PlayerController : MonoBehaviour
         {
             //switch weapon and shoot
             gesture = inputManager.GetGesture();
-            if (gesture == GestureType.X)
+            if (gesture == GestureType.X && shootingEnabled)
                 shooting = true;
             else if (gesture == GestureType.O)
                 shooting = false;
@@ -84,6 +84,12 @@ public class PlayerController : MonoBehaviour
         }
     }
 
+    public void SetKilled()
+    {
+        killed = true;
+        EnableShooting(false);
+    }
+
     public void ResetRotation()
     {
         rotation = Vector2.zero;
@@ -91,8 +97,7 @@ public class PlayerController : MonoBehaviour
 
     public void EnableShooting(bool enabled)
     {
-        if (killed)
-            enabled = false;
+        if (killed) enabled = false;
         shootingEnabled = enabled;
         shooting = enabled ? shooting : false;
         currentWeapon.weapon.showCrosshair = enabled;

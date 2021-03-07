@@ -173,7 +173,6 @@ public class UIManager : MonoBehaviour
     {
         if (!playerHealthBars.Contains(playerName)) return;
         Slider healthBar = (Slider)playerHealthBars[playerName];
-        Debug.Log(value / 100f);
         healthBar.value = value / 100f;
     }
 

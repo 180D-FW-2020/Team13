@@ -41,7 +41,7 @@ public class GameManager : MonoBehaviour
     private string playerName;
     private PlayerController mainPlayer;
 
-    private GameStatus gameStatus = GameStatus.Start;
+    private GameStatus gameStatus = GameStatus.MainMenu;
     private int currentLevel = 0;
 
     public void Awake()
@@ -68,26 +68,45 @@ public class GameManager : MonoBehaviour
 
         // menu button listeners
         uiManager.mainStartButton.onClick.AddListener(applySettings);
-        uiManager.controlsButton.onClick.AddListener(uiManager.ShowControls);
-        uiManager.settingsButton.onClick.AddListener(uiManager.ShowSettings);
+        uiManager.controlsButton.onClick.AddListener(GoToControls);
+        uiManager.settingsButton.onClick.AddListener(GoToSettings);
         uiManager.startButton.onClick.AddListener(Connect);
-        uiManager.backButton.onClick.AddListener(uiManager.ShowMainMenu);
-        uiManager.backButton_C.onClick.AddListener(uiManager.ShowMainMenu);
-        uiManager.backButton_S.onClick.AddListener(uiManager.ShowMainMenu);
+        uiManager.backButton.onClick.AddListener(GoToMainMenu);
+        uiManager.backButton_C.onClick.AddListener(GoToMainMenu);
+        uiManager.backButton_S.onClick.AddListener(GoToMainMenu);
         uiManager.readyButton.onClick.AddListener(SendReady);
         uiManager.resumeButton.onClick.AddListener(ResumeGame);
         uiManager.exitButton.onClick.AddListener(ReloadGame);
 
-        uiManager.ShowMainMenu();
+        GoToMainMenu();
 
         StartCoroutine(InitMicrophone());
         StartCoroutine(MeasureLatency());
     }
 
-    public void applySettings()
+    private void applySettings()
     {
         inputManager.InitInputs();
-        uiManager.ShowStart();
+        gameStatus = GameStatus.Start;
+        uiManager.SetScreensActive(gameStatus);
+    }
+
+    private void GoToMainMenu()
+    {
+        gameStatus = GameStatus.MainMenu;
+        uiManager.SetScreensActive(gameStatus);
+    }
+
+    private void GoToControls()
+    {
+        gameStatus = GameStatus.ControlsMenu;
+        uiManager.SetScreensActive(gameStatus);
+    }
+
+    private void GoToSettings()
+    {
+        gameStatus = GameStatus.SettingsMenu;
+        uiManager.SetScreensActive(gameStatus);
     }
 
     private IEnumerator MeasureLatency()
@@ -139,7 +158,7 @@ public class GameManager : MonoBehaviour
         {
             Transform pad = levels[currentLevel].GetPlayerPads()[i];
             string key = allPlayers.Keys.ElementAt(i);
-            StartCoroutine(allPlayers[key].WalkToPad(pad));
+            StartCoroutine(allPlayers[key].WalkToPad(pad, true));
         }
         while (!allPlayers.All(p => !p.Value.IsWalking()))
         {
@@ -219,11 +238,11 @@ public class GameManager : MonoBehaviour
         yield return new WaitForSeconds(3);
 
         currentLevel++;
-        StartCoroutine(TransitionFromLevel());
+        StartCoroutine(TransitionFromLevel(false));
     }
 
 
-    public IEnumerator TransitionFromLevel()
+    public IEnumerator TransitionFromLevel(bool start)
     {
         Debug.Log("Transition from level");
         gameStatus = GameStatus.Transitioning;
@@ -237,17 +256,21 @@ public class GameManager : MonoBehaviour
         }
         mainCamera.SetParent(vehicle.vehicleCamera, true);
 
-        int i = 0;
-        foreach (string key in allPlayers.Keys)
+        if (!start)
         {
-            Transform pad = vehicle.playerPads[i];
-            StartCoroutine(allPlayers[key].WalkToPad(pad));
-            i++;
+            int i = 0;
+            foreach (string key in allPlayers.Keys)
+            {
+                Transform pad = vehicle.playerPads[i];
+                StartCoroutine(allPlayers[key].WalkToPad(pad, false));
+                i++;
+            }
+            while (!allPlayers.All(p => !p.Value.IsWalking()))
+            {
+                yield return null;
+            }
         }
-        while (!allPlayers.All(p => !p.Value.IsWalking()))
-        {
-            yield return null;
-        }
+
         StartCoroutine(MoveToLevel());
     }
 
@@ -294,8 +317,21 @@ public class GameManager : MonoBehaviour
         Time.timeScale = 1;
     }
 
+    private void DetermineWinner()
+    {
+        // TODO
+        FillScoreboard();
+    }
+
+    private void FillScoreboard()
+    {
+        var scores = uiManager.GetPlayerScores();
+        // TODO
+    }
+
     public void EndGame()
     {
+        DetermineWinner();
         gameStatus = GameStatus.Ended;
         uiManager.SetScreensActive(gameStatus);
         mainPlayer.EnableShooting(false);
@@ -367,43 +403,47 @@ public class GameManager : MonoBehaviour
             cmd = cmd.Substring(0, cmd.IndexOf(" "));
 
         Debug.Log($"Voice Command: {cmd.ToUpper()}");
-        Debug.Log(gameStatus);
         cmd = cmd.ToLower();
+        // Debug.Log(gameStatus);
+        // Debug.Log(cmd);
 
         switch (gameStatus)
         {
+            case GameStatus.MainMenu:
+                if (cmd == "start")
+                    applySettings();
+                else if (cmd == "controls")
+                    GoToControls();
+                else if (cmd == "settings")
+                    GoToSettings();
+                break;
+            case GameStatus.ControlsMenu:
+            case GameStatus.SettingsMenu:
+                if (cmd == "back")
+                    GoToMainMenu();
+                break;
             case GameStatus.Start:
-                // idk
+                if (cmd == "start")
+                    Connect();
+                else if (cmd == "back")
+                    GoToMainMenu();
                 break;
             case GameStatus.Waiting:
                 if (cmd == "ready")
-                {
                     SendReady();
-                }
                 break;
             case GameStatus.Playing:
+            case GameStatus.Moving:
+            case GameStatus.Transitioning:
                 if (cmd == "reload")
-                {
-                    // reload code
-                }
-                else if (cmd == "pause")
-                {
-                    PauseGame();
-                    uiManager.UpdateMicIndicator(new Color(0, 1, 0, 1));
-                }
+                    mainPlayer.ReloadWeapon();
                 break;
-            case GameStatus.Paused:
-                if (cmd == "resume")
-                {
-                    ResumeGame();
-                }
-                else if (cmd == "exit")
-                {
-                    ReloadGame();
-                }
+            case GameStatus.Ended:
+                if (cmd == "exit")
+                    QuitGame();
                 break;
             default:
-                // wtf
+                Debug.Log("Invalid Command.");
                 break;
         }
 
@@ -443,7 +483,7 @@ public class GameManager : MonoBehaviour
         pendingActions.Enqueue(() =>
         {
             if (gameStatus == GameStatus.Waiting) //game just started
-                StartCoroutine(TransitionFromLevel());
+                StartCoroutine(TransitionFromLevel(true));
             else
                 StartLevel();
         });
@@ -590,6 +630,15 @@ public class GameManager : MonoBehaviour
         {
             mainPlayer.UpdateInput();
         }
+    }
+
+    private void QuitGame()
+    {
+        #if UNITY_EDITOR
+            UnityEditor.EditorApplication.isPlaying = false;
+        #else
+            Application.Quit();
+        #endif
     }
 
     public async void OnApplicationQuit()

@@ -108,6 +108,12 @@ public class PlayerController : MonoBehaviour
         return currentWeapon.weapon.GetCurrentAmmo();
     }
 
+    public void ReloadWeapon()
+    {
+        currentWeapon.weapon.Reload();
+        // Debug.Log("Reloading Weapon...");
+    }
+
     public void SwitchWeapon(GestureType type)
     {
         if (currentWeaponType == type || type == GestureType.None)
@@ -187,9 +193,26 @@ public class PlayerController : MonoBehaviour
         currentWeapon.weapon = newGun.GetComponent<Weapon>();
     }
 
-    public IEnumerator WalkToPad(Transform pad)
+    public IEnumerator WalkToPad(Transform pad, bool toLevel)
     {
         walking = true;
+
+        if (true)
+        {
+            Vector3 leaveTruck = new Vector3();
+            if (toLevel)
+                leaveTruck = new Vector3(transform.position.x - 15.0f, transform.position.y, transform.position.z);
+            else
+                leaveTruck = new Vector3(pad.position.x - 15.0f, pad.position.y, pad.position.z);
+            transform.rotation = Quaternion.LookRotation(new Vector3(leaveTruck.x, leaveTruck.y, leaveTruck.z)); // look at waypoint
+            while (transform.position != leaveTruck) // move towards waypoint
+            {
+                transform.position = Vector3.MoveTowards(transform.position, leaveTruck, Time.deltaTime * movementSpeed);
+                yield return transform.position;
+            }
+        }
+
+        // go to pad
         transform.rotation = Quaternion.LookRotation(new Vector3(pad.position.x, transform.position.y, pad.position.z)); //look at pad
         while (transform.position != pad.position)
         {
@@ -198,6 +221,19 @@ public class PlayerController : MonoBehaviour
         }
         transform.SetParent(pad); //set parent
         transform.localRotation = Quaternion.identity; //face forward
+
+        // // return to truck
+        // if (!toLevel)
+        // {
+        //     Vector3 leaveTruck = new Vector3(pad.position.x - 15.0f, pad.position.y, pad.position.z);
+        //     transform.rotation = Quaternion.LookRotation(new Vector3(leaveTruck.x, leaveTruck.y, leaveTruck.z)); // look at waypoint
+        //     while (transform.position != leaveTruck) // move towards waypoint
+        //     {
+        //         transform.position = Vector3.MoveTowards(transform.position, leaveTruck, Time.deltaTime * movementSpeed);
+        //         yield return transform.position;
+        //     }
+        // }
+
         walking = false;
     }
 

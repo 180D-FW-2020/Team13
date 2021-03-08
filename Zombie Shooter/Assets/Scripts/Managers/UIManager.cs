@@ -81,6 +81,9 @@ public class UIManager : MonoBehaviour
     public Image micIndicator;
     public bool micConnected = false;
 
+    [Header("Final Scoreboard")]
+    public GameObject Scoreboard;
+
     private GameManager gameManager;
 
     private void Start()
@@ -208,6 +211,11 @@ public class UIManager : MonoBehaviour
         if (!playerScores.Contains(playerName)) return;
         Text score = (Text)playerScores[playerName];
         score.text = newScore.ToString();
+    }
+
+    public OrderedDictionary GetPlayerScores()
+    {
+        return playerScores;
     }
 
     public void UpdateLatency(double latency)

@@ -1061,7 +1061,7 @@ public class Weapon : MonoBehaviour
 
 
 	// Reload the weapon
-	void Reload()
+	public void Reload()
 	{
 		currentAmmo = ammoCapacity;
 		fireTimer = -reloadTime;

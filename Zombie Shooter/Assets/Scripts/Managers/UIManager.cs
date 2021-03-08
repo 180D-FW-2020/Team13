@@ -6,22 +6,13 @@ using UnityEngine.SceneManagement;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System;
+using System.Collections;
 
-public enum GameStatus
+[Serializable]
+public struct ScoreboardEntry
 {
-    MainMenu = 0,
-    ControlsMenu = 1,
-    SettingsMenu = 2,
-    Start = 3,
-    Connecting = 4,
-    Waiting = 5,
-    Playing = 6,
-    Moving = 7,
-    Transitioning = 8,
-    KillCam = 9,
-    Paused = 10,
-    Ended = 11,
-    Calibrating = 12,
+    public Text name;
+    public Text score;
 }
 
 // UIManager coordinates the changing of screens and UI element initialization
@@ -47,6 +38,7 @@ public class UIManager : MonoBehaviour
 
     [Header("End UI")]
     public GameObject endScreen;
+    public List<ScoreboardEntry> scoreboard;
 
     [Header("Calibration UI")]
     public GameObject calibrationScreen;
@@ -81,8 +73,6 @@ public class UIManager : MonoBehaviour
     public Image micIndicator;
     public bool micConnected = false;
 
-    [Header("Final Scoreboard")]
-    public GameObject Scoreboard;
 
     private GameManager gameManager;
 
@@ -151,6 +141,23 @@ public class UIManager : MonoBehaviour
     public void StartCalibration()
     {
         SetScreensActive(GameStatus.Calibrating);
+    }
+
+    public void UpdateScoreboard()
+    {
+        var scores = playerScores.Cast<DictionaryEntry>().ToDictionary(k => (string)k.Key, v => (Text)v.Value).ToList();
+        scores.Sort((p1, p2) => int.Parse(p1.Value.text).CompareTo(int.Parse(p2.Value.text)));
+
+        for (int i = 0; i < scoreboard.Count; i++)
+        {
+            if (i >= scores.Count)
+            {
+                Destroy(scoreboard[i].name.transform.parent.gameObject);
+                continue;
+            }
+            scoreboard[i].name.text = scores[i].Key;
+            scoreboard[i].score.text = scores[i].Value.text;
+        }
     }
 
     #region Start Screen UI

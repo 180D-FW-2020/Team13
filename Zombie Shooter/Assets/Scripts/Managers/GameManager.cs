@@ -10,6 +10,23 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
+public enum GameStatus
+{
+    MainMenu = 0,
+    ControlsMenu = 1,
+    SettingsMenu = 2,
+    Start = 3,
+    Connecting = 4,
+    Waiting = 5,
+    Playing = 6,
+    Moving = 7,
+    Transitioning = 8,
+    KillCam = 9,
+    Paused = 10,
+    Ended = 11,
+    Calibrating = 12,
+}
+
 [RequireComponent(typeof(EnemyManager))]
 [RequireComponent(typeof(UIManager))]
 [RequireComponent(typeof(InputManager))]
@@ -317,21 +334,9 @@ public class GameManager : MonoBehaviour
         Time.timeScale = 1;
     }
 
-    private void DetermineWinner()
-    {
-        // TODO
-        FillScoreboard();
-    }
-
-    private void FillScoreboard()
-    {
-        var scores = uiManager.GetPlayerScores();
-        // TODO
-    }
-
     public void EndGame()
     {
-        DetermineWinner();
+        uiManager.UpdateScoreboard();
         gameStatus = GameStatus.Ended;
         uiManager.SetScreensActive(gameStatus);
         mainPlayer.EnableShooting(false);
@@ -495,6 +500,7 @@ public class GameManager : MonoBehaviour
         {
             if (gameStatus != GameStatus.KillCam)
             {
+                allPlayers[state.id].UpdateScore(state.score);
                 uiManager.UpdateScore(state.id, state.score);
                 uiManager.UpdateHealth(state.id, state.health);
                 if (state.health <= 0)

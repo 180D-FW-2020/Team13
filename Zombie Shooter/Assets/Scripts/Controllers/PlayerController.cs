@@ -51,6 +51,8 @@ public class PlayerController : MonoBehaviour
 
     private GestureType gesture;
 
+    private int score;
+
     public void Initialize(bool main, InputManager manager)
     {
         inputManager = manager;
@@ -176,6 +178,15 @@ public class PlayerController : MonoBehaviour
         }
     }
 
+    public void UpdateScore(int newScore)
+    {
+        score = newScore;
+    }
+
+    public int GetScore()
+    {
+        return score;
+    }
 
     public void Shoot()
     {

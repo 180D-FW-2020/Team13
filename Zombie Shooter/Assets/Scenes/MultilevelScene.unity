@@ -4359,6 +4359,15 @@ MonoBehaviour:
   backButton: {fileID: 2023231450}
   playerName: {fileID: 87931542}
   endScreen: {fileID: 1258456395}
+  scoreboard:
+  - name: {fileID: 2003122720}
+    score: {fileID: 1923951429}
+  - name: {fileID: 645542228}
+    score: {fileID: 1744910736}
+  - name: {fileID: 1838692416}
+    score: {fileID: 97155043}
+  - name: {fileID: 1466665441}
+    score: {fileID: 438135267}
   calibrationScreen: {fileID: 1342642937}
   calibrationText: {fileID: 943023381}
   connectingScreen: {fileID: 900423180}
@@ -4376,7 +4385,6 @@ MonoBehaviour:
   exitButton: {fileID: 298804193}
   micIndicator: {fileID: 1049638452}
   micConnected: 0
-  Scoreboard: {fileID: 745943732}
 --- !u!114 &677302516
 MonoBehaviour:
   m_ObjectHideFlags: 0

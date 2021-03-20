@@ -203,6 +203,7 @@ if __name__== "__main__":
     mag_medianTable2Z = [1] * MAG_MEDIANTABLESIZE
 
     IMU.detectIMU()     #Detect if BerryIMU is connected.
+    print(IMU.BerryIMUversion)
     if(IMU.BerryIMUversion == 99):
         print(" No BerryIMU found... exiting ")
         sys.exit()

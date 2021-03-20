@@ -23,14 +23,7 @@ import math
 import IMU
 import datetime
 import os
-import socket
 
-s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-s.bind(('', 5000))
-s.listen(1)
-print("Waiting for connection")
-connection, client_address = s.accept()
-print("Connected")
 
 
 RAD_TO_DEG = 57.29578
@@ -203,7 +196,7 @@ if __name__== "__main__":
     mag_medianTable2Z = [1] * MAG_MEDIANTABLESIZE
 
     IMU.detectIMU()     #Detect if BerryIMU is connected.
-    print(IMU.BerryIMUversion)
+
     if(IMU.BerryIMUversion == 99):
         print(" No BerryIMU found... exiting ")
         sys.exit()
@@ -480,12 +473,10 @@ if __name__== "__main__":
                             sstime = -1
                             direction = [0]* dirRange
                             directionChecked = 1.97
+
                     
         else:
             directionChecked = directionChecked - 0.03
-        
-
-
 
         #slow program down a bit, makes the output more readable
         time.sleep(0.03)

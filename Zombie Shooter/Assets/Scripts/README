@@ -1,0 +1,37 @@
+This folder contains the game source code.
+All source code follows the MVC architecture, organized as follows:
+
+Managers:
+All high level model scripts coordinating game/UI/input logic. In particular, the following elements
+are Model elements: 
+- Game (for game logic)
+- Input (handles all sources of input)
+- UI (for buttons, user input, and menus)
+- Enemy (for coordinating and managing enemy states)
+
+
+Controllers:
+All controller elements controlling input events and game graphics. In particular, the following elements
+are Controller elements:
+- ComputerVisionInput (uses OpenCV to track an object)
+- RaspberryPiInput (uses TCP sockets to receive IMU gestures)
+- Level (controls level properties like waypoints and player locations)
+- Enemy (maintains enemy health, location, etc to sync with server and coordinates animations + movement)
+- Player (maintains player health, pose, etc to sync with server and coordinates animations + movement)
+- Vehicle (controls vehicle movement in relation to the level's waypoints)
+- FingerTracking (uses OpenCV to track a finger instead of object, for future CV purposes)
+
+
+Utilities
+Utility functions for defining constants and interfaces. The following utility scripts are defined:
+- NetworkConnection (interface for sending/receiving messages asynchronously over websocket)
+- Constants (message definitions, game constants, etc)
+- Vector3Extensions (simple extentions for extracting 2d projection of 3d coordinates)
+
+
+
+
+
+Future direction:
+Improvements to final killcam frame rate, networking latency, and usage of finger tracking instead of green
+object tracking are all within scope of improvement to the current program.

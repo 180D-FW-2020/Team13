@@ -1,0 +1,18 @@
+This folder contains all third-party libraries used to process input sources and networking.
+In particular, the following folders contain libraries for the following functions:
+
+Speech Recognition (library reference: https://github.com/Funnyguy77/PocketSphinxUnityDemo)
+    PocketSphinx/
+    SpeechRecognition/
+    TarReader/
+
+Computer Vision (OpenCV-Sharp) (library reference: https://github.com/shimat/opencvsharp)
+    OpenCV/
+
+
+
+
+Future Plans:
+Ideally, these libraries will be pre-compiled to allow for faster build times and storage, as the 
+raw source code for these libraries is unnecessary. In that case, these copiled DLL files would
+be placed in the Plugins/ directory.

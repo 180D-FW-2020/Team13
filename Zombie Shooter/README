@@ -1,22 +1,33 @@
 Zombie Shooter Unity Project
 
 This directory contains all Unity files, with all project models, textures, and scripts located in the Assets folder.
-The rest of the contents are Unity editor specific files.
+The rest of the contents are Unity editor specific files. All classes are properly commented for further reference.
 
 Folder structure:
 
 Assets/
-   Scripts/		Stores all game code following the MCV architecture
-      Managers/ 	All high level model scripts coordinating game/UI/input logic
-      Controllers/	All controller elements controlling input events and game graphics
-      Utilities/	Utility functions for defining constants and interfaces
-   Libraries/		All libraries used in the game (PocketSphinx, OpenCV, and dependencies)
-   Plugins/		Native libraries for networking (Socket.IO), OpenCV, and JSON serialization
-   StreamingAssets/	This folder contains any files that are not compiled, and remain untouched in the final build
-			Therefore, it contains the list of words for the speech recognition to detect
-   Weapons Package/	Unity Asset Store downloaded package containing weapon models and shooting logic
-   Zombie/		All zombie textures, materials, models, and animations
-   Images/		Raw image format files UI (mic icon)
-   Scenes/		Unity scenes (TestScene is the main scene)
 
-All game scripts are properly commented for further reference.
+   Scripts/		         Stores all game code following the MVC architecture
+      Managers/ 	      All high level model scripts coordinating game/UI/input logic
+      Controllers/	   All controller elements controlling input events and game graphics
+      Utilities/	      Utility functions for defining constants and interfaces
+
+   Graphics/            All graphics + models + associated animations
+      Forest/           Forest graphics, models, and textures *
+      Weapons Package/	Weapon models and shooting logic *
+      Zombie/           All zombie textures, materials, models, and animations *
+      Truck/            Truck model and textures *
+      Images/	         Raw image format files UI (mic icon)
+
+   Libraries/		      All libraries used in the game (PocketSphinx, OpenCV, and dependencies)
+
+   Plugins/		         Native libraries for networking (NativeWebSocket), OpenCV, and JSON serialization
+
+   StreamingAssets/	   This folder contains any files that are not compiled, and remain untouched in the final build
+			               Therefore, it contains the list of words for the speech recognition to detect
+   
+   Scenes/		         Unity scenes (TestScene is the main scene)
+
+
+* These folders contain assets downloaded from the Unity Asset Store
+

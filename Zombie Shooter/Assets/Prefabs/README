@@ -1,0 +1,17 @@
+This folder contains all game prefabs.
+
+Prefabs are Unity GameObjects that has pre-defined characteristics (all scripts and variables)
+have already been preset. These prefabs can be initialized during runtime and can be dynamically
+placed and modified in the environment. The main dynamically instantiated game elements are the following:
+
+
+Player.prefab
+When a new player joins, this object is instantiated with given player properties, so that the
+remote state can update the model/properties during gameplay
+
+Zombie.prefab
+The zombies (enemies) need to be instantiated for each level at the defined locations.
+
+Score Card.prefab
+When a new player joins, a new scorecard is instantiated in the UI to represent each player's 
+score and health

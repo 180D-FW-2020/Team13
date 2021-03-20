@@ -1,0 +1,15 @@
+This folder contains all graphics, images, materials, and models for the game.
+It is organized by name, with each directory name corresponding to its contents. The following
+Unity Asset store packages were downloaded and placed here:
+
+Truck: 
+https://assetstore.unity.com/packages/3d/vehicles/land/post-apocalyptic-truck-with-armor-45422
+
+Forest Environment:
+https://assetstore.unity.com/packages/3d/vegetation/trees/dream-forest-tree-105297
+
+Zombie:
+https://assetstore.unity.com/packages/3d/characters/humanoids/zombie-30232
+
+Weapons:
+https://assetstore.unity.com/packages/templates/systems/easy-weapons-19365

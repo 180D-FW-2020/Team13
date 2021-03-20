@@ -224,7 +224,7 @@ Transform:
   - {fileID: 6214518372352157925}
   - {fileID: 6214518372819068995}
   m_Father: {fileID: 6214518373078228820}
-  m_RootOrder: 3
+  m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!33 &6214518372064110686
 MeshFilter:
@@ -607,7 +607,6 @@ Transform:
   m_Children:
   - {fileID: 6214518373487200755}
   - {fileID: 6214518371804121170}
-  - {fileID: 6214518373516103709}
   - {fileID: 6214518372064110673}
   m_Father: {fileID: 0}
   m_RootOrder: 0
@@ -624,12 +623,31 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 143ef3df5734894429c8971e3d9967fa, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  mainPlayer: 0
-  inputManager: {fileID: 0}
-  playerCamera: {fileID: 6214518373487200755}
-  weaponController: {fileID: 6214518373516103710}
   movementSpeed: 10
-  shootInterval: 1
+  killed: 0
+  playerCamera: {fileID: 6214518373487200755}
+  cameraSensitivity: 10
+  aimingSensitivity: 1
+  xLimit: 135
+  yLimit: 210
+  leftWeapon:
+    name: M4
+    weapon: {fileID: 11403024, guid: c656de207260bf54883c10f990df79db, type: 3}
+    aimSpeed: 5
+  rightWeapon:
+    name: Pistol
+    weapon: {fileID: 11457572, guid: 8a96a3013cf891b4bbc4bebfab850b5b, type: 3}
+    aimSpeed: 10
+  upWeapon:
+    name: Rail Gun
+    weapon: {fileID: 11469638, guid: 9ca60f9da26f4ab47844c355b992a179, type: 3}
+    aimSpeed: 1
+  downWeapon:
+    name: Shotgun
+    weapon: {fileID: 11489288, guid: 705cb262fd0457348b5fe13bd23e8756, type: 3}
+    aimSpeed: 2
+  weaponOffset: {x: 0.23, y: 3.6, z: 0.9}
+  aimOffset: {x: 0, y: 3.7, z: 0.4}
 --- !u!1 &6214518373487200756
 GameObject:
   m_ObjectHideFlags: 0
@@ -660,55 +678,6 @@ Transform:
   m_Father: {fileID: 6214518373078228820}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &6214518373516103711
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 6214518373516103709}
-  - component: {fileID: 6214518373516103710}
-  m_Layer: 0
-  m_Name: Weapon
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &6214518373516103709
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6214518373516103711}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.25, y: 3.6, z: 0.9}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_Children: []
-  m_Father: {fileID: 6214518373078228820}
-  m_RootOrder: 2
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &6214518373516103710
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6214518373516103711}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 447ccbb1d78df9a46a19e6f5378ce644, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  playerWeapon: 1
-  referenceRadius: 20
-  leftWeapon: {fileID: 11457572, guid: 8a96a3013cf891b4bbc4bebfab850b5b, type: 3}
-  rightWeapon: {fileID: 11409158, guid: fc04164fe9fbe694d8efd0998a4af0f9, type: 3}
-  upWeapon: {fileID: 11489288, guid: 705cb262fd0457348b5fe13bd23e8756, type: 3}
-  downWeapon: {fileID: 11453434, guid: 141863aeb86dd534ea8951ec62bcc181, type: 3}
 --- !u!1 &6214518373730859452
 GameObject:
   m_ObjectHideFlags: 0

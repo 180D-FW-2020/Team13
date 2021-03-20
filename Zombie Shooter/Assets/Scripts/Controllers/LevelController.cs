@@ -1,21 +1,21 @@
-﻿using System.Collections;
+﻿using System.Linq;
 using System.Collections.Generic;
 using UnityEngine;
 
 public class LevelController : MonoBehaviour
 {
     public int levelNumber;
-    public List<Transform> playerPads;
-    public List<Transform> waypoints;
+    public Transform playerPads;
+    public Transform waypoints;
 
 
     public List<Transform> GetWaypoints()
     {
-        return waypoints;
+        return waypoints.Cast<Transform>().ToList();
     }
 
     public List<Transform> GetPlayerPads()
     {
-        return playerPads;
+        return playerPads.Cast<Transform>().ToList();
     }
 }

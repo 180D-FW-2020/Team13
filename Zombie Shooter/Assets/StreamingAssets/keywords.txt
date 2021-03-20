@@ -1,5 +1,7 @@
+start
+controls
+settings
+back
 ready
-resume
-pause
-exit
 reload
+exit

@@ -17,10 +17,11 @@ public enum EnemyStatus
 public class EnemyController : MonoBehaviour
 {
     public Animator animator;
-    public float secondsIdleUntilWalk;
     public float attackDistance;
     public float attackInterval;
     public float dieDelay;
+
+    private bool killCamReplay;
 
     private Transform target;
     private bool running;
@@ -36,7 +37,8 @@ public class EnemyController : MonoBehaviour
 
     public void StartGame()
     {
-        //StartCoroutine(WaitForMove());
+        animator.SetTrigger(running ? Constants.TRIGGER_RUN : Constants.TRIGGER_WALK);
+        state = EnemyStatus.Moving;
     }
 
     public void FixedUpdate()
@@ -44,23 +46,25 @@ public class EnemyController : MonoBehaviour
         Vector3 dir = target.position - transform.position;
         Quaternion rotation = Quaternion.LookRotation(dir);
         transform.rotation = Quaternion.Euler(0, rotation.eulerAngles.y, 0);
-
-        //if (state == EnemyState.Moving && Vector2.Distance(target.position.xz(), transform.position.xz()) < attackDistance)
-        //    StartCoroutine(Attack());
+        if (state == EnemyStatus.Moving && Vector2.Distance(target.position.xz(), transform.position.xz()) < attackDistance)
+            StartCoroutine(Attack());
     }
 
-    public IEnumerator WaitForMove()
+    public void SetProperties(Transform targetTransform, bool running, int health, bool killCamReplay, float? killTime)
     {
-        yield return new WaitForSeconds(secondsIdleUntilWalk);
-        animator.SetTrigger(Constants.TRIGGER_MOVE);
-        state = EnemyStatus.Moving;
-    }
-    
-    public void SetProperties(Transform targetTransform, bool running, int health)
-    {
+        this.killCamReplay = killCamReplay;
         target = targetTransform;
         this.running = running;
         this.health = health;
+
+        Vector3 dir = target.position - transform.position;
+        Quaternion rotation = Quaternion.LookRotation(dir);
+        transform.rotation = Quaternion.Euler(0, rotation.eulerAngles.y, 0);
+
+        if (killCamReplay)
+        {
+            transform.position += transform.forward * (running ? Constants.RUN_SPEED : Constants.WALK_SPEED) * (float)killTime;
+        }
     }
 
     public void SetGameManager(GameManager manager)
@@ -76,28 +80,19 @@ public class EnemyController : MonoBehaviour
         while (state != EnemyStatus.Dead)
         {
             yield return interval;
-            gameManager.AttackPlayer();
+            gameManager.AttackPlayer(gameObject.name);
         }
     }
 
-    public void Kill(Transform killElement)
+    public void RegisterHit(int damage, bool mainPlayer)
     {
         if (state != EnemyStatus.Dead)
         {
-            Transform parent = killElement.parent;
-            WeaponController weaponController;
-            while (parent != null)
-            {
-                if ((weaponController = parent.GetComponent<WeaponController>()) != null)
-                {
-                    if (weaponController.playerWeapon)
-                    {
-                        gameManager.KillEnemy(gameObject);
-                        break;
-                    }
-                }
-                parent = parent.parent;
-            }
+            health -= damage;
+            //Debug.Log("Shot, " + health);
+            bool killed = health <= 0;
+            if (mainPlayer)
+                gameManager.RegisterShot(gameObject, damage, killed);
         }
     }
 

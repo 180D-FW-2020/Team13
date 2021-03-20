@@ -1,13 +1,31 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http.Headers;
+using System.Net.Sockets;
 using System.Threading.Tasks;
-using System.Xml.Serialization;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+
+public enum GameStatus
+{
+    MainMenu = 0,
+    ControlsMenu = 1,
+    SettingsMenu = 2,
+    Start = 3,
+    Connecting = 4,
+    Waiting = 5,
+    Playing = 6,
+    Moving = 7,
+    Transitioning = 8,
+    KillCam = 9,
+    Paused = 10,
+    Ended = 11,
+    Calibrating = 12,
+}
 
 [RequireComponent(typeof(EnemyManager))]
 [RequireComponent(typeof(UIManager))]
@@ -21,6 +39,7 @@ public class GameManager : MonoBehaviour
     public VehicleController vehicle;
     public float cameraMovementSpeed;
 
+    public float killCamDuration;
     public Transform mainCamera;
     public GameObject player;
 
@@ -39,7 +58,7 @@ public class GameManager : MonoBehaviour
     private string playerName;
     private PlayerController mainPlayer;
 
-    private GameStatus gameStatus = GameStatus.Start;
+    private GameStatus gameStatus = GameStatus.MainMenu;
     private int currentLevel = 0;
 
     public void Awake()
@@ -57,19 +76,54 @@ public class GameManager : MonoBehaviour
         connection.EnemyLocationsReceived.AddListener(EnemyLocationsReceived);
         connection.LeaveMessageReceived.AddListener(LeaveMessageReceived);
         connection.EnemyKilledMessageReceived.AddListener(EnemyKilledMessageReceived);
+        connection.EnemyShotMessageReceived.AddListener(EnemyShotMessageReceived);
+        connection.KillCamEventsReceived.AddListener(KillCamEventsReceived);
         connection.RemoteStateUpdateReceived.AddListener(RemoteStateUpdateReceived);
         connection.StartReceived.AddListener(StartReceived);
         connection.PongReceived.AddListener(PongReceived);
         connection.Opened.AddListener(ConnectionOpened);
 
+        // menu button listeners
+        uiManager.mainStartButton.onClick.AddListener(applySettings);
+        uiManager.controlsButton.onClick.AddListener(GoToControls);
+        uiManager.settingsButton.onClick.AddListener(GoToSettings);
         uiManager.startButton.onClick.AddListener(Connect);
+        uiManager.backButton.onClick.AddListener(GoToMainMenu);
+        uiManager.backButton_C.onClick.AddListener(GoToMainMenu);
+        uiManager.backButton_S.onClick.AddListener(GoToMainMenu);
         uiManager.readyButton.onClick.AddListener(SendReady);
         uiManager.resumeButton.onClick.AddListener(ResumeGame);
         uiManager.exitButton.onClick.AddListener(ReloadGame);
-        uiManager.ShowStart();
+
+        GoToMainMenu();
 
         StartCoroutine(InitMicrophone());
         StartCoroutine(MeasureLatency());
+    }
+
+    private void applySettings()
+    {
+        inputManager.InitInputs();
+        gameStatus = GameStatus.Start;
+        uiManager.SetScreensActive(gameStatus);
+    }
+
+    private void GoToMainMenu()
+    {
+        gameStatus = GameStatus.MainMenu;
+        uiManager.SetScreensActive(gameStatus);
+    }
+
+    private void GoToControls()
+    {
+        gameStatus = GameStatus.ControlsMenu;
+        uiManager.SetScreensActive(gameStatus);
+    }
+
+    private void GoToSettings()
+    {
+        gameStatus = GameStatus.SettingsMenu;
+        uiManager.SetScreensActive(gameStatus);
     }
 
     private IEnumerator MeasureLatency()
@@ -119,66 +173,129 @@ public class GameManager : MonoBehaviour
 
         for (int i = 0; i < allPlayers.Count; i++)
         {
-            Transform pad = levels[currentLevel].playerPads[i];
+            Transform pad = levels[currentLevel].GetPlayerPads()[i];
             string key = allPlayers.Keys.ElementAt(i);
-            StartCoroutine(allPlayers[key].WalkToPad(pad));
+            StartCoroutine(allPlayers[key].WalkToPad(pad, true));
         }
         while (!allPlayers.All(p => !p.Value.IsWalking()))
         {
             yield return null;
         }
-        while (mainCamera.position != mainPlayer.playerCamera.position)
+        while (mainCamera.position != mainPlayer.playerCamera.position || mainCamera.eulerAngles != mainPlayer.playerCamera.eulerAngles)
         {
             mainCamera.position = Vector3.MoveTowards(mainCamera.position, mainPlayer.playerCamera.position, Time.deltaTime * cameraMovementSpeed);
-            mainCamera.eulerAngles = Vector3.MoveTowards(mainCamera.eulerAngles, mainPlayer.playerCamera.eulerAngles, Time.deltaTime * cameraMovementSpeed);
+            mainCamera.rotation = Quaternion.RotateTowards(mainCamera.rotation, mainPlayer.playerCamera.rotation, Time.deltaTime * cameraMovementSpeed);
             yield return mainCamera;
         }
         mainCamera.SetParent(mainPlayer.playerCamera, true);
         SendReady();
-        inputManager.ResetRotation();
+        mainPlayer.ResetRotation();
     }
 
     public void StartLevel()
     {
         Debug.Log("Start level");
-        inputManager.EnableShooting(true);
+        mainPlayer.EnableShooting(true);
         gameStatus = GameStatus.Playing;
         uiManager.SetScreensActive(gameStatus);
         enemyManager.StartGame();
     }
-    public IEnumerator TransitionFromLevel()
+
+    public IEnumerator FinalKillCam(ReplayEvents killCamEvents)
+    {
+        mainPlayer.EnableShooting(false);
+        yield return new WaitForSeconds(3);
+        enemyManager.KillAllEnemies();
+
+        gameStatus = GameStatus.KillCam;
+        Time.timeScale = 0.5f;
+        uiManager.SetScreensActive(gameStatus);
+
+        //init enemies
+        Dictionary<long, string> enemyDeathDelay = killCamEvents.killTimes.ToDictionary(item => long.Parse(item.Key), item => item.Value);
+        long initialTime = long.Parse(killCamEvents.events.First().Value.First().Key);
+        enemyManager.Initialize(killCamEvents.enemies, levels[currentLevel].transform, levels[currentLevel].GetPlayerPads(), true, enemyDeathDelay, initialTime);
+        enemyManager.StartGame();
+        yield return enemyManager;
+
+        Dictionary<string, ReplayEvent> events;
+        long timestamp;
+        foreach (KeyValuePair<string, Dictionary<string, ReplayEvent>> playerEvent in killCamEvents.events)
+        {
+            var split = playerEvent.Key.Split(':');
+            string enemyId = split[0];
+            string id = split[1];
+            events = playerEvent.Value;
+
+            Debug.Log($"Replaying enemy {enemyId} kill event by player {id}");
+
+            //set camera
+            mainCamera.position = allPlayers[id].playerCamera.position;
+            mainCamera.rotation = allPlayers[id].playerCamera.rotation;
+            mainCamera.SetParent(allPlayers[id].playerCamera, true);
+
+            long prevTime = long.Parse(events.Keys.First());
+            foreach (string ts in events.Keys)
+            {
+                timestamp = long.Parse(ts);
+                yield return new WaitForSeconds((timestamp - prevTime) / 1000f);
+                prevTime = timestamp;
+                ReplayEvent e = events[ts];
+                if (e.type == "remoteState")
+                    RemoteStateUpdateReceived(e.remoteState);
+                else if (e.type == "enemyKilled")
+                    EnemyKilledMessageReceived(e.enemyKilled);
+            }
+
+            allPlayers[id].SetShooting(false);
+        }
+
+
+        Time.timeScale = 1f;
+        yield return new WaitForSeconds(3);
+
+        currentLevel++;
+        StartCoroutine(TransitionFromLevel(false));
+    }
+
+
+    public IEnumerator TransitionFromLevel(bool start)
     {
         Debug.Log("Transition from level");
         gameStatus = GameStatus.Transitioning;
         uiManager.SetScreensActive(gameStatus);
 
-        while (mainCamera.position != vehicle.vehicleCamera.position)
+        while (mainCamera.position != vehicle.vehicleCamera.position || mainCamera.eulerAngles != vehicle.vehicleCamera.eulerAngles)
         {
             mainCamera.position = Vector3.MoveTowards(mainCamera.position, vehicle.vehicleCamera.position, Time.deltaTime * cameraMovementSpeed);
-            mainCamera.eulerAngles = Vector3.MoveTowards(mainCamera.eulerAngles, vehicle.vehicleCamera.eulerAngles, Time.deltaTime * cameraMovementSpeed);
+            mainCamera.rotation = Quaternion.RotateTowards(mainCamera.rotation, vehicle.vehicleCamera.rotation, Time.deltaTime * cameraMovementSpeed);
             yield return mainCamera;
         }
         mainCamera.SetParent(vehicle.vehicleCamera, true);
 
-        for (int i = 0; i < allPlayers.Count; i++)
+        if (!start)
         {
-            Transform pad = vehicle.playerPads[i];
-            string key = allPlayers.Keys.ElementAt(i);
-            StartCoroutine(allPlayers[key].WalkToPad(pad));
+            int i = 0;
+            foreach (string key in allPlayers.Keys)
+            {
+                Transform pad = vehicle.playerPads[i];
+                StartCoroutine(allPlayers[key].WalkToPad(pad, false));
+                i++;
+            }
+            while (!allPlayers.All(p => !p.Value.IsWalking()))
+            {
+                yield return null;
+            }
         }
-        while (!allPlayers.All(p => !p.Value.IsWalking()))
-        {
-            yield return null;
-        }
+
         StartCoroutine(MoveToLevel());
     }
 
     public void EndLevel()
     {
-        inputManager.EnableShooting(false);
-        currentLevel++;
+        mainPlayer.EnableShooting(false);
         Debug.Log("End level");
-        StartCoroutine(TransitionFromLevel());
+        gameStatus = GameStatus.Transitioning;
     }
 
     public async void Connect()
@@ -200,14 +317,14 @@ public class GameManager : MonoBehaviour
     {
         gameStatus = GameStatus.Paused;
         uiManager.SetScreensActive(gameStatus);
-        inputManager.EnableShooting(false);
+        mainPlayer.EnableShooting(false);
     }
 
     public void ResumeGame()
     {
         gameStatus = GameStatus.Playing;
         uiManager.SetScreensActive(gameStatus);
-        inputManager.EnableShooting(true);
+        mainPlayer.EnableShooting(true);
     }
 
     public void ReloadGame()
@@ -219,28 +336,38 @@ public class GameManager : MonoBehaviour
 
     public void EndGame()
     {
+        uiManager.UpdateScoreboard();
         gameStatus = GameStatus.Ended;
         uiManager.SetScreensActive(gameStatus);
-        inputManager.EnableShooting(false);
+        mainPlayer.EnableShooting(false);
         Debug.Log("End Game");
     }
 
-    public async void KillEnemy(GameObject enemy)
+    public async void RegisterShot(GameObject enemy, int damage, bool killed)
     {
-        EnemyKilled shotEnemy = new EnemyKilled
+        if (gameStatus == GameStatus.KillCam)
+            return;
+
+        EnemyShot shotEnemy = new EnemyShot
         {
             enemyId = enemy.name,
             id = playerName,
-            damage = 100
+            damage = damage,
+            enemyPosition = enemy.transform.localPosition.xz().coordinates()
         };
-        enemyManager.KillEnemy(enemy.name);
+        if (killed)
+        {
+            enemyManager.KillEnemy(enemy.name);
+            Debug.Log($"Enemy {enemy.name} killed by {playerName}");
+        }
         await connection.Send(shotEnemy);
     }
 
-    public async void AttackPlayer()
+    public async void AttackPlayer(string enemyId)
     {
         EnemyAttack attack = new EnemyAttack
         {
+            enemyId = enemyId,
             id = playerName
         };
         await connection.Send(attack);
@@ -250,11 +377,6 @@ public class GameManager : MonoBehaviour
     {
         EnemiesRequest request = new EnemiesRequest();
         await connection.Send(request);
-    }
-
-    public void Shoot(int weapon)
-    {
-        gameState.shooting = weapon;
     }
 
     #endregion
@@ -286,43 +408,47 @@ public class GameManager : MonoBehaviour
             cmd = cmd.Substring(0, cmd.IndexOf(" "));
 
         Debug.Log($"Voice Command: {cmd.ToUpper()}");
-        Debug.Log(gameStatus);
         cmd = cmd.ToLower();
+        // Debug.Log(gameStatus);
+        // Debug.Log(cmd);
 
         switch (gameStatus)
         {
+            case GameStatus.MainMenu:
+                if (cmd == "start")
+                    applySettings();
+                else if (cmd == "controls")
+                    GoToControls();
+                else if (cmd == "settings")
+                    GoToSettings();
+                break;
+            case GameStatus.ControlsMenu:
+            case GameStatus.SettingsMenu:
+                if (cmd == "back")
+                    GoToMainMenu();
+                break;
             case GameStatus.Start:
-                // idk
+                if (cmd == "start")
+                    Connect();
+                else if (cmd == "back")
+                    GoToMainMenu();
                 break;
             case GameStatus.Waiting:
                 if (cmd == "ready")
-                {
                     SendReady();
-                }
                 break;
             case GameStatus.Playing:
+            case GameStatus.Moving:
+            case GameStatus.Transitioning:
                 if (cmd == "reload")
-                {
-                    // reload code
-                }
-                else if (cmd == "pause")
-                {
-                    PauseGame();
-                    uiManager.UpdateMicIndicator(new Color(0, 1, 0, 1));
-                }
+                    mainPlayer.ReloadWeapon();
                 break;
-            case GameStatus.Paused:
-                if (cmd == "resume")
-                {
-                    ResumeGame();
-                }
-                else if (cmd == "exit")
-                {
-                    ReloadGame();
-                }
+            case GameStatus.Ended:
+                if (cmd == "exit")
+                    QuitGame();
                 break;
             default:
-                // wtf
+                Debug.Log("Invalid Command.");
                 break;
         }
 
@@ -362,7 +488,7 @@ public class GameManager : MonoBehaviour
         pendingActions.Enqueue(() =>
         {
             if (gameStatus == GameStatus.Waiting) //game just started
-                StartCoroutine(TransitionFromLevel());
+                StartCoroutine(TransitionFromLevel(true));
             else
                 StartLevel();
         });
@@ -372,22 +498,40 @@ public class GameManager : MonoBehaviour
     {
         pendingActions.Enqueue(() =>
         {
-            uiManager.UpdateScore(state.id, state.score);
-            uiManager.UpdateHealth(state.id, state.health);
+            if (gameStatus != GameStatus.KillCam)
+            {
+                allPlayers[state.id].UpdateScore(state.score);
+                uiManager.UpdateScore(state.id, state.score);
+                uiManager.UpdateHealth(state.id, state.health);
+                if (state.health <= 0)
+                {
+                    allPlayers[state.id].SetKilled();
+                    if (state.id == mainPlayer.name)
+                        uiManager.ShowMainPlayerKilledText();
+                }
+            }
 
-            if (state.id != playerName)
+            if (state.id != playerName || gameStatus == GameStatus.KillCam)
             {
                 if (state.shooting != (int)GestureType.None)
                 {
-                    WeaponController weaponController = allPlayers[state.id].GetComponentInChildren<WeaponController>();
-                    weaponController.SwitchWeapon((GestureType)state.shooting);
-                    weaponController.Shoot();
+                    allPlayers[state.id].SwitchWeapon((GestureType)state.shooting);
+                    allPlayers[state.id].SetShooting(true);
+                }
+                else
+                {
+                    allPlayers[state.id].SetShooting(false);
                 }
 
                 Vector3 rotation = new Vector3(state.rotation[0], state.rotation[1], state.rotation[2]);
                 allPlayers[state.id].transform.eulerAngles = rotation;
             }
         });
+    }
+
+    private void KillCamEventsReceived(ReplayEvents replayEvents)
+    {
+        StartCoroutine(FinalKillCam(replayEvents));
     }
 
     private void PlayerListReceived(PlayerList list)
@@ -406,12 +550,9 @@ public class GameManager : MonoBehaviour
                 var newPlayer = Instantiate(player, parent);
                 newPlayer.name = name;
                 var newPlayerController = newPlayer.GetComponent<PlayerController>();
-                if (name == playerName)
-                {
-                    newPlayerController.mainPlayer = true;
-                    mainPlayer = newPlayerController;
-                    inputManager.SetMainPlayer(mainPlayer);
-                }
+                bool main = name == playerName;
+                if (main) mainPlayer = newPlayerController;
+                newPlayerController.Initialize(main, inputManager);
                 allPlayers.Add(name, newPlayerController);
                 uiManager.AddPlayer(name);
             }
@@ -420,7 +561,7 @@ public class GameManager : MonoBehaviour
 
     private void EnemyLocationsReceived(EnemyStates states)
     {
-        pendingActions.Enqueue(() => enemyManager.Initialize(states.enemies, levels[currentLevel].transform, levels[currentLevel].playerPads));
+        pendingActions.Enqueue(() => enemyManager.Initialize(states.enemies, levels[currentLevel].transform, levels[currentLevel].GetPlayerPads()));
     }
 
     private void LeaveMessageReceived(Leave leave)
@@ -443,6 +584,13 @@ public class GameManager : MonoBehaviour
         });
     }
 
+    private void EnemyShotMessageReceived(EnemyShot enemyShot)
+    {
+        pendingActions.Enqueue(() =>
+        {
+            enemyManager.ShootEnemy(false, enemyShot.enemyId, enemyShot.damage);
+        });
+    }
     public void PongReceived(Ping pong)
     {
         long now = DateTime.Now.Ticks;
@@ -459,13 +607,15 @@ public class GameManager : MonoBehaviour
     {
         if (gameStatus == GameStatus.Playing)
         {
-            uiManager.UpdateAmmo(inputManager.GetCurrentAmmo());
+            uiManager.UpdateAmmo(mainPlayer.GetCurrentAmmo());
             gameState.rotation = allPlayers[playerName].transform.eulerAngles.coordinates();
+            gameState.shooting = mainPlayer.GetShooting();
             await connection.Send(gameState);
-            gameState.shooting = 0;
 
             if (enemyManager.GetEnemyCount() == 0)
+            {
                 EndLevel();
+            }
         }
     }
 
@@ -484,8 +634,17 @@ public class GameManager : MonoBehaviour
 
         if (gameStatus == GameStatus.Playing)
         {
-            inputManager.UpdateInput();
+            mainPlayer.UpdateInput();
         }
+    }
+
+    private void QuitGame()
+    {
+        #if UNITY_EDITOR
+            UnityEditor.EditorApplication.isPlaying = false;
+        #else
+            Application.Quit();
+        #endif
     }
 
     public async void OnApplicationQuit()

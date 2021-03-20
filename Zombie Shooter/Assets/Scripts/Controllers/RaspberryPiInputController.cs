@@ -13,7 +13,9 @@ public enum GestureType
     L = 1,
     R = 2,
     U = 3,
-    D = 4
+    D = 4,
+    X = 5,
+    O = 6
 }
 
 // Performs all networking and data aquisition to receive gestures from the Pi

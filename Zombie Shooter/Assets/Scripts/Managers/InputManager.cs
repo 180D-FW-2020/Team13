@@ -7,35 +7,33 @@ using UnityEngine.UI;
 
 public enum AimInputType
 {
-    Mouse = 1,
-    CV = 2,
-    Finger = 3
+    Mouse = 0,
+    CV = 1,
+    Finger = 2
 }
 
 public enum WeaponSelectInputType
 {
-    IMU = 1,
-    ArrowKeys = 2,
+    ArrowKeys = 0,
+    IMU = 1
 }
 
 // InputManager is responsible for receiving both Computer Vision and IMU inputs, and 
 // triggering the corresponding game events. 
 public class InputManager : MonoBehaviour
 {
-    public AimInputType aimInputType;
-    public WeaponSelectInputType weaponSelectInputType;
+    [Header("Controls/UI Options")]
     public float reticleStopVelocityThreshold;
-
-    [Header("First Person Aim")]
-    public float shootInterval;
-    public float sensitivity;
-    public float xLimit;
-    public float yLimit;
+    private AimInputType aimInputType;
+    private WeaponSelectInputType weaponSelectInputType;
+    public Text controlsText;
+    public Text webcamText;
+    public Toggle webcamToggle;
 
     [Header("Computer Vision Options")]
     public RawImage webcamPreview;
     public RawImage calibrationPreview;
-    public bool enablePreview;
+    private bool enablePreview;
     public float[] greenLowerHSV = new float[3];
     public float[] greenUpperHSV = new float[3];
 
@@ -47,12 +45,6 @@ public class InputManager : MonoBehaviour
     public FingerTracking ftInput;
     private RaspberryPiInput rpiInput;
 
-    private Vector3 previousRotation;
-    internal float velocity = 0;
-    private Vector2 rotation = Vector2.zero;
-    private PlayerController playerController;
-    private bool shootingEnabled = false;
-
     private GameManager gameManager;
 
     private void Awake()
@@ -62,6 +54,59 @@ public class InputManager : MonoBehaviour
 
     public void Start()
     {
+        SetDefaultControls();
+        UpdateControlsText();
+    }
+
+    public void SetDefaultControls()
+    {
+        aimInputType = AimInputType.Mouse;
+        weaponSelectInputType = WeaponSelectInputType.ArrowKeys;
+        enablePreview = false;
+    }
+
+    public void UpdateAimingControls(int val) // mapped to dropdown menu in Unity Editor
+    {
+        aimInputType = (val == 0) ? AimInputType.Mouse : AimInputType.CV;
+        UpdateControlsText();
+        UpdatePreviewInteractable();
+        UpdateWebcamText(false);
+    }
+
+    public void UpdateWeaponControls(int val) // mapped to dropdown menu in Unity Editor
+    {
+        weaponSelectInputType = (val == 0) ? WeaponSelectInputType.ArrowKeys : WeaponSelectInputType.IMU;
+        UpdateControlsText();
+    }
+
+    public void UpdateControlsText()
+    {
+        string aimText = "Aiming: " + aimInputType;
+        string weaponText = "Weapons: " + weaponSelectInputType;
+        controlsText.text =  aimText + ", " + weaponText;
+    }
+
+    public void UpdateWebcamText(bool val) // mapped to dropdown menu in Unity Editor
+    {
+        if (aimInputType == AimInputType.CV) {
+            webcamToggle.isOn = val;
+            webcamText.text = "Webcam Preview: " + ((webcamToggle.isOn) ? "ON" : "OFF");
+        } else {
+            webcamToggle.isOn = false;
+            webcamText.text = "";
+        }
+        enablePreview = webcamToggle.isOn;
+    }
+
+    public void UpdatePreviewInteractable()
+    {
+        bool isCV = (aimInputType == AimInputType.CV);
+        if (!isCV) webcamToggle.isOn = false;
+        webcamToggle.interactable = isCV;
+    }
+
+    public void InitInputs()
+    {
         webcamPreview.enabled = enablePreview && (aimInputType != AimInputType.Mouse);
         if (weaponSelectInputType == WeaponSelectInputType.IMU)
             rpiInput = new RaspberryPiInput(ipAddress, port);
@@ -70,6 +115,9 @@ public class InputManager : MonoBehaviour
         else if (aimInputType == AimInputType.Finger) {
             ftInput = new FingerTracking(enablePreview, webcamPreview, calibrationPreview);
         }
+        Debug.Log("Selected Controls: " + aimInputType + ", " + weaponSelectInputType + 
+                    ((aimInputType == AimInputType.CV) ? (", Webcam " + ((enablePreview) ? "On" : "Off")) : "") 
+        );
     }
 
     public void UpdateCalibration()
@@ -77,41 +125,6 @@ public class InputManager : MonoBehaviour
         ftInput.Update();
         if (Input.GetKeyDown("c"))
             ftInput.AnalyzeFrame();
-    }
-
-    public void ResetRotation()
-    {
-        rotation = Vector2.zero;
-    }
-
-    public void SetMainPlayer(PlayerController player)
-    {
-        playerController = player;
-        StartCoroutine(AutoShoot());
-    }
-
-    public void UpdateInput()
-    {
-        //weapon switching
-        playerController.weaponController.SwitchWeapon(GetGesture());
-
-        //aim reticle
-        rotation += GetAimInput() * sensitivity;
-        rotation.x = Mathf.Clamp(rotation.x, -xLimit / 2, xLimit / 2);
-        rotation.y = Mathf.Clamp(rotation.y, -yLimit / 2, yLimit / 2);
-        playerController.transform.eulerAngles = rotation;
-        velocity = (playerController.transform.eulerAngles - previousRotation).sqrMagnitude / Time.deltaTime;
-        previousRotation = playerController.transform.eulerAngles;
-    }
-
-    public int GetCurrentAmmo()
-    {
-        return playerController.GetCurrentAmmo();
-    }
-
-    public void EnableShooting(bool enabled)
-    {
-        shootingEnabled = enabled;
     }
 
     public Vector2 GetAimInput()
@@ -137,37 +150,16 @@ public class InputManager : MonoBehaviour
                 gestureType = GestureType.U;
             else if (Input.GetKeyDown("down"))
                 gestureType = GestureType.D;
+            else if (Input.GetKeyDown(KeyCode.A))
+                gestureType = GestureType.X;
+            else if (Input.GetKeyUp(KeyCode.A))
+                gestureType = GestureType.O;
         }
         else
         {
             gestureType = rpiInput.GetGesture();
         }
         return gestureType;
-    }
-
-    private IEnumerator AutoShoot()
-    {
-        while (true)
-        {
-            if (shootingEnabled)
-            {
-                ShootIfStopped();
-                yield return new WaitForSeconds(shootInterval);
-            }
-            else
-            {
-                yield return null;
-            }
-        }
-    }
-
-    public void ShootIfStopped()
-    {
-        if (Mathf.Abs(velocity) < reticleStopVelocityThreshold) //aim stopped
-        {
-            playerController.weaponController.Shoot();
-            gameManager.Shoot((int)playerController.weaponController.GetWeaponType());
-        }
     }
 
     public void OnApplicationQuit()

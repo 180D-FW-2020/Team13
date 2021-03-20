@@ -25,6 +25,7 @@ import datetime
 import os
 
 
+
 RAD_TO_DEG = 57.29578
 M_PI = 3.14159265358979323846
 G_GAIN = 0.070          # [deg/s/LSB]  If you change the dps for gyro, you need to update this value accordingly
@@ -57,12 +58,12 @@ filter_length = 6
 # compass will result in a more accurate heading value.
 
 
-magXmin = -2000
-magYmin = -2046
-magZmin = 515
-magXmax = 1487
-magYmax = 1250
-magZmax = 4119  
+magXmin = -250
+magYmin = -339
+magZmin = 5388
+magXmax = 251
+magYmax = -254
+magZmax = 5751
 
 if __name__== "__main__":
 
@@ -195,6 +196,7 @@ if __name__== "__main__":
     mag_medianTable2Z = [1] * MAG_MEDIANTABLESIZE
 
     IMU.detectIMU()     #Detect if BerryIMU is connected.
+
     if(IMU.BerryIMUversion == 99):
         print(" No BerryIMU found... exiting ")
         sys.exit()
@@ -413,15 +415,15 @@ if __name__== "__main__":
 
         if shoot == 0 and abs(kalmanY)>90:
             shoot = 1
+            connection.send(b"X")
             
             if activeShoot == 0:
                 activeShoot = 1
             else:
                 activeShoot = 0
-            break
-        elif abs(kalmanY)<90:
+        elif shoot == 1 and abs(kalmanY)<90:
             shoot = 0
-            break
+            connection.send(b"O")
     #shoot = 1 means shooting
     #shoot = 0 means stop shooting
             
@@ -455,22 +457,26 @@ if __name__== "__main__":
                     if (direction[n] != direction[n+1] or direction[n]==0):
                         direction = [0] * dirRange
                         sstime = -1
-                        break
                     else:
                         if n == dirRange-2:
                             TrueDir = direction[n]
                             print (TrueDir)
+                            if TrueDir == 1:
+                                connection.send(b"U")
+                            elif TrueDir == 2:
+                                connection.send(b"D")
+                            elif TrueDir == 3:
+                                connection.send(b"L")
+                            elif TrueDir == 4:
+                                connection.send(b"R")
+
                             sstime = -1
                             direction = [0]* dirRange
                             directionChecked = 1.97
-                            break
+
                     
         else:
             directionChecked = directionChecked - 0.03
-        
-
-
 
         #slow program down a bit, makes the output more readable
         time.sleep(0.03)
-

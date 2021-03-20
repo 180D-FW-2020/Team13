@@ -22,9 +22,6 @@ class Client {
 
     registerShot() {
         this.score += hitScore;
-        this.decrementHealth();
-        if (this.health < 0)
-            this.registerKill();
     }
 
     decrementHealth() {

@@ -1,0 +1,5 @@
+The node.js implementation of the server.
+
+The player and enemy classes are abstracted to be able to store the state of each (i.e. health,
+score, etc) and be serialized using the native JSON format. All communication and logic is
+handles in server.js, with enemy and player objects dynamically created as the game progresses.

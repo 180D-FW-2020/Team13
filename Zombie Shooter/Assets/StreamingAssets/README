@@ -1,0 +1,4 @@
+This folder contains all files that will not be compiled when the game is built.
+
+The only contents of this folder are the dictionary and recognized works for speech recognition,
+as it is parsed and read during runtime.

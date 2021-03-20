@@ -1,0 +1,11 @@
+This folder contains the following compiled libraries:
+
+OpenCV-Sharp runtime: The OS-specific runtime files for OpenCV to be run natively
+Newtonsoft.JSON: A low latency simple JSON serialization library
+
+
+Dependencies:
+System.Memory
+System.Buffers
+System.Runtime.CompilerServices.Unsafe
+System.Threading.Tasks.Extensions

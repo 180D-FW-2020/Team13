@@ -1,5 +1,6 @@
-﻿using System;
-using System.Collections;
+﻿using OpenCvSharp;
+using System;
+using System.Linq;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -11,7 +12,7 @@ public class EnemyManager : MonoBehaviour
     public float dieDelay;
 
     private GameManager gameManager;
-    private List<EnemyController> enemies = new List<EnemyController>();
+    private Dictionary<string, EnemyController> enemies = new Dictionary<string, EnemyController>();
 
     public void Awake()
     {
@@ -20,37 +21,56 @@ public class EnemyManager : MonoBehaviour
     
     public void StartGame()
     {
-        foreach (EnemyController enemyController in enemies)
+        foreach (string enemyId in enemies.Keys)
         {
-            enemyController.StartGame();
+            enemies[enemyId].StartGame();
         }
     }
 
-    public void Initialize(Dictionary<string, EnemyState> positions, Transform levelOffset, List<Transform> playerPads)
+    public void Initialize(Dictionary<string, EnemyState> positions, Transform levelOffset, List<Transform> playerPads, bool killCamReplay = false, Dictionary<long, string> killTimes = null, long initialTime = 0)
     {
         transform.position = levelOffset.position;
         transform.rotation = levelOffset.rotation;
         foreach (KeyValuePair<string, EnemyState> pair in positions)
         {
             EnemyState state = pair.Value;
-            string[] xz = state.initialPosition.Split(',');
             var spawnedEnemy = Instantiate(enemy);
             spawnedEnemy.transform.SetParent(transform);
-            spawnedEnemy.transform.localPosition = new Vector3(float.Parse(xz[0]), 0, float.Parse(xz[1]));
+            spawnedEnemy.transform.localPosition = new Vector3(state.position[0], 0, state.position[1]);
             var spawnedEnemyController = spawnedEnemy.GetComponent<EnemyController>();
-            spawnedEnemyController.SetProperties(playerPads[state.target], state.running == 1, state.health);
+            long killTime = 0L;
+            if (killCamReplay)
+            {
+                killTime = killTimes.First(x => x.Value.Contains($"{pair.Key}:")).Key;
+            }
+            spawnedEnemyController.SetProperties(playerPads[state.target], state.running == 1, state.health, killCamReplay, (killTime - Mathf.Max(initialTime, positions[pair.Key].attacking)) / 1000f);
             spawnedEnemyController.SetGameManager(gameManager);
             spawnedEnemy.name = pair.Key;
-            enemies.Add(spawnedEnemyController);
+            enemies.Add(pair.Key, spawnedEnemyController);
         }
     }
 
     public void KillEnemy(string enemyId)
     {
-        var enemy = transform.Find(enemyId);
-        var enemyController = enemy.GetComponent<EnemyController>();
-        enemies.Remove(enemyController);
-        StartCoroutine(enemyController.Die());
+        if (enemies.ContainsKey(enemyId)) {
+            StartCoroutine(enemies[enemyId].Die());
+            enemies.Remove(enemyId);
+        }
+    }
+
+    public void KillAllEnemies()
+    {
+        foreach (string enemyId in enemies.Keys)
+        {
+            Debug.Log($"Enemy {enemyId} still alive");
+            KillEnemy(enemyId);
+        }
+    }
+
+    public void ShootEnemy(bool mainPlayer, string enemyId, int damage)
+    {
+        if (enemies.ContainsKey(enemyId))
+            enemies[enemyId].RegisterHit(damage, mainPlayer);
     }
 
     public int GetEnemyCount()
